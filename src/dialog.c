@@ -4,8 +4,8 @@
  *
  *   http://www.nostatic.org/grip
  *
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License as 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
  * License, or (at your option) any later version.
  *
@@ -29,8 +29,13 @@
 
 void DisplayMsg(char *msg)
 {
-//  gnome_ok_dialog(msg);
-// FIXME
+	GtkWidget *dialog = gtk_message_dialog_new (NULL,
+						GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+						GTK_MESSAGE_INFO, GTK_BUTTONS_OK,
+						msg);
+//	gtk_window_set_title (GTK_WINDOW (dialog), "Message");
+	gtk_dialog_run (GTK_DIALOG (dialog) );
+	gtk_widget_destroy (dialog);
 }
 
 void BoolDialog(char *question,char *yes,GtkSignalFunc yesfunc,

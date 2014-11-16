@@ -4,8 +4,8 @@
  *
  *   http://www.nostatic.org/grip
  *
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License as 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
  * License, or (at your option) any later version.
  *
@@ -32,6 +32,7 @@
 #include "discedit.h"
 #include "dialog.h"
 #include "rip.h"
+#include "tray.h"
 #include "grip_id3.h"
 
 static void ShutDownCB(GtkWidget *widget,gpointer data);
@@ -76,7 +77,7 @@ static void DiscDBToggle(GtkWidget *widget,gpointer data)
   GripInfo *ginfo;
 
   ginfo=(GripInfo *)data;
-  
+
   if(ginfo->looking_up) {
     return;
   }
@@ -87,7 +88,7 @@ static void DiscDBToggle(GtkWidget *widget,gpointer data)
 
       return;
     }
- 
+
     if(ginfo->have_disc)
       LookupDisc(ginfo,TRUE);
   }
@@ -122,7 +123,7 @@ void LookupDisc(GripInfo *ginfo,gboolean manual)
       ddata->data_genre=7; /* "misc" */
       strcpy(ddata->data_title,_("Unknown Disc"));
       strcpy(ddata->data_artist,"");
-      
+
       for(track=0;track<disc->num_tracks;track++) {
 	sprintf(ddata->data_track[track].track_name,_("Track %02d"),track+1);
 	*(ddata->data_track[track].track_artist)='\0';
@@ -131,13 +132,13 @@ void LookupDisc(GripInfo *ginfo,gboolean manual)
       }
 
       *ddata->data_extended='\0';
-      
+
       ginfo->update_required=TRUE;
     }
 
     if(!ginfo->local_mode && (manual?TRUE:ginfo->automatic_discdb)) {
       ginfo->looking_up=TRUE;
-      
+
       pthread_create(&(ginfo->discdb_thread),NULL,(void *)&DoLookup,
 		     (void *)ginfo);
       pthread_detach(ginfo->discdb_thread);
@@ -199,7 +200,7 @@ gboolean DiscDBLookupDisc(GripInfo *ginfo,DiscDBServer *server)
     hello.proto_version=6;
   else
     hello.proto_version=5;
-	
+
   if(!DiscDBDoQuery(disc,server,&hello,&query)) {
     ginfo->update_required=TRUE;
   } else {
@@ -216,7 +217,7 @@ gboolean DiscDBLookupDisc(GripInfo *ginfo,DiscDBServer *server)
 
       Debug(_("Done\n"));
       success=TRUE;
-		
+
       if(DiscDBWriteDiscData(disc,ddata,NULL,TRUE,FALSE,"utf-8")<0)
 	g_print(_("Error saving disc data\n"));
 
@@ -245,16 +246,16 @@ int GetLengthRipWidth(GripInfo *ginfo)
 					_("Length"));
 
     pango_layout_get_size(layout,&width,NULL);
-    
+
     g_object_unref(layout);
-    
+
     tot_width+=width;
-    
+
     layout=gtk_widget_create_pango_layout(GTK_WIDGET(track_list),
 					_("Rip"));
 
     pango_layout_get_size(layout,&width,NULL);
-    
+
     g_object_unref(layout);
 
     tot_width+=width;
@@ -368,7 +369,7 @@ void MakeTrackPage(GripInfo *ginfo)
   g_signal_connect(G_OBJECT(select),"changed",
 		   G_CALLBACK(SelectionChanged),(gpointer)ginfo);
 
-  
+
   g_signal_connect(G_OBJECT(uinfo->track_list),"button_press_event",
 		   G_CALLBACK(TracklistButtonPressed),(gpointer)ginfo);
 
@@ -381,10 +382,10 @@ void MakeTrackPage(GripInfo *ginfo)
   g_signal_connect(G_OBJECT(uinfo->track_list),"unselect_row",
 		   G_CALLBACK(UnSelectRow),
 		   (gpointer)uinfo);
-  
+
   g_signal_connect(G_OBJECT(uinfo->track_list),"button_press_event",
 		   G_CALLBACK(CListButtonPressed),(gpointer)uinfo);
-  
+
   g_signal_connect(G_OBJECT(uinfo->track_list),"click_column",
   G_CALLBACK(ClickColumn),(gpointer)ginfo);*/
 
@@ -422,7 +423,6 @@ static void SetCurrentTrack(GripInfo *ginfo,int track)
 {
   char buf[256];
   int tracklen;
-  const gchar *st,*st2;
 
   GripGUI *uinfo;
 
@@ -436,16 +436,16 @@ static void SetCurrentTrack(GripInfo *ginfo,int track)
     g_signal_handlers_block_by_func(G_OBJECT(uinfo->track_edit_entry),
 				     TrackEditChanged,(gpointer)ginfo);
     gtk_entry_set_text(GTK_ENTRY(uinfo->track_edit_entry),"");
-    
+
     g_signal_handlers_unblock_by_func(G_OBJECT(uinfo->track_edit_entry),
 	 			       TrackEditChanged,(gpointer)ginfo);
-    
+
     g_signal_handlers_block_by_func(G_OBJECT(uinfo->
 						track_artist_edit_entry),
 	 			     TrackEditChanged,(gpointer)ginfo);
-    
+
     gtk_entry_set_text(GTK_ENTRY(uinfo->track_artist_edit_entry),"");
-    
+
     g_signal_handlers_unblock_by_func(G_OBJECT(uinfo->
 						  track_artist_edit_entry),
 	 			       TrackEditChanged,(gpointer)ginfo);
@@ -471,9 +471,9 @@ static void SetCurrentTrack(GripInfo *ginfo,int track)
 	 			       TrackEditChanged,(gpointer)ginfo);
     g_snprintf(buf,80,"%02d",track+1);
     gtk_label_set(GTK_LABEL(uinfo->current_track_label),buf);
-	
+
     gtk_entry_set_text(GTK_ENTRY(uinfo->start_sector_entry),"0");
-	
+
     tracklen=(ginfo->disc.track[track+1].start_frame-1)-
       ginfo->disc.track[track].start_frame;
     g_snprintf(buf,80,"%d",tracklen);
@@ -531,14 +531,14 @@ static void ClickColumn(GtkTreeViewColumn *column,gpointer data)
   if(ginfo->have_disc) {
     for(track=0;track<ginfo->disc.num_tracks;track++)
       if(TrackIsChecked(&(ginfo->gui_info),track)) numsel++;
-    
+
     if(ginfo->disc.num_tracks>1) {
       check=(numsel<ginfo->disc.num_tracks/2);
     }
     else {
       check=(numsel==0);
     }
-    
+
     for(track=0;track<ginfo->disc.num_tracks;track++)
       SetChecked(&(ginfo->gui_info),track,check);
   }
@@ -585,14 +585,14 @@ static void SelectRow(GripInfo *ginfo,int track)
 {
   GtkTreePath *path;
   GtkTreeSelection *select;
-  
+
   path=gtk_tree_path_new_from_indices(track,-1);
-  
+
   select=
     gtk_tree_view_get_selection(GTK_TREE_VIEW(ginfo->gui_info.track_list));
-  
+
   gtk_tree_selection_select_path(select,path);
-  
+
   gtk_tree_path_free(path);
 }
 
@@ -606,14 +606,14 @@ static void SelectionChanged(GtkTreeSelection *selection,gpointer data)
  
   ginfo=(GripInfo *)data;
   uinfo=&(ginfo->gui_info);
-  
+
   if(gtk_tree_selection_get_selected(selection,&model,&iter)) {
     gtk_tree_model_get(model,&iter,TRACKLIST_NUM_COL,&row,-1);
   }
 
   if(row!=-1)
     SetCurrentTrack(ginfo,row);
-  
+
   if((ginfo->disc.disc_mode==CDAUDIO_PLAYING)&&
      (ginfo->disc.curr_track!=(row+1)))
     PlayTrack(ginfo,row);
@@ -645,7 +645,7 @@ static void ToggleLoop(GtkWidget *widget,gpointer data)
 
   ginfo->playloop=!ginfo->playloop;
 
-  if(ginfo->playloop) 
+  if(ginfo->playloop)
     CopyPixmap(GTK_PIXMAP(ginfo->gui_info.loop_image),\
 	       GTK_PIXMAP(ginfo->gui_info.loop_indicator));
   else
@@ -772,7 +772,7 @@ GtkWidget *MakeControls(GripInfo *ginfo)
 
   gtk_box_pack_start(GTK_BOX(hbox2),imagebox,FALSE,FALSE,0);
   gtk_widget_show(imagebox);
-  
+
   hbox=gtk_hbox_new(TRUE,0);
   gtk_container_border_width(GTK_CONTAINER(hbox),0);
 
@@ -814,7 +814,7 @@ GtkWidget *MakeControls(GripInfo *ginfo)
 		       uinfo->mp3_indicator[mycpu],TRUE,TRUE,0);
     gtk_widget_show(uinfo->mp3_indicator[mycpu]);
   }
-  
+
   uinfo->discdb_indicator=NewBlankPixmap(GTK_WIDGET(uinfo->app));
   gtk_box_pack_start(GTK_BOX(indicator_box),uinfo->discdb_indicator,
 		     TRUE,TRUE,0);
@@ -836,7 +836,7 @@ GtkWidget *MakeControls(GripInfo *ginfo)
 
   gtk_box_pack_start(GTK_BOX(hbox2),imagebox,FALSE,FALSE,0);
   gtk_widget_show(imagebox);
-  
+
   gtk_container_add(GTK_CONTAINER(lcdbox),hbox2);
   gtk_widget_show(hbox2);
 
@@ -1013,7 +1013,7 @@ GtkWidget *MakeControls(GripInfo *ginfo)
   g_signal_connect(G_OBJECT(button),"clicked",
   		     G_CALLBACK(ShutDownCB),(gpointer)ginfo);
   gtk_widget_show(button);
-  
+
   gtk_box_pack_start(GTK_BOX(uinfo->control_button_box),hbox,TRUE,TRUE,0);
   gtk_widget_show(hbox);
 
@@ -1311,7 +1311,7 @@ void StopPlayCB(GtkWidget *widget,gpointer data)
 
   if(ginfo->stop_first)
     SelectRow(ginfo,0);
-    
+
   TrayMenuShowPlay(ginfo);
 }
 
@@ -1336,7 +1336,7 @@ void PlayTrackCB(GtkWidget *widget,gpointer data)
   if(ginfo->ripping_a_disc) {
     show_warning(ginfo->gui_info.app,
                       _("Cannot play while ripping."));
-   
+
     return;
   }
 
@@ -1380,7 +1380,7 @@ void PlayTrackCB(GtkWidget *widget,gpointer data)
 static void PlayTrack(GripInfo *ginfo,int track)
 {
   Busy(&(ginfo->gui_info));
-  
+
   if(ginfo->play_mode==PM_NORMAL)
     CDPlayTrack(&(ginfo->disc),track+1,ginfo->disc.num_tracks);
   else CDPlayTrack(&(ginfo->disc),track+1,track+1);
@@ -1406,7 +1406,7 @@ void NextTrack(GripInfo *ginfo)
                       _("Cannot switch tracks while ripping."));
     return;
   }
-  
+
   CDStat(&(ginfo->disc),FALSE);
 
   if(ginfo->current_track_index<(ginfo->prog_totaltracks-1)) {
@@ -1492,11 +1492,11 @@ static void InitProgram(GripInfo *ginfo)
   }
   else {
     ginfo->prog_totaltracks=ginfo->disc.num_tracks;
-    
+
     for(track=0;track<ginfo->prog_totaltracks;track++) {
       ginfo->tracks_prog[track]=track;
     }
-    
+
     if(mode==PM_SHUFFLE)
       ShuffleTracks(ginfo);
   }
@@ -1510,7 +1510,7 @@ static void ShuffleTracks(GripInfo *ginfo)
   for(shuffle=0;shuffle<(ginfo->prog_totaltracks*10);shuffle++) {
     t1=RRand(ginfo->prog_totaltracks);
     t2=RRand(ginfo->prog_totaltracks);
-    
+
     tmp=ginfo->tracks_prog[t1];
     ginfo->tracks_prog[t1]=ginfo->tracks_prog[t2];
     ginfo->tracks_prog[t2]=tmp;
@@ -1531,10 +1531,10 @@ void CheckNewDisc(GripInfo *ginfo,gboolean force)
        && disc->disc_present
        && CDStat(disc,TRUE)) {
       Debug(_("CDStat found a disc, checking tracks\n"));
-      
+
       if(CheckTracks(disc)) {
 	Debug(_("We have a valid disc!\n"));
-	
+
 	new_id=DiscDBDiscid(disc);
 
 	InitProgram(ginfo);
@@ -1546,7 +1546,7 @@ void CheckNewDisc(GripInfo *ginfo,gboolean force)
 
 	    disc->curr_track = 1;
           }
-	
+
 	if(new_id || force) {
 	  ginfo->have_disc=TRUE;
 
@@ -1558,7 +1558,7 @@ void CheckNewDisc(GripInfo *ginfo,gboolean force)
       else {
 	if(ginfo->have_disc)
 	  ginfo->update_required=TRUE;
-	
+
 	ginfo->have_disc=FALSE;
 	Debug(_("No non-zero length tracks\n"));
       }
@@ -1618,7 +1618,7 @@ void UpdateDisplay(GripInfo *ginfo)
 
   uinfo=&(ginfo->gui_info);
   disc=&(ginfo->disc);
-  
+
   if(!uinfo->minimized) {
     if(uinfo->track_edit_visible) {
       gtk_window_get_size(GTK_WINDOW(uinfo->app),&uinfo->win_width,
@@ -1627,12 +1627,12 @@ void UpdateDisplay(GripInfo *ginfo)
     else
       gtk_window_get_size(GTK_WINDOW(uinfo->app),&uinfo->win_width,
                           &uinfo->win_height);
-    
+
     if(old_width &&
        (old_width != uinfo->track_list->allocation.width)) {
       ResizeTrackList(ginfo);
     }
-    
+
     old_width=uinfo->track_list->allocation.width;
   }
   else {
@@ -1660,7 +1660,7 @@ void UpdateDisplay(GripInfo *ginfo)
 
       if(!ginfo->rip_finished) {
 	CDStat(disc,FALSE);
-	
+
 	if(!disc->disc_present) {
 	  ginfo->have_disc=FALSE;
 	  ginfo->update_required=TRUE;
@@ -1701,23 +1701,23 @@ void UpdateDisplay(GripInfo *ginfo)
 	    secs=(disc->track_time.mins*60)+disc->track_time.secs;
 	    totsecs=(disc->track[CURRENT_TRACK].length.mins*60)+
 	      disc->track[CURRENT_TRACK].length.secs;
-	    
+
 	    totsecs-=secs;
-	    
+
 	    mins=totsecs/60;
 	    secs=totsecs%60;
 	    break;
 	  case TIME_MODE_LEFT_DISC:
 	    secs=(disc->disc_time.mins*60)+disc->disc_time.secs;
 	    totsecs=(disc->length.mins*60)+disc->length.secs;
-	    
+
 	    totsecs-=secs;
-	    
+
 	    mins=totsecs/60;
 	    secs=totsecs%60;
 	    break;
 	  }
-	  
+
 	  g_snprintf(buf,80,_("Current sector: %6d"),frames);
 	  gtk_label_set(GTK_LABEL(uinfo->play_sector_label),buf);
 
@@ -1742,15 +1742,15 @@ void UpdateDisplay(GripInfo *ginfo)
 	  frames=secs=mins=0;
 	  g_snprintf(buf,80,_("Current sector: %6d"),frames);
 	  gtk_label_set(GTK_LABEL(uinfo->play_sector_label),buf);
-	  
+
 	  strcpy(buf,"00:00");
-	  
+
 	  ginfo->stopped=FALSE;
 	  ginfo->playing=FALSE;
 	}
 	else return;
       }
-      
+
       gtk_label_set(GTK_LABEL(uinfo->play_time_label),buf);
       g_snprintf(icon_buf,sizeof(icon_buf),"%02d %s %s",
 		 disc->curr_track,buf,PACKAGE);
@@ -1768,9 +1768,9 @@ void UpdateDisplay(GripInfo *ginfo)
 		 disc->length.secs);
       g_snprintf(icon_buf, sizeof(icon_buf),"%02d %s %s",
 		 disc->curr_track,buf,PACKAGE);
-	       
+
       gtk_label_set(GTK_LABEL(uinfo->play_time_label),buf);
-      
+
       if(!ginfo->looking_up) {
 	CopyPixmap(GTK_PIXMAP(uinfo->empty_image),
 		   GTK_PIXMAP(uinfo->discdb_indicator));
@@ -1782,7 +1782,7 @@ void UpdateDisplay(GripInfo *ginfo)
 
 	ginfo->is_new_disc=FALSE;
       }
-      
+
       if(!ginfo->no_interrupt)
 	SelectRow(ginfo,0);
       else
@@ -1791,7 +1791,7 @@ void UpdateDisplay(GripInfo *ginfo)
     else {
       gtk_label_set(GTK_LABEL(uinfo->play_time_label),"--:--");
       strncpy(icon_buf,PACKAGE,sizeof(icon_buf));
-      
+
       SetCurrentTrack(ginfo,-1);
     }
 
@@ -1869,7 +1869,7 @@ void UpdateTracks(GripInfo *ginfo)
       else
 	g_snprintf(col_strings[0],260,"%02d  %s",track+1,
                    ddata->data_track[track].track_name);
-      
+
       g_snprintf(col_strings[1],6,"%2d:%02d",
 	       disc->track[track].length.mins,
 	       disc->track[track].length.secs);

@@ -4,8 +4,8 @@
  *
  *   http://www.nostatic.org/grip
  *
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License as 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
  * License, or (at your option) any later version.
  *
@@ -29,6 +29,7 @@
 #include "gripcfg.h"
 #include "dialog.h"
 #include "parsecfg.h"
+#include "common.h"
 
 static void UseProxyChanged(GtkWidget *widget,gpointer data);
 static void RipperSelected(GtkWidget *widget,gpointer data);
@@ -121,7 +122,7 @@ void MakeConfigPage(GripInfo *ginfo)
 			_("Don't interrupt playback on exit/startup"));
   gtk_box_pack_start(GTK_BOX(vbox),check,FALSE,FALSE,0);
   gtk_widget_show(check);
- 
+
   check=MakeCheckButton(NULL,&ginfo->stop_first,_("Rewind when stopped"));
   gtk_box_pack_start(GTK_BOX(vbox),check,FALSE,FALSE,0);
   gtk_widget_show(check);
@@ -155,7 +156,7 @@ void MakeConfigPage(GripInfo *ginfo)
 		     3);
   gtk_box_pack_start(GTK_BOX(vbox),entry,FALSE,FALSE,0);
   gtk_widget_show(entry);
-  
+
   gtk_container_add(GTK_CONTAINER(page),vbox);
   gtk_widget_show(vbox);
 
@@ -250,7 +251,7 @@ void MakeConfigPage(GripInfo *ginfo)
   label=gtk_label_new(_("Disable scratch"));
   gtk_box_pack_start(GTK_BOX(hbox),label,TRUE,TRUE,0);
   gtk_widget_show(label);
-  
+
   check=MakeCheckButton(NULL,&ginfo->disable_scratch_detect,_("detection"));
   gtk_box_pack_start(GTK_BOX(hbox),check,TRUE,TRUE,0);
   gtk_widget_show(check);
@@ -261,7 +262,7 @@ void MakeConfigPage(GripInfo *ginfo)
 
   gtk_box_pack_start(GTK_BOX(uinfo->rip_builtin_box),hbox,FALSE,FALSE,0);
   gtk_widget_show(hbox);
-  
+
   check=MakeCheckButton(NULL,&ginfo->calc_gain,
 			_("Calculate gain adjustment"));
   gtk_box_pack_start(GTK_BOX(uinfo->rip_builtin_box),check,FALSE,FALSE,0);
@@ -295,7 +296,7 @@ void MakeConfigPage(GripInfo *ginfo)
   entry=MakeNumEntry(NULL,&ginfo->ripnice,_("Rip 'nice' value"),3);
   gtk_box_pack_start(GTK_BOX(vbox),entry,FALSE,FALSE,0);
   gtk_widget_show(entry);
-  
+
   entry=MakeNumEntry(NULL,&ginfo->max_wavs,_("Max non-encoded .wav's"),3);
   gtk_box_pack_start(GTK_BOX(vbox),entry,FALSE,FALSE,0);
   gtk_widget_show(entry);
@@ -346,12 +347,12 @@ void MakeConfigPage(GripInfo *ginfo)
 						  255,TRUE);
   gtk_box_pack_start(GTK_BOX(vbox),entry,FALSE,FALSE,0);
   gtk_widget_show(entry);
-  
+
   entry=MakeStrEntry(NULL,ginfo->disc_filter_cmd,_("Disc filter command"),
 						  255,TRUE);
   gtk_box_pack_start(GTK_BOX(vbox),entry,FALSE,FALSE,0);
   gtk_widget_show(entry);
-  
+
   gtk_container_add(GTK_CONTAINER(page2),vbox);
   gtk_widget_show(vbox);
 
@@ -427,7 +428,7 @@ void MakeConfigPage(GripInfo *ginfo)
 		     10,TRUE);
   gtk_box_pack_start(GTK_BOX(vbox),entry,FALSE,FALSE,0);
   gtk_widget_show(entry);
-  
+
   entry=MakeStrEntry(NULL,ginfo->mp3fileformat,_("Encode file format"),
 		     255,TRUE);
   gtk_box_pack_start(GTK_BOX(vbox),entry,FALSE,FALSE,0);
@@ -472,15 +473,15 @@ void MakeConfigPage(GripInfo *ginfo)
 		     _("Encoding bitrate (kbits/sec)"),3);
   gtk_box_pack_start(GTK_BOX(vbox),entry,FALSE,FALSE,0);
   gtk_widget_show(entry);
-  
+
   entry=MakeNumEntry(NULL,&ginfo->edit_num_cpu,_("Number of CPUs to use"),3);
   gtk_box_pack_start(GTK_BOX(vbox),entry,FALSE,FALSE,0);
   gtk_widget_show(entry);
-  
+
   entry=MakeNumEntry(NULL,&ginfo->mp3nice,_("Encode 'nice' value"),3);
   gtk_box_pack_start(GTK_BOX(vbox),entry,FALSE,FALSE,0);
   gtk_widget_show(entry);
-  
+
   entry=MakeStrEntry(NULL,ginfo->mp3_filter_cmd,_("Encode filter command"),
 		     255,TRUE);
   gtk_box_pack_start(GTK_BOX(vbox),entry,FALSE,FALSE,0);
@@ -684,7 +685,7 @@ void MakeConfigPage(GripInfo *ginfo)
 			_("Do not lowercase filenames"));
   gtk_box_pack_start(GTK_BOX(vbox),check,FALSE,FALSE,0);
   gtk_widget_show(check);
-   
+
   check=MakeCheckButton(NULL,&ginfo->sprefs.allow_high_bits,
 			_("Allow high bits in filenames"));
   gtk_box_pack_start(GTK_BOX(vbox),check,FALSE,FALSE,0);
@@ -704,7 +705,7 @@ void MakeConfigPage(GripInfo *ginfo)
 		     _("Characters to not strip\nin filenames"),255,TRUE);
   gtk_box_pack_start(GTK_BOX(vbox),entry,FALSE,FALSE,0);
   gtk_widget_show(entry);
-  
+
   check=MakeCheckButton(NULL,&ginfo->show_tray_icon,
   			_("Show tray icon"));
   gtk_box_pack_start(GTK_BOX(vbox),check,FALSE,FALSE,0);
@@ -775,7 +776,7 @@ static void RipperSelected(GtkWidget *widget,gpointer data)
         gtk_entry_set_text(GTK_ENTRY(uinfo->ripexename_entry), buf);
       }
       else gtk_entry_set_text(GTK_ENTRY(uinfo->ripexename_entry),"");
-      
+
       gtk_entry_set_text(GTK_ENTRY(uinfo->ripcmdline_entry),rip->cmdline);
     }
   }
@@ -845,7 +846,7 @@ static void EncoderSelected(GtkWidget *widget,gpointer data)
     gtk_entry_set_text(GTK_ENTRY(uinfo->mp3cmdline_entry),buf);
 
     strcpy(buf,ginfo->mp3extension);
-    gtk_entry_set_text(GTK_ENTRY(uinfo->mp3extension_entry),buf);    
+    gtk_entry_set_text(GTK_ENTRY(uinfo->mp3extension_entry),buf);
   }
   else {
     if(strcmp(enc->name,"other")) {
@@ -853,7 +854,7 @@ static void EncoderSelected(GtkWidget *widget,gpointer data)
       gtk_entry_set_text(GTK_ENTRY(uinfo->mp3exename_entry),buf);
     }
     else gtk_entry_set_text(GTK_ENTRY(uinfo->mp3exename_entry),"");
-    
+
     gtk_entry_set_text(GTK_ENTRY(uinfo->mp3cmdline_entry),enc->cmdline);
     gtk_entry_set_text(GTK_ENTRY(uinfo->mp3extension_entry),enc->extension);
   }
