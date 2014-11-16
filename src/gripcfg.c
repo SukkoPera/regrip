@@ -20,8 +20,11 @@
  * USA
  */
 
+#include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <glib.h>
+#include <glib/gi18n.h>
 #include "grip.h"
 #include "gripcfg.h"
 #include "dialog.h"
@@ -815,7 +818,7 @@ void SaveRipperConfig(GripInfo *ginfo,int ripcfg)
           ripper_defaults[ripcfg].name);
 
   if(!SaveConfig(buf,"GRIP",2,rip_cfg_entries))
-    gnome_app_warning((GnomeApp *)ginfo->gui_info.app,
+    show_warning(ginfo->gui_info.app,
                       _("Error: Unable to save ripper config."));
 }
 
@@ -886,7 +889,7 @@ void SaveEncoderConfig(GripInfo *ginfo,int encodecfg)
           encoder_defaults[encodecfg].name);
 
   if(!SaveConfig(buf,"GRIP",2,encode_cfg_entries))
-    gnome_app_warning((GnomeApp *)ginfo->gui_info.app,
+    show_warning(ginfo->gui_info.app,
                       _("Error: Unable to save encoder config."));
 }
 

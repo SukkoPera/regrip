@@ -20,6 +20,8 @@
  * USA
  */
 
+#include <glib.h>
+#include <glib/gi18n.h>
 #include "tray.h"
 #include "../pixmaps/rip1.xpm"
 #include "../pixmaps/menuplay.xpm"

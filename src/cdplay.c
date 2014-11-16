@@ -20,6 +20,9 @@
  * USA
  */
 
+#include <stdlib.h>
+#include <glib.h>
+#include <glib/gi18n.h>
 #include "cdplay.h"
 #include "grip.h"
 #include "config.h"
@@ -79,7 +82,7 @@ static void DiscDBToggle(GtkWidget *widget,gpointer data)
   }
   else {
     if(ginfo->ripping_a_disc) {
-      gnome_app_warning((GnomeApp *)ginfo->gui_info.app,
+      show_warning(ginfo->gui_info.app,
                         _("Cannot do lookup while ripping."));
 
       return;
@@ -628,9 +631,10 @@ static void PlaylistChanged(GtkWindow *window,GtkWidget *widget,gpointer data)
   InitProgram(ginfo);
 
   if(DiscDBWriteDiscData(&(ginfo->disc),&(ginfo->ddata),NULL,TRUE,FALSE,
-                         "utf-8")<0)
-    gnome_app_warning((GnomeApp *)ginfo->gui_info.app,
+                         "utf-8")<0) {
+    show_warning(ginfo->gui_info.app,
                       _("Error saving disc data."));
+  }
 }
 
 static void ToggleLoop(GtkWidget *widget,gpointer data)
@@ -1169,7 +1173,7 @@ static void FastFwdCB(GtkWidget *widget,gpointer data)
   ginfo=(GripInfo *)data;
 
   if(ginfo->ripping_a_disc) {
-    gnome_app_warning((GnomeApp *)ginfo->gui_info.app,
+    show_warning(ginfo->gui_info.app,
                       _("Cannot fast forward while ripping."));
 
     return;
@@ -1200,7 +1204,7 @@ static void RewindCB(GtkWidget *widget,gpointer data)
   ginfo=(GripInfo *)data;
 
   if(ginfo->ripping_a_disc) {
-    gnome_app_warning((GnomeApp *)ginfo->gui_info.app,
+    show_warning(ginfo->gui_info.app,
                       _("Cannot rewind while ripping."));
 
     return;
@@ -1231,7 +1235,7 @@ static void NextDisc(GtkWidget *widget,gpointer data)
   ginfo=(GripInfo *)data;
 
   if(ginfo->ripping_a_disc) {
-    gnome_app_warning((GnomeApp *)ginfo->gui_info.app,
+    show_warning(ginfo->gui_info.app,
                       _("Cannot switch discs while ripping."));
 
     return;
@@ -1253,7 +1257,7 @@ void EjectDisc(GtkWidget *widget,gpointer data)
   LogStatus(ginfo,_("Eject disc\n"));
 
   if(ginfo->ripping_a_disc) {
-    gnome_app_warning((GnomeApp *)ginfo->gui_info.app,
+    show_warning(ginfo->gui_info.app,
                       _("Cannot eject while ripping."));
 
     return;
@@ -1330,7 +1334,7 @@ void PlayTrackCB(GtkWidget *widget,gpointer data)
   disc=&(ginfo->disc);
 
   if(ginfo->ripping_a_disc) {
-    gnome_app_warning((GnomeApp *)ginfo->gui_info.app,
+    show_warning(ginfo->gui_info.app,
                       _("Cannot play while ripping."));
    
     return;
@@ -1398,7 +1402,7 @@ void NextTrackCB(GtkWidget *widget,gpointer data)
 void NextTrack(GripInfo *ginfo)
 {
   if(ginfo->ripping_a_disc) {
-    gnome_app_warning((GnomeApp *)ginfo->gui_info.app,
+    show_warning(ginfo->gui_info.app,
                       _("Cannot switch tracks while ripping."));
     return;
   }
@@ -1429,7 +1433,7 @@ void PrevTrackCB(GtkWidget *widget,gpointer data)
 static void PrevTrack(GripInfo *ginfo)
 {
   if(ginfo->ripping_a_disc) {
-    gnome_app_warning((GnomeApp *)ginfo->gui_info.app,
+    show_warning(ginfo->gui_info.app,
                       _("Cannot switch tracks while ripping."));
     return;
   }
@@ -1887,13 +1891,14 @@ void UpdateTracks(GripInfo *ginfo)
   }
 
   if(ginfo->ask_submit) {
-    gnome_app_ok_cancel_modal
+/*    gnome_app_ok_cancel_modal
       ((GnomeApp *)uinfo->app,
        _("This disc has been found on your secondary server,\n"
        "but not on your primary server.\n\n"
        "Do you wish to submit this disc information?"),
-       SubmitEntry,(gpointer)ginfo);
-    
+       SubmitEntry,(gpointer)ginfo);*/
+       // FIXME
+
     ginfo->ask_submit=FALSE;
   }
 
@@ -1916,7 +1921,7 @@ void SubmitEntry(gint reply,gpointer data)
   fd = mkstemp(filename);
 
   if(fd == -1) {
-    gnome_app_warning((GnomeApp *)ginfo->gui_info.app,
+    show_warning(ginfo->gui_info.app,
                       _("Error: Unable to create temporary file."));
     return;
   }
@@ -1925,7 +1930,7 @@ void SubmitEntry(gint reply,gpointer data)
 
   if(!efp) {
     close(fd);
-    gnome_app_warning((GnomeApp *)ginfo->gui_info.app,
+    show_warning(ginfo->gui_info.app,
                       _("Error: Unable to create temporary file."));
   }
   else {
@@ -1943,7 +1948,7 @@ void SubmitEntry(gint reply,gpointer data)
     if(DiscDBWriteDiscData(&(ginfo->disc),&(ginfo->ddata),efp,FALSE,
 			   ginfo->db_use_freedb,ginfo->db_use_freedb?
 			   "UTF-8":ginfo->discdb_encoding)<0) {
-      gnome_app_warning((GnomeApp *)ginfo->gui_info.app,
+      show_warning(ginfo->gui_info.app,
                         _("Error: Unable to write disc data."));
       fclose(efp);
     }

@@ -21,16 +21,19 @@
  */
 
 #include <config.h>
-#include <gnome.h>
+#include <popt.h>
+#include <glib.h>
+#include <glib/gi18n.h>
 #include <stdlib.h>
 
 #include "grip.h"
 
-static gint KillSession(GnomeClient* client, gpointer client_data);
-static gint SaveSession(GnomeClient *client, gint phase, 
+//FIXME
+/*static gint KillSession(GnomeClient* client, gpointer client_data);
+static gint SaveSession(GnomeClient *client, gint phase,
 			GnomeSaveStyle save_style,
 			gint is_shutdown, GnomeInteractStyle interact_style,
-			gint is_fast, gpointer client_data);
+			gint is_fast, gpointer client_data);*/
 static gint TimeOut(gpointer data);
 
 gboolean do_debug=TRUE;
@@ -150,7 +153,7 @@ void Debug(char *fmt,...)
 
 int Cmain(int argc, char* argv[])
 {
-  GnomeClient *client;
+//  GnomeClient *client;
 
   /* Unbuffer stdout */
   setvbuf(stdout, 0, _IONBF, 0);
@@ -160,21 +163,22 @@ int Cmain(int argc, char* argv[])
   bindtextdomain(GETTEXT_PACKAGE,GNOMELOCALEDIR);
   textdomain(GETTEXT_PACKAGE);
 
-  gnome_program_init(PACKAGE,VERSION,LIBGNOMEUI_MODULE,argc,argv, 
+/*  gnome_program_init(PACKAGE,VERSION,LIBGNOMEUI_MODULE,argc,argv,
 		     GNOME_PARAM_POPT_TABLE,options,
-		     GNOME_PROGRAM_STANDARD_PROPERTIES,NULL);
+		     GNOME_PROGRAM_STANDARD_PROPERTIES,NULL);*/
 
+  gtk_init (&argc, &argv);
   bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF8");
   setenv("CHARSET","UTF-8",1);
 
   /* Session Management */
-  
-  client=gnome_master_client();
-  gtk_signal_connect(GTK_OBJECT(client),"save_yourself",
+// FIXME
+//  client=gnome_master_client();
+/*  gtk_signal_connect(GTK_OBJECT(client),"save_yourself",
 		     GTK_SIGNAL_FUNC(SaveSession),argv[0]);
   gtk_signal_connect(GTK_OBJECT(client),"die",
-		     GTK_SIGNAL_FUNC(KillSession),NULL);
-  
+		     GTK_SIGNAL_FUNC(KillSession),NULL);*/
+
 
   do_debug=verbose;
 
@@ -195,6 +199,8 @@ int Cmain(int argc, char* argv[])
 }
 
 /* Save the session */
+// FIXME
+#if 0
 static gint SaveSession(GnomeClient *client, gint phase,
 			GnomeSaveStyle save_style,
 			gint is_shutdown, GnomeInteractStyle interact_style,
@@ -222,6 +228,7 @@ static gint KillSession(GnomeClient* client, gpointer client_data)
 
   return TRUE;
 }
+#endif
 
 static gint TimeOut(gpointer data)
 {

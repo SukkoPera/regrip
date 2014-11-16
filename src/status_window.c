@@ -4,8 +4,8 @@
  *
  *   http://www.nostatic.org/grip
  *
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License as 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
  * License, or (at your option) any later version.
  *
@@ -20,8 +20,9 @@
  * USA
  */
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <vte/vte.h>
@@ -64,7 +65,7 @@ StatusWindow *NewStatusWindow(GtkWidget *box)
 
   sw->term_widget=vte_terminal_new();
 
-  
+
   vte_terminal_set_encoding(VTE_TERMINAL(sw->term_widget),"UTF-8");
 
   /*  vte_terminal_set_size(VTE_TERMINAL(sw->term_widget),40,10);*/
@@ -98,15 +99,15 @@ void StatusWindowWrite(StatusWindow *sw,char *msg)
       if(*msg=='\n') {
 	buf[pos++]='\r';
         buf[pos++]='\n';
-      } 
+      }
       else {
 	buf[pos++]=*msg;
       }
     }
-    
+
     msg++;
   }
-  
+
   buf[pos]='\0';
 
 

@@ -167,3 +167,13 @@ void UpdateGTK(void)
   while(gtk_events_pending())
     gtk_main_iteration();
 }
+
+void show_warning (GtkWidget *parentWin, char *text) {
+	GtkWidget *dialog = gtk_message_dialog_new (GTK_WINDOW (parentWin),
+						GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+						GTK_MESSAGE_WARNING, GTK_BUTTONS_OK,
+						text);
+	gtk_window_set_title (GTK_WINDOW (dialog), "Warning");
+	gtk_dialog_run (GTK_DIALOG (dialog) );
+	gtk_widget_destroy (dialog);
+}

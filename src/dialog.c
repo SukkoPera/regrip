@@ -23,12 +23,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <gtk/gtk.h>
-#include <gnome.h>
+#include <glib.h>
+#include <glib/gi18n.h>
 #include "dialog.h"
 
 void DisplayMsg(char *msg)
 {
-  gnome_ok_dialog(msg);
+//  gnome_ok_dialog(msg);
+// FIXME
 }
 
 void BoolDialog(char *question,char *yes,GtkSignalFunc yesfunc,

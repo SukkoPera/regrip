@@ -37,6 +37,8 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <pthread.h>
+#include <glib.h>
+#include <glib/gi18n.h>
 #include "rip.h"
 #include "dialog.h"
 #include "cdplay.h"
@@ -598,7 +600,7 @@ static gboolean AddM3U(GripInfo *ginfo)
 
   fp=fopen(conv_str, "w");
   if(fp==NULL) {
-    gnome_app_warning((GnomeApp *)ginfo->gui_info.app,
+    show_warning(ginfo->gui_info.app,
                       _("Error: can't open m3u file."));
     return FALSE;
   }
@@ -1266,7 +1268,7 @@ void DoRip(GtkWidget *widget,gpointer data)
   ginfo=(GripInfo *)data;
 
   if(!ginfo->have_disc) {
-    gnome_app_warning((GnomeApp *)ginfo->gui_info.app,
+    show_warning(ginfo->gui_info.app,
                       _("No disc was detected in the drive. If you have a disc in your drive, please check your CDRom device setting under Config->CD."));
     return;
   }
@@ -1275,7 +1277,7 @@ void DoRip(GtkWidget *widget,gpointer data)
   else ginfo->doencode=TRUE;
 
   if(!ginfo->using_builtin_cdp&&!FileExists(ginfo->ripexename)) {
-    gnome_app_warning((GnomeApp *)ginfo->gui_info.app,
+    show_warning(ginfo->gui_info.app,
                       _("Invalid rip executable.\nCheck your rip config, and ensure it specifies the full path to the ripper executable."));
 
     ginfo->doencode=FALSE;
@@ -1283,7 +1285,7 @@ void DoRip(GtkWidget *widget,gpointer data)
   }
 
   if(ginfo->doencode&&!FileExists(ginfo->mp3exename)) {
-    gnome_app_warning((GnomeApp *)ginfo->gui_info.app,
+    show_warning(ginfo->gui_info.app,
                       _("Invalid encoder executable.\nCheck your encoder config, and ensure it specifies the full path to the encoder executable."));
 
     ginfo->doencode=FALSE;
@@ -1318,10 +1320,11 @@ void DoRip(GtkWidget *widget,gpointer data)
   }
 
   if(NextTrackToRip(ginfo)==ginfo->disc.num_tracks) {
-    gnome_app_ok_cancel_modal
+/*    gnome_app_ok_cancel_modal
       ((GnomeApp *)ginfo->gui_info.app,
        _("No tracks selected.\nRip whole CD?\n"),
-       RipWholeCD,(gpointer)ginfo);
+       RipWholeCD,(gpointer)ginfo);*/
+       // FIXME
     return;
   }
   
@@ -1445,7 +1448,7 @@ static gboolean RipNextTrack(GripInfo *ginfo)
 
     MakeDirs(ginfo->ripfile);
     if(!CanWrite(ginfo->ripfile)) {
-      gnome_app_warning((GnomeApp *)ginfo->gui_info.app,
+      show_warning(ginfo->gui_info.app,
                         _("No write access to write wav file"));
       return FALSE;
     }
@@ -1489,7 +1492,7 @@ static gboolean RipNextTrack(GripInfo *ginfo)
     bytesleft=BytesLeftInFS(ginfo->ripfile);
 
     if(bytesleft<(ginfo->ripsize*1.5)) {
-      gnome_app_warning((GnomeApp *)ginfo->gui_info.app,
+      show_warning(ginfo->gui_info.app,
                         _("Out of space in output directory"));
 
       return FALSE;
@@ -1715,7 +1718,7 @@ static gboolean MP3Encode(GripInfo *ginfo)
 
   MakeDirs(ginfo->mp3file[cpu]);
   if(!CanWrite(ginfo->mp3file[cpu])) {
-    gnome_app_warning((GnomeApp *)ginfo->gui_info.app,
+    show_warning(ginfo->gui_info.app,
                       _("No write access to write encoded file."));
     return FALSE;
   }
@@ -1741,7 +1744,7 @@ static gboolean MP3Encode(GripInfo *ginfo)
 	  (gfloat)(ginfo->kbits_per_sec*1024)/600.0);
   
   if(bytesleft<(ginfo->mp3size[cpu]*1.5)) {
-    gnome_app_warning((GnomeApp *)ginfo->gui_info.app,
+    show_warning(ginfo->gui_info.app,
                       _("Out of space in output directory"));
     
     return FALSE;

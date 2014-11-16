@@ -28,6 +28,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <glib.h>
+#include <glib/gi18n.h>
 #include "grip.h"
 #include "common.h"
 #include "launch.h"

@@ -21,9 +21,9 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <gnome.h>
 #include "grip_id3.h"
 
 static void ID3Put(char *dest,char *src,int len,char *encoding);

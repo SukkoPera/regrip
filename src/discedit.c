@@ -20,6 +20,8 @@
  * USA
  */
 
+#include <glib.h>
+#include <glib/gi18n.h>
 #include "grip.h"
 #include "cdplay.h"
 #include "dialog.h"
@@ -386,10 +388,10 @@ static void SaveDiscInfo(GtkWidget *widget,gpointer data)
   if(ginfo->have_disc) {
     if(DiscDBWriteDiscData(&(ginfo->disc),&(ginfo->ddata),NULL,TRUE,FALSE,
                            "utf-8")<0)
-      gnome_app_warning((GnomeApp *)ginfo->gui_info.app,
+      show_warning(ginfo->gui_info.app,
                         _("Error saving disc data."));
   }
-  else gnome_app_warning((GnomeApp *)ginfo->gui_info.app,
+  else show_warning(ginfo->gui_info.app,
                          _("No disc present."));
 }
 
@@ -539,7 +541,7 @@ static void SubmitEntryCB(GtkWidget *widget,gpointer data)
   ginfo=(GripInfo *)data;
 
   if(!ginfo->have_disc) {
-    gnome_app_warning((GnomeApp *)ginfo->gui_info.app,
+    show_warning(ginfo->gui_info.app,
                       _("Cannot submit. No disc is present."));
 
     return;
@@ -554,14 +556,14 @@ static void SubmitEntryCB(GtkWidget *widget,gpointer data)
   }
 
   if(!*ginfo->ddata.data_title) {
-    gnome_app_warning((GnomeApp *)ginfo->gui_info.app,
+    show_warning(ginfo->gui_info.app,
                       _("You must enter a disc title."));
 
     return;
   }
 
   if(!*ginfo->ddata.data_artist) {
-    gnome_app_warning((GnomeApp *)ginfo->gui_info.app,
+    show_warning(ginfo->gui_info.app,
                       _("You must enter a disc artist."));
     
     return;
@@ -569,7 +571,7 @@ static void SubmitEntryCB(GtkWidget *widget,gpointer data)
 
   len=strlen(ginfo->discdb_submit_email);
 
-  if(!strncasecmp(ginfo->discdb_submit_email+(len-9),".cddb.com",9))
+/*  if(!strncasecmp(ginfo->discdb_submit_email+(len-9),".cddb.com",9))
     gnome_app_ok_cancel_modal
       ((GnomeApp *)ginfo->gui_info.app,
        _("You are about to submit this disc information\n"
@@ -582,7 +584,8 @@ static void SubmitEntryCB(GtkWidget *widget,gpointer data)
     gnome_app_ok_cancel_modal
       ((GnomeApp *)ginfo->gui_info.app,
        _("You are about to submit this\ndisc information via email.\n\n"
-       "Continue?"),(GnomeReplyCallback)SubmitEntry,(gpointer)ginfo);
+       "Continue?"),(GnomeReplyCallback)SubmitEntry,(gpointer)ginfo);*/
+       // FIXME
 }
 
 /* Make the user pick a DiscDB genre on submit*/

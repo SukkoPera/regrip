@@ -26,6 +26,8 @@
 #ifndef GRIP_DISCDB_H
 #define GRIP_DISCDB_H
 
+#include <stdio.h>
+
 /* HTTP proxy server structure */
 
 typedef struct _proxy_server {

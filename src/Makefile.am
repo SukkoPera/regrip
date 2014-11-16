@@ -1,4 +1,5 @@
 INCLUDES = -I$(top_srcdir) -I$(includedir) \
+	@GTK_CFLAGS@ \
 	-DGNOME_ICONDIR=\""$(datadir)/pixmaps"\" \
          -DG_LOG_DOMAIN=\"grip\" -DGNOMELOCALEDIR=\""$(datadir)/locale"\" \
         -I../intl -I$(top_srcdir)/intl \

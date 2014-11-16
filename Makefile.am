@@ -1,3 +1,5 @@
+ACLOCAL_AMFLAGS = -I m4
+
 SUBDIRS = po src pixmaps doc contrib
 
 EXTRA_DIST = \

@@ -20,6 +20,9 @@
  * USA
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <pthread.h>
 #include <config.h>
 #include <fcntl.h>
@@ -30,7 +33,8 @@
 #include <X11/Xlib.h>
 #include <time.h>
 #include "grip.h"
-#include <libgnomeui/gnome-window-icon.h>
+#include <glib.h>
+#include <glib/gi18n.h>
 #include "discdb.h"
 #include "cdplay.h"
 #include "discedit.h"
@@ -176,10 +180,14 @@ GtkWidget *GripNew(const gchar* geometry,char *device,char *scsi_device,
   int major,minor,point;
   char buf[256];
 
-  gnome_window_icon_set_default_from_file(GNOME_ICONDIR"/gripicon.png");
+// FIXME
+//  gnome_window_icon_set_default_from_file(GNOME_ICONDIR"/gripicon.png");
 
-  app=gnome_app_new(PACKAGE,_("Grip"));
- 
+//  app=gnome_app_new(PACKAGE,_("Grip"));
+  //app = gtk_application_new (NULL, G_APPLICATION_FLAGS_NONE);
+  app = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+  gtk_window_set_title (GTK_WINDOW(app), _("Grip"));
+
   ginfo=g_new0(GripInfo,1);
 
   gtk_object_set_user_data(GTK_OBJECT(app),(gpointer)ginfo);
@@ -306,8 +314,10 @@ GtkWidget *GripNew(const gchar* geometry,char *device,char *scsi_device,
   else
     gtk_box_pack_start(GTK_BOX(uinfo->winbox),uinfo->controls,FALSE,FALSE,0);
   gtk_widget_show(uinfo->controls);
-  
-  gnome_app_set_contents(GNOME_APP(app),uinfo->winbox);
+
+  // FIXME
+//  gnome_app_set_contents(GNOME_APP(app),uinfo->winbox);
+  gtk_container_add (GTK_CONTAINER (app),uinfo->winbox);
   gtk_widget_show(uinfo->winbox);
 
   CheckNewDisc(ginfo,FALSE);
@@ -320,7 +330,7 @@ GtkWidget *GripNew(const gchar* geometry,char *device,char *scsi_device,
 
     /* Check if we have a dev release */
     if(minor%2) {
-      gnome_app_warning((GnomeApp *)ginfo->gui_info.app,
+      show_warning(ginfo->gui_info.app,
                         _("This is a development version of Grip. If you encounter problems, you are encouraged to revert to the latest stable version."));
     }
   }
@@ -339,11 +349,12 @@ void GripDie(GtkWidget *widget,gpointer data)
   ginfo=(GripInfo *)gtk_object_get_user_data(GTK_OBJECT(widget));
   
 #ifndef GRIPCD
+/*
   if(ginfo->ripping_a_disc || ginfo->encoding)
     gnome_app_ok_cancel_modal((GnomeApp *)ginfo->gui_info.app,
 			      _("Work is in progress.\nReally shut down?"),
 			      ReallyDie,(gpointer)ginfo);
-  else ReallyDie(0,ginfo);
+  else ReallyDie(0,ginfo); FIXME*/
 #else
   ReallyDie(0,ginfo);
 #endif
@@ -473,7 +484,8 @@ static void DoHelp(GtkWidget *widget,gpointer data)
 
   section=(char *)data;
 
-  gnome_help_display("grip.xml",section,NULL);
+//  gnome_help_display("grip.xml",section,NULL);
+// FIXME
 }
 
 static void MakeHelpPage(GripInfo *ginfo)
@@ -918,7 +930,7 @@ static void DoLoadConfig(GripInfo *ginfo)
   if(confret<0) {
     /* Check if the config is out of date */
     if(confret==-2) {
-      gnome_app_warning((GnomeApp *)ginfo->gui_info.app,
+      show_warning(ginfo->gui_info.app,
                         _("Your config file is out of date -- "
                           "resetting to defaults.\n"
                           "You will need to re-configure Grip.\n"
@@ -1012,7 +1024,7 @@ void DoSaveConfig(GripInfo *ginfo)
   g_snprintf(filename,256,"%s/%s",getenv("HOME"),ginfo->config_filename);
 
   if(!SaveConfig(filename,"GRIP",2,cfg_entries))
-    gnome_app_warning((GnomeApp *)ginfo->gui_info.app,
+    show_warning(ginfo->gui_info.app,
                       _("Error: Unable to save config file."));
 
   SaveRipperConfig(ginfo,ginfo->selected_ripper);

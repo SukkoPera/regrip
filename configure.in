@@ -3,6 +3,7 @@ AC_PREREQ(2.52)
 AC_INIT(grip, 3.3.1, http://sf.net/tracker/?group_id=3714&atid=103714)
 AC_CONFIG_SRCDIR(src/main.c)
 AM_INIT_AUTOMAKE(AC_PACKAGE_NAME, AC_PACKAGE_VERSION)
+AC_CONFIG_MACRO_DIR([m4])
 
 AM_MAINTAINER_MODE
 AM_CONFIG_HEADER(config.h)
@@ -33,9 +34,9 @@ AC_CHECK_HEADERS(linux/soundcard.h machine/soundcard.h sys/soundcard.h sys/audio
 
 AM_PROG_LIBTOOL
 
-PKG_CHECK_MODULES(GNOME, libgnomeui-2.0 >= 2.2.0,
-                  [LIBS="$LIBS $GNOME_LIBS"
-                   CFLAGS="$CFLAGS $GNOME_CFLAGS"])
+dnl 2.10 was chosen randomly, there's a high probability another version
+dnl makes more sense :)
+AM_PATH_GTK_2_0([2.10.0],,AC_MSG_ERROR([Gtk+ 2.10.0 or higher required.]))
 
 PKG_CHECK_MODULES(TERMINAL_WIDGET, vte)
 CFLAGS="$TERMINAL_WIDGET_CFLAGS $CFLAGS"
