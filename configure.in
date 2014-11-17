@@ -129,5 +129,4 @@ po/Makefile.in
 pixmaps/Makefile
 doc/Makefile
 doc/C/Makefile
-contrib/Makefile
 ])

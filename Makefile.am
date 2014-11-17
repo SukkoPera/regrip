@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = po src pixmaps doc contrib
+SUBDIRS = po src pixmaps doc
 
 EXTRA_DIST = \
         grip.desktop \

@@ -16641,7 +16641,7 @@ LIBS=$id3_libs_bak
 
 
 
-ac_config_files="$ac_config_files Makefile grip.spec src/Makefile po/Makefile.in pixmaps/Makefile doc/Makefile doc/C/Makefile contrib/Makefile"
+ac_config_files="$ac_config_files Makefile grip.spec src/Makefile po/Makefile.in pixmaps/Makefile doc/Makefile doc/C/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -17755,7 +17755,6 @@ do
     "pixmaps/Makefile") CONFIG_FILES="$CONFIG_FILES pixmaps/Makefile" ;;
     "doc/Makefile") CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;
     "doc/C/Makefile") CONFIG_FILES="$CONFIG_FILES doc/C/Makefile" ;;
-    "contrib/Makefile") CONFIG_FILES="$CONFIG_FILES contrib/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
