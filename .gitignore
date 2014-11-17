@@ -13,3 +13,4 @@ src/grip
 libtool
 po/POTFILES
 configure
+*.gmo
