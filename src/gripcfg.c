@@ -451,11 +451,6 @@ void MakeConfigPage(GripInfo *ginfo)
   gtk_box_pack_start(GTK_BOX(vbox),check,FALSE,FALSE,0);
   gtk_widget_show(check);
 
-  check=MakeCheckButton(NULL,&ginfo->add_to_db,
-			_("Insert info into SQL database"));
-  gtk_box_pack_start(GTK_BOX(vbox),check,FALSE,FALSE,0);
-  gtk_widget_show(check);
-
   check=MakeCheckButton(NULL,&ginfo->add_m3u,_("Create .m3u files"));
   gtk_box_pack_start(GTK_BOX(vbox),check,FALSE,FALSE,0);
   gtk_widget_show(check);

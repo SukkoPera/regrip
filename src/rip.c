@@ -57,8 +57,6 @@ extern int rip_smile_level;
 static void RipPartialChanged(GtkWidget *widget,gpointer data);
 static void PlaySegmentCB(GtkWidget *widget,gpointer data);
 static GtkWidget *MakeRangeSelects(GripInfo *ginfo);
-static void AddSQLEntry(GripInfo *ginfo,EncodeTrack *enc_track);
-static void DBScan(GtkWidget *widget,gpointer data);
 static char *MakeRelative(char *file1,char *file2);
 static gboolean AddM3U(GripInfo *ginfo);
 static void ID3Add(GripInfo *ginfo,char *file,EncodeTrack *enc_track);
@@ -134,15 +132,6 @@ void MakeRipPage(GripInfo *ginfo)
 		       _("Kill rip process"),NULL);
   gtk_signal_connect(GTK_OBJECT(button),"clicked",
 		     GTK_SIGNAL_FUNC(KillRip),(gpointer)ginfo);
-  gtk_box_pack_start(GTK_BOX(vbox2),button,FALSE,FALSE,0);
-  gtk_widget_show(button);
-
-  button=gtk_button_new_with_label(_("DDJ Scan"));
-  gtk_tooltips_set_tip(MakeToolTip(),button,
-		       _("Insert disc information into the DigitalDJ database"),
-		       NULL);
-  gtk_signal_connect(GTK_OBJECT(button),"clicked",
-		     GTK_SIGNAL_FUNC(DBScan),(gpointer)ginfo);
   gtk_box_pack_start(GTK_BOX(vbox2),button,FALSE,FALSE,0);
   gtk_widget_show(button);
 
@@ -336,79 +325,6 @@ static GtkWidget *MakeRangeSelects(GripInfo *ginfo)
   gtk_widget_show(numentry);
 
   return vbox;
-}
-
-static void DBScan(GtkWidget *widget,gpointer data)
-{
-  GripInfo *ginfo;
-  int track;
-  EncodeTrack enc_track;
-  GString *str;
-
-  ginfo=(GripInfo *)data;
-
-  if(!ginfo->have_disc) return;
-
-  for(track=0;track<ginfo->disc.num_tracks;track++) {
-    FillInTrackInfo(ginfo,track,&enc_track);
-
-    str=g_string_new(NULL);
-
-    TranslateString(ginfo->mp3fileformat,str,TranslateSwitch,
-		    &enc_track,TRUE,&(ginfo->sprefs));
-
-    g_snprintf(enc_track.mp3_filename,256,"%s",str->str);
-    g_string_free(str,TRUE);
-
-    AddSQLEntry(ginfo,&enc_track);
-  }
-}
-
-static void AddSQLEntry(GripInfo *ginfo,EncodeTrack *enc_track)
-{
-  int sqlpid;
-  char track_str[4];
-  char frame_str[11];
-  char length_str[11];
-  char playtime_str[6];
-  char year_str[5];
-
-  g_snprintf(track_str,4,"%d",enc_track->track_num);
-  g_snprintf(frame_str,11,"%d",enc_track->start_frame);
-  g_snprintf(length_str,11,"%d",enc_track->end_frame-enc_track->start_frame);
-  g_snprintf(playtime_str,6,"%d:%d",enc_track->mins,enc_track->secs);
-  g_snprintf(year_str,5,"%d",enc_track->song_year);
-
-  LogStatus(ginfo,_("Inserting track %d into the ddj database\n"),
-	    enc_track->track_num);
-
-  sqlpid=fork();
-
-  if(sqlpid==0) {
-    CloseStuff(ginfo);
-
-    if(*enc_track->song_artist)
-      execlp("mp3insert","mp3insert",
-	    "-p",enc_track->mp3_filename,
-	    "-a",enc_track->disc_artist,
-	    "-i",enc_track->song_artist,
-	    "-t",enc_track->song_name,"-d",enc_track->disc_name,
-	    "-g",ID3GenreString(enc_track->id3_genre),"-y",year_str,
-	    "-n",track_str,
-	    "-f",frame_str,"-l",length_str,"-m",playtime_str,NULL);
-    else
-      execlp("mp3insert","mp3insert",
-	    "-p",enc_track->mp3_filename,
-	    "-a",enc_track->disc_artist,
-	    "-t",enc_track->song_name,"-d",enc_track->disc_name,
-	    "-g",ID3GenreString(enc_track->id3_genre),"-y",year_str,
-	    "-n",track_str,
-	    "-f",frame_str,"-l",length_str,"-m",playtime_str,NULL);
-
-    _exit(0);
-  }
-
-  waitpid(sqlpid,NULL,0);
 }
 
 gboolean IsDir(char *path)
@@ -1010,8 +926,6 @@ void UpdateRipProgress(GripInfo *ginfo)
           if(ginfo->doid3 || ginfo->doid3v2)
 	    ID3Add(ginfo,ginfo->mp3file[mycpu],
 		   ginfo->encoded_track[mycpu]);
-
-	  if(ginfo->add_to_db) AddSQLEntry(ginfo,ginfo->encoded_track[mycpu]);
 
 	  if(*ginfo->mp3_filter_cmd)
 	    TranslateAndLaunch(ginfo->mp3_filter_cmd,TranslateSwitch,

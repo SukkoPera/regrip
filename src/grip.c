@@ -76,7 +76,6 @@ void DoSaveConfig(GripInfo *ginfo);
 {"delete_wavs",CFG_ENTRY_BOOL,0,&ginfo->delete_wavs},\
 {"add_m3u",CFG_ENTRY_BOOL,0,&ginfo->add_m3u},\
 {"rel_m3u",CFG_ENTRY_BOOL,0,&ginfo->rel_m3u},\
-{"add_to_db",CFG_ENTRY_BOOL,0,&ginfo->add_to_db},\
 {"use_proxy",CFG_ENTRY_BOOL,0,&ginfo->use_proxy},\
 {"proxy_name",CFG_ENTRY_STRING,256,ginfo->proxy_server.name},\
 {"proxy_port",CFG_ENTRY_INT,0,&(ginfo->proxy_server.port)},\
@@ -917,7 +916,6 @@ static void DoLoadConfig(GripInfo *ginfo)
   ginfo->mp3nice=0;
   *ginfo->mp3_filter_cmd='\0';
   ginfo->delete_wavs=TRUE;
-  ginfo->add_to_db=FALSE;
   ginfo->add_m3u=TRUE;
   ginfo->rel_m3u=TRUE;
   strcpy(ginfo->m3ufileformat,"~/mp3/%A-%d.m3u");

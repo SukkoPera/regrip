@@ -54,8 +54,7 @@
       frontend for MP3 (and other audio format) encoders, letting you take a
       disc and transform it easily straight into MP3s. Internet disc lookups
       are supported for retrieving track information from disc database
-      servers. Grip works with DigitalDJ to provide a unified "computerized"
-      version of your music collection.</para>
+      servers.</para>
   </sect1>
   
   <sect1 id="cdplayer">
@@ -331,12 +330,6 @@
           <para><guilabel>Abort Ripping Only</guilabel> &mdash; Clicking
             this button will abort ripping, but will leave encoding
             running.</para>
-        </listitem>
-        
-        <listitem>
-          <para><guilabel>DDJ Scan</guilabel> &mdash; Clicking this button
-            will insert all track information for the current disc into
-            DigitalDJ's database (if it is installed)</para>
         </listitem>
         
         <listitem>
@@ -783,12 +776,6 @@
           <para><guilabel>Delete .wav after encoding</guilabel> &mdash; If
             this option is checked, Grip will delete wav files after it has
             finished encoding them.</para>
-        </listitem>
-
-        <listitem>
-          <para><guilabel>Insert info into SQL database</guilabel> &mdash; If
-            this option is checked, Grip will insert track meta-data into the
-            DigitalDJ database (if it is installed).</para>
         </listitem>
 
         <listitem>

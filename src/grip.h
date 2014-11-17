@@ -4,8 +4,8 @@
  *
  *   http://www.nostatic.org/grip
  *
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License as 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
  * License, or (at your option) any later version.
  *
@@ -179,7 +179,7 @@ typedef struct _grip_gui {
   GtkWidget *smile_pix[8];
 
   GtkWidget *play_pix[3];
-  
+
   /* notification area widgets */
   EggTrayIcon *tray_icon;
   GtkTooltips *tray_tips;
@@ -313,7 +313,6 @@ typedef struct _grip_info {
   char mp3fileformat[256];
   char mp3exename[256];
   gboolean delete_wavs;
-  gboolean add_to_db;
   gboolean add_m3u;
   gboolean rel_m3u;
   char m3ufileformat[256];
@@ -328,16 +327,16 @@ typedef struct _grip_info {
   char cdupdate[256];
   StrTransPrefs sprefs;
   gboolean keep_min_size;
-  
+
   /* some vars for use in TrayIconUpdate */
   gfloat rip_percent;
   gfloat enc_percent;
-  
+
   gfloat rip_tot_percent;
   gfloat enc_tot_percent;
 
   gboolean app_visible;
-  
+
   gboolean show_tray_icon;
   gboolean tray_icon_made;
   gboolean tray_menu_sensitive;
