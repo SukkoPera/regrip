@@ -4,8 +4,8 @@
  *
  *   http://www.nostatic.org/grip
  *
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License as 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
  * License, or (at your option) any later version.
  *
@@ -24,6 +24,8 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <glib.h>
+#include <glib/gi18n.h>
 #include "grip_id3.h"
 
 static void ID3Put(char *dest,char *src,int len,char *encoding);
@@ -236,7 +238,7 @@ gboolean ID3v2TagFile(char *filename, char *title, char *artist, char *album,
   ID3Frame *frames[ NUM_FRAMES ];
   int i;
   gboolean retval = TRUE;
-  luint frm_offset;
+  luint frm_offset __attribute__ ((unused));
   mode_t mask;
   char *conv_str;
   gsize rb,wb;
@@ -244,54 +246,55 @@ gboolean ID3v2TagFile(char *filename, char *title, char *artist, char *album,
   tag = ID3Tag_New();
 
   if(tag) {
+    // I guess this should throw an exception? -sukko
     frm_offset=ID3Tag_Link(tag,filename);
     /* GRR. No error. */
-    
+
     for ( i = 0; i < NUM_FRAMES; i++ ) {
       frames[ i ] = ID3Frame_NewID( frameids[ i ] );
-      
+
       if ( frames[ i ] ) {
 	char *c_data = NULL;
 	char gen[ 6 ] = "(   )"; /* max unsigned char: 255 */
 	char trk[ 3 ] = "  "; /* max CDDA tracks: 99 */
-	
+
 	switch( frameids[ i ] ) {
 	case ID3FID_TITLE:
 	  c_data = title;
 	  break;
-	  
+
 	case ID3FID_LEADARTIST:
 	  c_data = artist;
 	  break;
-	  
+
 	case ID3FID_ALBUM:
 	  c_data = album;
 	  break;
-	  
+
 	case ID3FID_YEAR:
 	  c_data = year;
 	  break;
-	  
+
 	case ID3FID_COMMENT:
 	  c_data = comment;
 	  break;
-	  
+
 	case ID3FID_CONTENTTYPE:
 	  c_data = gen;
 	  snprintf( gen, 6, "(%d)", genre );
 	  break;
-	  
+
 	case ID3FID_TRACKNUM:
 	  c_data = trk;
 	  snprintf( trk, 3, "%d", tracknum );
 	  break;
-	  
+
 	default:
 	  /* Doh! */
 	  g_printerr(_("unknown ID3 field\n"));
 	  break;
 	}
-	
+
 	if(c_data != NULL) {
 	  field = ID3Frame_GetField( frames[i], ID3FN_TEXT );
 
@@ -300,13 +303,13 @@ gboolean ID3v2TagFile(char *filename, char *title, char *artist, char *album,
 	      ID3Field_SetUNICODE(field,(unicode_t *)c_data);
 	    }
 	    else {
-            */     
+            */
 
             /* Always encode pretending it is ascii */
-            
+
             conv_str=g_convert_with_fallback(c_data,strlen(c_data),id3v2_encoding,
                                "utf-8",NULL,&rb,&wb,NULL);
-            
+
             if(!conv_str) {
               printf("***convert failed\n");
 
@@ -314,7 +317,7 @@ gboolean ID3v2TagFile(char *filename, char *title, char *artist, char *album,
             }
 
             ID3Field_SetASCII(field,conv_str);
-            
+
             g_free(conv_str);
 	  } else {
 	    retval = FALSE;
@@ -337,11 +340,11 @@ gboolean ID3v2TagFile(char *filename, char *title, char *artist, char *album,
 	ID3Tag_AddFrame( tag, frames[ i ] );
       }
     }
-    
+
     if(ID3Tag_UpdateByTagType(tag,ID3TT_ID3V2) != ID3E_NoError ) {
       retval = FALSE;
     }
-    
+
     ID3Tag_Delete( tag );
 
     /* Reset permissions based on users umask to work around a bug in the
@@ -353,7 +356,7 @@ gboolean ID3v2TagFile(char *filename, char *title, char *artist, char *album,
   } else { /* Tag -> new() failed */
     retval = FALSE;
   }
-  
+
   return retval;
 }
 
@@ -442,11 +445,11 @@ ID3Genre *ID3GenreByNum(int num)
 int ID3GenreValue(char *genre)
 {
   int pos;
-  
+
   for(pos=0;id3_genres[pos].name;pos++)
     if(!strcasecmp(genre,id3_genres[pos].name))
       return id3_genres[pos].num;
-  
+
   return 12;
 }
 
