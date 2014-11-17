@@ -4,8 +4,8 @@
  *
  *   http://www.nostatic.org/grip
  *
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License as 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
  * License, or (at your option) any later version.
  *
@@ -46,7 +46,8 @@
 #include "parsecfg.h"
 #include "tray.h"
 
-static void ReallyDie(gint reply,gpointer data);
+static gboolean gripDieOnWinCloseCB (GtkWidget *widget, GdkEvent *event, gpointer data);
+static void ReallyDie(GtkDialog *dialog,gint reply,gpointer data);
 static void MakeStatusPage(GripInfo *ginfo);
 static void DoHelp(GtkWidget *widget,gpointer data);
 static void MakeHelpPage(GripInfo *ginfo);
@@ -156,7 +157,7 @@ gboolean AppWindowStateCB(GtkWidget *widget, GdkEventWindowState *event, gpointe
   GripInfo *ginfo = (GripInfo*)data;
   GripGUI *uinfo = &(ginfo->gui_info);
   GdkWindowState state = event->new_window_state;
-	
+
   if ((state & GDK_WINDOW_STATE_WITHDRAWN) || (state & GDK_WINDOW_STATE_ICONIFIED)) {
     ginfo->app_visible = FALSE;
     return TRUE;
@@ -165,7 +166,7 @@ gboolean AppWindowStateCB(GtkWidget *widget, GdkEventWindowState *event, gpointe
     gtk_window_get_position(GTK_WINDOW(uinfo->app), &uinfo->x, &uinfo->y);
     return TRUE;
   }
-	
+
   return FALSE;
 }
 
@@ -183,8 +184,6 @@ GtkWidget *GripNew(const gchar* geometry,char *device,char *scsi_device,
 // FIXME
 //  gnome_window_icon_set_default_from_file(GNOME_ICONDIR"/gripicon.png");
 
-//  app=gnome_app_new(PACKAGE,_("Grip"));
-  //app = gtk_application_new (NULL, G_APPLICATION_FLAGS_NONE);
   app = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   gtk_window_set_title (GTK_WINDOW(app), _("Grip"));
 
@@ -207,13 +206,13 @@ GtkWidget *GripNew(const gchar* geometry,char *device,char *scsi_device,
 
   /*  if(geometry != NULL) {
     gint x,y,w,h;
-    
-    if(gnome_parse_geometry(geometry, 
+
+    if(gnome_parse_geometry(geometry,
 			    &x,&y,&w,&h)) {
       if(x != -1) {
 	gtk_widget_set_uposition(app,x,y);
       }
-      
+
       if(w != -1) {
         uinfo->win_width=w;
         uinfo->win_height=h;
@@ -252,8 +251,8 @@ GtkWidget *GripNew(const gchar* geometry,char *device,char *scsi_device,
 
   gtk_window_set_policy(GTK_WINDOW(app),FALSE,TRUE,FALSE);
   gtk_window_set_wmclass(GTK_WINDOW(app),"grip","Grip");
-  g_signal_connect(G_OBJECT(app),"delete_event",
-		   G_CALLBACK(GripDie),NULL);
+  g_signal_connect(G_OBJECT(app), "delete_event",
+		   G_CALLBACK (gripDieOnWinCloseCB), ginfo);
 
   if(uinfo->minimized) {
     gtk_widget_set_size_request(GTK_WIDGET(app),MIN_WINWIDTH,
@@ -307,7 +306,7 @@ GtkWidget *GripNew(const gchar* geometry,char *device,char *scsi_device,
   uinfo->playopts=MakePlayOpts(ginfo);
   gtk_box_pack_start(GTK_BOX(uinfo->winbox),uinfo->playopts,FALSE,FALSE,0);
   if(uinfo->track_prog_visible) gtk_widget_show(uinfo->playopts);
- 
+
   uinfo->controls=MakeControls(ginfo);
   if(uinfo->minimized)
     gtk_box_pack_start(GTK_BOX(uinfo->winbox),uinfo->controls,TRUE,TRUE,0);
@@ -315,8 +314,6 @@ GtkWidget *GripNew(const gchar* geometry,char *device,char *scsi_device,
     gtk_box_pack_start(GTK_BOX(uinfo->winbox),uinfo->controls,FALSE,FALSE,0);
   gtk_widget_show(uinfo->controls);
 
-  // FIXME
-//  gnome_app_set_contents(GNOME_APP(app),uinfo->winbox);
   gtk_container_add (GTK_CONTAINER (app),uinfo->winbox);
   gtk_widget_show(uinfo->winbox);
 
@@ -342,29 +339,44 @@ GtkWidget *GripNew(const gchar* geometry,char *device,char *scsi_device,
   return app;
 }
 
-void GripDie(GtkWidget *widget,gpointer data)
-{
+static gboolean gripDieOnWinCloseCB (GtkWidget *widget, GdkEvent *event, gpointer data) {
+    GripDie (widget, data);
+
+    return TRUE;
+}
+
+void GripDie(GtkWidget *widget, gpointer data) {
   GripInfo *ginfo;
 
-  ginfo=(GripInfo *)gtk_object_get_user_data(GTK_OBJECT(widget));
-  
+//  ginfo=(GripInfo *)gtk_object_get_user_data(GTK_OBJECT(widget));
+  ginfo = (GripInfo *) data;
+
 #ifndef GRIPCD
-/*
-  if(ginfo->ripping_a_disc || ginfo->encoding)
-    gnome_app_ok_cancel_modal((GnomeApp *)ginfo->gui_info.app,
-			      _("Work is in progress.\nReally shut down?"),
-			      ReallyDie,(gpointer)ginfo);
-  else ReallyDie(0,ginfo); FIXME*/
+  if(ginfo->ripping_a_disc || ginfo->encoding) {
+    GtkWidget *dialog = gtk_message_dialog_new (GTK_WINDOW (ginfo->gui_info.app),
+						GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+						GTK_MESSAGE_WARNING, GTK_BUTTONS_YES_NO,
+						_("Work is in progress.\nReally shut down?"));
+//	gtk_window_set_title (GTK_WINDOW (dialog), "Warning");
+    g_signal_connect (dialog,
+                     "response",
+                     G_CALLBACK (ReallyDie),
+                     ginfo);
+	gtk_dialog_run (GTK_DIALOG (dialog));
+	gtk_widget_destroy (dialog);
+  } else {
+      ReallyDie(NULL,GTK_RESPONSE_YES,ginfo);
+  }
 #else
-  ReallyDie(0,ginfo);
+  ReallyDie(NULL,GTK_RESPONSE_YES,ginfo);
 #endif
 }
 
-static void ReallyDie(gint reply,gpointer data)
-{
+static void ReallyDie(GtkDialog *dialog, gint reply, gpointer data) {
   GripInfo *ginfo;
 
-  if(reply) return;
+  if(reply != GTK_RESPONSE_YES)
+    return;
 
   ginfo=(GripInfo *)data;
 
@@ -605,7 +617,7 @@ void MakeAboutPage(GripGUI *uinfo)
 
   gtk_box_pack_start(GTK_BOX(vbox2),hbox,FALSE,FALSE,0);
   gtk_widget_show(hbox);
-  
+
 
   gtk_container_add(GTK_CONTAINER(vbox),vbox2);
   gtk_widget_show(vbox2);
@@ -626,10 +638,10 @@ static void MakeStyles(GripGUI *uinfo)
 
   gdk_color_white(gdk_colormap_get_system(),&gdkwhite);
   gdk_color_black(gdk_colormap_get_system(),&gdkblack);
-  
+
   color_LCD=MakeColor(33686,38273,29557);
   color_dark_grey=MakeColor(0x4444,0x4444,0x4444);
-  
+
   uinfo->style_wb=MakeStyle(&gdkwhite,&gdkblack,FALSE);
   uinfo->style_LCD=MakeStyle(color_LCD,color_LCD,FALSE);
   uinfo->style_dark_grey=MakeStyle(&gdkwhite,color_dark_grey,TRUE);
@@ -727,7 +739,7 @@ void GripUpdate(GtkWidget *app)
 
     UpdateDisplay(ginfo);
   }
-  
+
   UpdateTray(ginfo);
 }
 
@@ -748,7 +760,7 @@ void UnBusy(GripGUI *uinfo)
 static void DoLoadConfig(GripInfo *ginfo)
 {
   GripGUI *uinfo=&(ginfo->gui_info);
-  char filename[256];
+  gchar *filename;
   char renamefile[256];
   char *proxy_env,*tok;
   char outputdir[256];
@@ -923,7 +935,7 @@ static void DoLoadConfig(GripInfo *ginfo)
   *ginfo->sprefs.allow_these_chars='\0';
   ginfo->show_tray_icon=TRUE;
 
-  sprintf(filename,"%s/%s",getenv("HOME"),ginfo->config_filename);
+  filename = g_build_filename (g_get_home_dir(), ginfo->config_filename, NULL);
 
   confret=LoadConfig(filename,"GRIP",2,2,cfg_entries);
 
@@ -965,6 +977,8 @@ static void DoLoadConfig(GripInfo *ginfo)
   }
 #endif
 
+  g_free (filename);
+
   ginfo->dbserver2.use_proxy=ginfo->dbserver.use_proxy=ginfo->use_proxy;
   ginfo->dbserver2.proxy=ginfo->dbserver.proxy;
 
@@ -981,7 +995,7 @@ static void DoLoadConfig(GripInfo *ginfo)
       host = "localhost";
 
     user = getenv("USER");
-    if(!user) 
+    if(!user)
       user = getenv("USERNAME");
     if(!user)
       user = "user";
@@ -993,17 +1007,17 @@ static void DoLoadConfig(GripInfo *ginfo)
     proxy_env=getenv("http_proxy");
 
     if(proxy_env) {
-      
+
       /* Skip the "http://" if it's present */
-      
+
       if(!strncasecmp(proxy_env,"http://",7)) proxy_env+=7;
-      
+
       tok=strtok(proxy_env,":");
       if(tok) strncpy(ginfo->proxy_server.name,tok,256);
-      
+
       tok=strtok(NULL,"/");
       if(tok) ginfo->proxy_server.port=atoi(tok);
-      
+
       Debug(_("server is %s, port %d\n"),ginfo->proxy_server.name,
 	    ginfo->proxy_server.port);
     }
@@ -1012,7 +1026,7 @@ static void DoLoadConfig(GripInfo *ginfo)
 
 void DoSaveConfig(GripInfo *ginfo)
 {
-  char filename[256];
+  gchar *filename;
   GripGUI *uinfo=&(ginfo->gui_info);
   CFGEntry cfg_entries[]={
     CFG_ENTRIES
@@ -1021,7 +1035,7 @@ void DoSaveConfig(GripInfo *ginfo)
 
   if(ginfo->edit_num_cpu>MAX_NUM_CPU) ginfo->edit_num_cpu=MAX_NUM_CPU;
 
-  g_snprintf(filename,256,"%s/%s",getenv("HOME"),ginfo->config_filename);
+  filename = g_build_filename (g_get_home_dir(), ginfo->config_filename, NULL);
 
   if(!SaveConfig(filename,"GRIP",2,cfg_entries))
     show_warning(ginfo->gui_info.app,
@@ -1029,6 +1043,8 @@ void DoSaveConfig(GripInfo *ginfo)
 
   SaveRipperConfig(ginfo,ginfo->selected_ripper);
   SaveEncoderConfig(ginfo,ginfo->selected_encoder);
+
+  g_free (filename);
 }
 
 /* Shut down stuff (generally before an exec) */

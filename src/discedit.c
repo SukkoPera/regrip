@@ -4,8 +4,8 @@
  *
  *   http://www.nostatic.org/grip
  *
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License as 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
  * License, or (at your option) any later version.
  *
@@ -443,10 +443,10 @@ void TrackEditChanged(GtkWidget *widget,gpointer data)
 
   strcpy(ginfo->ddata.data_track[CURRENT_TRACK].track_name,
          gtk_entry_get_text(GTK_ENTRY(ginfo->gui_info.track_edit_entry)));
-  
+
   strcpy(ginfo->ddata.data_track[CURRENT_TRACK].track_artist,
          gtk_entry_get_text(GTK_ENTRY(ginfo->gui_info.track_artist_edit_entry)));
-  
+
   if(*ginfo->ddata.data_track[CURRENT_TRACK].track_artist)
     g_snprintf(newname,256,"%02d  %s (%s)",CURRENT_TRACK+1,
                ginfo->ddata.data_track[CURRENT_TRACK].track_name,
@@ -523,7 +523,7 @@ static void SplitTitleArtist(GtkWidget *widget,gpointer data)
 		     ginfo->ddata.data_track[track].track_name,
 		     ginfo->ddata.data_track[track].track_artist,
 		     ginfo->title_split_chars);
-    else 
+    else
       SeparateFields(ginfo->ddata.data_track[track].track_name,
 		     ginfo->ddata.data_track[track].track_artist,
 		     ginfo->ddata.data_track[track].track_name,
@@ -565,27 +565,42 @@ static void SubmitEntryCB(GtkWidget *widget,gpointer data)
   if(!*ginfo->ddata.data_artist) {
     show_warning(ginfo->gui_info.app,
                       _("You must enter a disc artist."));
-    
+
     return;
   }
 
   len=strlen(ginfo->discdb_submit_email);
 
-/*  if(!strncasecmp(ginfo->discdb_submit_email+(len-9),".cddb.com",9))
-    gnome_app_ok_cancel_modal
-      ((GnomeApp *)ginfo->gui_info.app,
-       _("You are about to submit this disc information\n"
-       "to a commercial CDDB server, which will then\n"
-       "own the data that you submit. These servers make\n"
-       "a profit out of your effort. We suggest that you\n"
-       "support free servers instead.\n\nContinue?"),
-       (GnomeReplyCallback)SubmitEntry,(gpointer)ginfo);
-  else
-    gnome_app_ok_cancel_modal
-      ((GnomeApp *)ginfo->gui_info.app,
-       _("You are about to submit this\ndisc information via email.\n\n"
-       "Continue?"),(GnomeReplyCallback)SubmitEntry,(gpointer)ginfo);*/
-       // FIXME
+  if (strncasecmp (ginfo -> discdb_submit_email + (len - 9), ".cddb.com", 9) == 0) {
+    GtkWidget *dialog = gtk_message_dialog_new (GTK_WINDOW (ginfo->gui_info.app),
+						GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+						GTK_MESSAGE_WARNING, GTK_BUTTONS_YES_NO,
+						_("You are about to submit this disc information\n"
+                        "to a commercial CDDB server, which will then\n"
+                        "own the data that you submit. These servers make\n"
+                        "a profit out of your effort. We suggest that you\n"
+                        "support free servers instead.\n\nContinue?"));
+//	gtk_window_set_title (GTK_WINDOW (dialog), "Warning");
+    g_signal_connect (dialog,
+                     "response",
+                     G_CALLBACK (SubmitEntry),
+                     ginfo);
+	gtk_dialog_run (GTK_DIALOG (dialog));
+	gtk_widget_destroy (dialog);
+  } else {
+    GtkWidget *dialog = gtk_message_dialog_new (GTK_WINDOW (ginfo->gui_info.app),
+						GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+						GTK_MESSAGE_WARNING, GTK_BUTTONS_YES_NO,
+						_("You are about to submit this\ndisc information via email.\n\n"
+                        "Continue?"));
+//	gtk_window_set_title (GTK_WINDOW (dialog), "Warning");
+    g_signal_connect (dialog,
+                     "response",
+                     G_CALLBACK (SubmitEntry),
+                     ginfo);
+	gtk_dialog_run (GTK_DIALOG (dialog));
+	gtk_widget_destroy (dialog);
+  }
 }
 
 /* Make the user pick a DiscDB genre on submit*/

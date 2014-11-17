@@ -69,7 +69,7 @@ static void ShutDownCB(GtkWidget *widget,gpointer data)
 
   ginfo=(GripInfo *)data;
 
-  GripDie(ginfo->gui_info.app,NULL);
+  GripDie(ginfo->gui_info.app,ginfo);
 }
 
 static void DiscDBToggle(GtkWidget *widget,gpointer data)
@@ -603,7 +603,7 @@ static void SelectionChanged(GtkTreeSelection *selection,gpointer data)
   int row=-1;
   GripInfo *ginfo;
   GripGUI *uinfo;
- 
+
   ginfo=(GripInfo *)data;
   uinfo=&(ginfo->gui_info);
 
@@ -1891,13 +1891,19 @@ void UpdateTracks(GripInfo *ginfo)
   }
 
   if(ginfo->ask_submit) {
-/*    gnome_app_ok_cancel_modal
-      ((GnomeApp *)uinfo->app,
-       _("This disc has been found on your secondary server,\n"
-       "but not on your primary server.\n\n"
-       "Do you wish to submit this disc information?"),
-       SubmitEntry,(gpointer)ginfo);*/
-       // FIXME
+    GtkWidget *dialog = gtk_message_dialog_new (GTK_WINDOW (uinfo->app),
+						GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+						GTK_MESSAGE_WARNING, GTK_BUTTONS_YES_NO,
+						_("This disc has been found on your secondary server,\n"
+                        "but not on your primary server.\n\n"
+                        "Do you wish to submit this disc information?"));
+//	gtk_window_set_title (GTK_WINDOW (dialog), "Warning");
+    g_signal_connect (dialog,
+                     "response",
+                     G_CALLBACK (SubmitEntry),
+                     ginfo);
+	gtk_dialog_run (GTK_DIALOG (dialog));
+	gtk_widget_destroy (dialog);
 
     ginfo->ask_submit=FALSE;
   }
@@ -1905,15 +1911,15 @@ void UpdateTracks(GripInfo *ginfo)
   ginfo->first_time=0;
 }
 
-void SubmitEntry(gint reply,gpointer data)
-{
+void SubmitEntry(GtkDialog *dialog, gint reply, gpointer data) {
   GripInfo *ginfo;
   int fd;
   FILE *efp;
   char mailcmd[256];
   char filename[256];
 
-  if(reply) return;
+  if(reply != GTK_RESPONSE_YES)
+    return;
 
   ginfo=(GripInfo *)data;
 

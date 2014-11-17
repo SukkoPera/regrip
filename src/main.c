@@ -4,8 +4,8 @@
  *
  *   http://www.nostatic.org/grip
  *
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License as 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
  * License, or (at your option) any later version.
  *
@@ -28,12 +28,6 @@
 
 #include "grip.h"
 
-//FIXME
-/*static gint KillSession(GnomeClient* client, gpointer client_data);
-static gint SaveSession(GnomeClient *client, gint phase,
-			GnomeSaveStyle save_style,
-			gint is_shutdown, GnomeInteractStyle interact_style,
-			gint is_fast, gpointer client_data);*/
 static gint TimeOut(gpointer data);
 
 gboolean do_debug=TRUE;
@@ -50,7 +44,7 @@ static int no_redirect=FALSE;
 static int verbose=FALSE;
 
 struct poptOption options[] = {
-  { 
+  {
     "geometry",
     '\0',
     POPT_ARG_STRING,
@@ -68,7 +62,7 @@ struct poptOption options[] = {
     N_("Specify the config file to use (in your home dir)"),
     N_("CONFIG")
   },
-  { 
+  {
     "device",
     '\0',
     POPT_ARG_STRING,
@@ -77,7 +71,7 @@ struct poptOption options[] = {
     N_("Specify the cdrom device to use"),
     N_("DEVICE")
   },
-  { 
+  {
     "scsi-device",
     '\0',
     POPT_ARG_STRING,
@@ -86,7 +80,7 @@ struct poptOption options[] = {
     N_("Specify the generic scsi device to use"),
     N_("DEVICE")
   },
-  { 
+  {
     "small",
     '\0',
     POPT_ARG_NONE,
@@ -95,7 +89,7 @@ struct poptOption options[] = {
     N_("Launch in \"small\" (cd-only) mode"),
     NULL
   },
-  { 
+  {
     "local",
     '\0',
     POPT_ARG_NONE,
@@ -104,7 +98,7 @@ struct poptOption options[] = {
     N_("\"Local\" mode -- do not look up disc info on the net"),
     NULL
   },
-  { 
+  {
     "no-redirect",
     '\0',
     POPT_ARG_NONE,
@@ -113,7 +107,7 @@ struct poptOption options[] = {
     N_("Do not do I/O redirection"),
     NULL
   },
-  { 
+  {
     "verbose",
     '\0',
     POPT_ARG_NONE,
@@ -151,9 +145,7 @@ void Debug(char *fmt,...)
   va_end(args);
 }
 
-int Cmain(int argc, char* argv[])
-{
-//  GnomeClient *client;
+int Cmain (int argc, char* argv[]) {
 
   /* Unbuffer stdout */
   setvbuf(stdout, 0, _IONBF, 0);
@@ -163,22 +155,8 @@ int Cmain(int argc, char* argv[])
   bindtextdomain(GETTEXT_PACKAGE,GNOMELOCALEDIR);
   textdomain(GETTEXT_PACKAGE);
 
-/*  gnome_program_init(PACKAGE,VERSION,LIBGNOMEUI_MODULE,argc,argv,
-		     GNOME_PARAM_POPT_TABLE,options,
-		     GNOME_PROGRAM_STANDARD_PROPERTIES,NULL);*/
-
   gtk_init (&argc, &argv);
   bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF8");
-  setenv("CHARSET","UTF-8",1);
-
-  /* Session Management */
-// FIXME
-//  client=gnome_master_client();
-/*  gtk_signal_connect(GTK_OBJECT(client),"save_yourself",
-		     GTK_SIGNAL_FUNC(SaveSession),argv[0]);
-  gtk_signal_connect(GTK_OBJECT(client),"die",
-		     GTK_SIGNAL_FUNC(KillSession),NULL);*/
-
 
   do_debug=verbose;
 
@@ -197,38 +175,6 @@ int Cmain(int argc, char* argv[])
 
   return 0;
 }
-
-/* Save the session */
-// FIXME
-#if 0
-static gint SaveSession(GnomeClient *client, gint phase,
-			GnomeSaveStyle save_style,
-			gint is_shutdown, GnomeInteractStyle interact_style,
-			gint is_fast, gpointer client_data)
-{
-  gchar** argv;
-  guint argc;
-
-  /* allocate 0-filled, so it will be NULL-terminated */
-  argv = g_malloc0(sizeof(gchar*)*4);
-  argc = 1;
-
-  argv[0] = client_data;
-
-  gnome_client_set_clone_command(client, argc, argv);
-  gnome_client_set_restart_command(client, argc, argv);
-
-  return TRUE;
-}
-
-/* Kill Session */
-static gint KillSession(GnomeClient* client, gpointer client_data)
-{
-  gtk_main_quit();
-
-  return TRUE;
-}
-#endif
 
 static gint TimeOut(gpointer data)
 {

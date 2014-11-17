@@ -66,7 +66,7 @@ static void DoWavFilter(GripInfo *ginfo);
 static void DoDiscFilter(GripInfo *ginfo);
 static void RipIsFinished(GripInfo *ginfo,gboolean aborted);
 static void CheckDupNames(GripInfo *ginfo);
-static void RipWholeCD(gint reply,gpointer data);
+static void RipWholeCD(GtkDialog *dialog, gint reply, gpointer data);
 static int NextTrackToRip(GripInfo *ginfo);
 static gboolean RipNextTrack(GripInfo *ginfo);
 #ifdef CDPAR
@@ -1318,11 +1318,17 @@ void DoRip(GtkWidget *widget,gpointer data)
   }
 
   if(NextTrackToRip(ginfo)==ginfo->disc.num_tracks) {
-/*    gnome_app_ok_cancel_modal
-      ((GnomeApp *)ginfo->gui_info.app,
-       _("No tracks selected.\nRip whole CD?\n"),
-       RipWholeCD,(gpointer)ginfo);*/
-       // FIXME
+    GtkWidget *dialog = gtk_message_dialog_new (GTK_WINDOW (ginfo->gui_info.app),
+						GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+						GTK_MESSAGE_WARNING, GTK_BUTTONS_YES_NO,
+						_("No tracks selected.\nRip whole CD?\n"));
+//	gtk_window_set_title (GTK_WINDOW (dialog), "Warning");
+    g_signal_connect (dialog,
+                     "response",
+                     G_CALLBACK (RipWholeCD),
+                     ginfo);
+	gtk_dialog_run (GTK_DIALOG (dialog));
+	gtk_widget_destroy (dialog);
     return;
   }
 
@@ -1337,12 +1343,12 @@ void DoRip(GtkWidget *widget,gpointer data)
   }
 }
 
-static void RipWholeCD(gint reply,gpointer data)
-{
+static void RipWholeCD (GtkDialog *dialog, gint reply, gpointer data) {
   int track;
   GripInfo *ginfo;
 
-  if(reply) return;
+  if(reply != GTK_RESPONSE_YES)
+    return;
 
   Debug(_("Ripping whole CD\n"));
 
