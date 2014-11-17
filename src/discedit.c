@@ -137,7 +137,7 @@ GtkWidget *MakeEditBox(GripInfo *ginfo)
       id3_genre_count++) {
     item = gtk_list_item_new_with_label(id3_genre->name);
     gtk_object_set_user_data(GTK_OBJECT(item),
-			     (gpointer)(id3_genre->num));
+			     GINT_TO_POINTER(id3_genre->num));
     uinfo->id3_genre_item_list=g_list_append(uinfo->id3_genre_item_list,item);
     gtk_signal_connect(GTK_OBJECT(item),"select",
 		       GTK_SIGNAL_FUNC(ID3GenreChanged),
@@ -483,7 +483,7 @@ static void ID3GenreChanged(GtkWidget *widget,gpointer data)
 
   ginfo=(GripInfo *)data;
 
-  ginfo->ddata.data_id3genre=(int)gtk_object_get_user_data(GTK_OBJECT(widget));
+  ginfo->ddata.data_id3genre=GPOINTER_TO_INT(gtk_object_get_user_data(GTK_OBJECT(widget)));
   /*  ginfo->ddata.data_genre=ID32DiscDB(ginfo->ddata.data_id3genre);*/
 }
 
@@ -515,7 +515,7 @@ static void SplitTitleArtist(GtkWidget *widget,gpointer data)
   int mode;
 
   ginfo=(GripInfo *)data;
-  mode=(int)gtk_object_get_user_data(GTK_OBJECT(widget));
+  mode=GPOINTER_TO_INT (gtk_object_get_user_data(GTK_OBJECT(widget)));
 
   for(track=0;track<ginfo->disc.num_tracks;track++) {
     if(mode==0)
@@ -637,7 +637,7 @@ static void GetDiscDBGenre(GripInfo *ginfo)
   for(genre=0;genre<12;genre++) {
     item=gtk_list_item_new_with_label(DiscDBGenre(genre));
     gtk_object_set_user_data(GTK_OBJECT(item),
-			     (gpointer)genre);
+			     GINT_TO_POINTER (genre));
     gtk_signal_connect(GTK_OBJECT(item), "select",
 		       GTK_SIGNAL_FUNC(DiscDBGenreChanged),(gpointer)ginfo);
     gtk_container_add(GTK_CONTAINER(GTK_COMBO(genre_combo)->list),item);
@@ -682,5 +682,5 @@ static void DiscDBGenreChanged(GtkWidget *widget,gpointer data)
 
   ginfo=(GripInfo *)data;
 
-  ginfo->ddata.data_genre=(int)gtk_object_get_user_data(GTK_OBJECT(widget));
+  ginfo->ddata.data_genre=GPOINTER_TO_INT(gtk_object_get_user_data(GTK_OBJECT(widget)));
 }

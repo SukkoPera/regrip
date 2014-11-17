@@ -7,8 +7,8 @@
  *
  *   http://www.nostatic.org/grip
  *
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License as 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
  * License, or (at your option) any later version.
  *
@@ -57,7 +57,7 @@ static inline int bigendianp(void){
 }
 
 static inline size16 swap16(size16 x){
-  return((((unsigned size16)x & 0x00ffU) <<  8) | 
+  return((((unsigned size16)x & 0x00ffU) <<  8) |
          (((unsigned size16)x & 0xff00U) >>  8));
 }
 
@@ -107,12 +107,12 @@ static void WriteWav(int f,long bytes)
 
 static void CDPCallback(long inpos,int function)
 {
-  static long c_sector=0,v_sector=0;
+  static long c_sector=0/*,v_sector=0*/;
   static int last=0;
   static long lasttime=0;
   long sector,osector=0;
   struct timeval thistime;
-  static char heartbeat=' ';
+//  static char heartbeat=' ';
   static int overlap=0;
   static int slevel=0;
   static int slast=0;
@@ -121,17 +121,17 @@ static void CDPCallback(long inpos,int function)
 
   osector=inpos;
   sector=inpos/CD_FRAMEWORDS;
-    
+
   if(function==-2){
-    v_sector=sector;
+//    v_sector=sector;
     return;
   }
 
   if(function==-1){
     last=8;
-    heartbeat='*';
+//    heartbeat='*';
     slevel=0;
-    v_sector=sector;
+//    v_sector=sector;
   } else
     switch(function){
     case PARANOIA_CB_VERIFY:
@@ -145,7 +145,7 @@ static void CDPCallback(long inpos,int function)
     case PARANOIA_CB_READ:
       if(sector>c_sector)c_sector=sector;
       break;
-      
+
     case PARANOIA_CB_FIXUP_EDGE:
       if(stimeout>=5) {
 	if(overlap>CD_FRAMEWORDS)
@@ -177,11 +177,11 @@ static void CDPCallback(long inpos,int function)
       slevel=5;
       break;
     }
-  
-  
+
+
   gettimeofday(&thistime,NULL);
   test=thistime.tv_sec*10+thistime.tv_usec/100000;
-  
+
   if(lasttime!=test || function==-1 || slast!=slevel){
     if(lasttime!=test || function==-1){
       last++;
@@ -190,25 +190,25 @@ static void CDPCallback(long inpos,int function)
       stimeout++;
       switch(last){
       case 0:
-	heartbeat=' ';
+//	heartbeat=' ';
 	break;
       case 1:case 7:
-	heartbeat='.';
+//	heartbeat='.';
 	break;
       case 2:case 6:
-	heartbeat='o';
+//	heartbeat='o';
 	break;
-      case 3:case 5:  
-	heartbeat='0';
+      case 3:case 5:
+//	heartbeat='0';
 	break;
       case 4:
-	heartbeat='O';
+//	heartbeat='O';
 	break;
       }
 
-      if(function==-1)
-	heartbeat='*';
-      
+//      if(function==-1)
+//	heartbeat='*';
+
     }
     if(slast!=slevel){
       stimeout=0;
@@ -283,7 +283,7 @@ gboolean CDPRip(char *device,char *generic_scsi_device,int track,
   if(generic_scsi_device && *generic_scsi_device)
     d=cdda_identify_scsi(generic_scsi_device,device,verbose,NULL);
   else  d=cdda_identify(device,verbose,NULL);
-  
+
   if(!d){
     if(!verbose)
       fprintf(output_fp,"\nUnable to open cdrom drive.\n");
@@ -371,7 +371,7 @@ gboolean CDPRip(char *device,char *generic_scsi_device,int track,
 	    "         and then recompiling the kernel.\n\n"
 	    "         Attempting to continue...\n\n");
   }
-  
+
   if(d->nsectors==1){
     fprintf(output_fp,
 	    "WARNING: The autosensed/selected sectors per read value is\n"
@@ -395,18 +395,18 @@ gboolean CDPRip(char *device,char *generic_scsi_device,int track,
   paranoia_modeset(p,paranoia_mode);
 
   if(force_cdrom_overlap!=-1) paranoia_overlapset(p,force_cdrom_overlap);
-    
+
   if(verbose)
     cdda_verbose_set(d,CDDA_MESSAGE_LOGIT,CDDA_MESSAGE_LOGIT);
   else
     cdda_verbose_set(d,CDDA_MESSAGE_FORGETIT,CDDA_MESSAGE_FORGETIT);
-    
-  paranoia_seek(p,cursor=first_sector,SEEK_SET);      
-    
+
+  paranoia_seek(p,cursor=first_sector,SEEK_SET);
+
   /* this is probably a good idea in general */
   /*  seteuid(getuid());
       setegid(getgid());*/
-    
+
   out=open(outfile,O_RDWR|O_CREAT|O_TRUNC,0666);
   if(out==-1){
     fprintf(output_fp,"Cannot open default output file %s: %s",outfile,
@@ -416,11 +416,11 @@ gboolean CDPRip(char *device,char *generic_scsi_device,int track,
 
     return FALSE;
   }
-      
+
   WriteWav(out,(last_sector-first_sector+1)*CD_FRAMESIZE_RAW);
-      
+
   /* Off we go! */
-      
+
   while(cursor<=last_sector){
     /* read a sector */
     gint16 *readbuf=paranoia_read(p,CDPCallback);
@@ -428,12 +428,12 @@ gboolean CDPRip(char *device,char *generic_scsi_device,int track,
     char *mes=cdda_messages(d);
 
     *rip_percent_done=(gfloat)cursor/(gfloat)last_sector;
-	
+
     if(mes || err)
       fprintf(output_fp,"\r                               "
 	      "                                           \r%s%s\n",
 	      mes?mes:"",err?err:"");
-	
+
     if(err)free(err);
     if(mes)free(mes);
 
@@ -450,41 +450,41 @@ gboolean CDPRip(char *device,char *generic_scsi_device,int track,
     if(readbuf==NULL){
       fprintf(output_fp,"\nparanoia_read: Unrecoverable error, bailing.\n");
       cursor=last_sector+1;
-      paranoia_seek(p,cursor,SEEK_SET);      
+      paranoia_seek(p,cursor,SEEK_SET);
       break;
     }
-	
+
     cursor++;
-	
+
     if(output_endian!=bigendianp()){
       for(i=0;i<CD_FRAMESIZE_RAW/2;i++)
 	readbuf[i]=swap16(readbuf[i]);
     }
-	
+
     CDPCallback(cursor*(CD_FRAMEWORDS)-1,-2);
 
     if(do_gain_calc)
       GainCalc((char *)readbuf);
-	
+
     if(CDPWrite(out,(char *)readbuf)){
       fprintf(output_fp,"Error writing output: %s",strerror(errno));
-	  
+
       cdda_close(d);
       paranoia_free(p);
 
       return FALSE;
     }
-	
+
     if(output_endian!=bigendianp()){
       for(i=0;i<CD_FRAMESIZE_RAW/2;i++)readbuf[i]=swap16(readbuf[i]);
     }
   }
-  
+
   CDPCallback(cursor*(CD_FRAMESIZE_RAW/2)-1,-1);
   close(out);
-    
+
   paranoia_free(p);
-  
+
   cdda_close(d);
 
   return TRUE;

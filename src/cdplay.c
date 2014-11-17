@@ -149,21 +149,21 @@ void LookupDisc(GripInfo *ginfo,gboolean manual)
 static void DoLookup(void *data)
 {
   GripInfo *ginfo;
-  gboolean discdb_found=FALSE;
+  //gboolean discdb_found=FALSE;
 
   ginfo=(GripInfo *)data;
 
   if(!DiscDBLookupDisc(ginfo,&(ginfo->dbserver))) {
     if(*(ginfo->dbserver2.name)) {
       if(DiscDBLookupDisc(ginfo,&(ginfo->dbserver2))) {
-        discdb_found=TRUE;
+//        discdb_found=TRUE;
         ginfo->ask_submit=TRUE;
       }
     }
   }
-  else {
-    discdb_found=TRUE;
-  }
+//  else {
+//    discdb_found=TRUE;
+//  }
 
   if(ginfo->ddata.data_id3genre==-1)
     ginfo->ddata.data_id3genre=DiscDB2ID3(ginfo->ddata.data_genre);
@@ -273,7 +273,6 @@ void ResizeTrackList(GripInfo *ginfo)
   GtkWidget *track_list;
   GtkTreeViewColumn *column;
   int tot_width=0;
-  PangoLayout *layout;
 
   track_list=ginfo->gui_info.track_list;
 
@@ -602,10 +601,10 @@ static void SelectionChanged(GtkTreeSelection *selection,gpointer data)
   GtkTreeModel *model;
   int row=-1;
   GripInfo *ginfo;
-  GripGUI *uinfo;
+//  GripGUI *uinfo;
 
   ginfo=(GripInfo *)data;
-  uinfo=&(ginfo->gui_info);
+//  uinfo=&(ginfo->gui_info);
 
   if(gtk_tree_selection_get_selected(selection,&model,&iter)) {
     gtk_tree_model_get(model,&iter,TRACKLIST_NUM_COL,&row,-1);

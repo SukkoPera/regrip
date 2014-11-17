@@ -66,12 +66,12 @@ static MP3Encoder encoder_defaults[]={{"bladeenc","-%b -QUIT %w %m","mp3"},
 				      {"",""}
 };
 
-static CFGEntry encoder_cfg_entries[]={
-  {"name",CFG_ENTRY_STRING,256,NULL},
-  {"cmdline",CFG_ENTRY_STRING,256,NULL},
-  {"exe",CFG_ENTRY_STRING,256,NULL},
-  {"extension",CFG_ENTRY_STRING,10,NULL}
-};
+//static CFGEntry encoder_cfg_entries[]={
+//  {"name",CFG_ENTRY_STRING,256,NULL},
+//  {"cmdline",CFG_ENTRY_STRING,256,NULL},
+//  {"exe",CFG_ENTRY_STRING,256,NULL},
+//  {"extension",CFG_ENTRY_STRING,10,NULL}
+//};
 
 static void UseProxyChanged(GtkWidget *widget,gpointer data)
 {
@@ -789,19 +789,26 @@ static void RipperSelected(GtkWidget *widget,gpointer data)
 
 gboolean LoadRipperConfig(GripInfo *ginfo,int ripcfg)
 {
-  char buf[256];
+  gchar *tmp, *buf;
+  gboolean ret;
   CFGEntry rip_cfg_entries[]={
     RIP_CFG_ENTRIES
   };
 
 #ifdef CDPAR
-  if(ripcfg==0) return;
+  if(ripcfg==0)
+    return FALSE;       // Is FALSE correct here? -sukko
 #endif
 
-  sprintf(buf,"%s/%s-%s",getenv("HOME"),ginfo->config_filename,
-          ripper_defaults[ripcfg].name);
+  tmp = g_strdup_printf ("%s-%s", ginfo->config_filename, ripper_defaults[ripcfg].name);
+  buf = g_build_filename (g_get_home_dir (), tmp, NULL);
+  g_free (tmp);
 
-  return (LoadConfig(buf,"GRIP",2,2,rip_cfg_entries)==1);
+  ret = LoadConfig(buf,"GRIP",2,2,rip_cfg_entries) == 1;
+
+  g_free (buf);
+
+  return ret;
 }
 
 void SaveRipperConfig(GripInfo *ginfo,int ripcfg)
