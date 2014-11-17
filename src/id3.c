@@ -252,8 +252,8 @@ gboolean ID3v2TagFile(char *filename, char *title, char *artist, char *album,
       
       if ( frames[ i ] ) {
 	char *c_data = NULL;
-	char gen[ 5 ] = "(   )";
-	char trk[ 4 ] = "   ";
+	char gen[ 6 ] = "(   )"; /* max unsigned char: 255 */
+	char trk[ 3 ] = "  "; /* max CDDA tracks: 99 */
 	
 	switch( frameids[ i ] ) {
 	case ID3FID_TITLE:
@@ -278,12 +278,12 @@ gboolean ID3v2TagFile(char *filename, char *title, char *artist, char *album,
 	  
 	case ID3FID_CONTENTTYPE:
 	  c_data = gen;
-	  sprintf( gen, "(%d)", genre ); /* XXX */
+	  snprintf( gen, 6, "(%d)", genre );
 	  break;
 	  
 	case ID3FID_TRACKNUM:
 	  c_data = trk;
-	  sprintf( trk, "%d", tracknum ); /* XXX */
+	  snprintf( trk, 3, "%d", tracknum );
 	  break;
 	  
 	default:
