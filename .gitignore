@@ -5,3 +5,8 @@ config.h
 config.log
 config.status
 grip.spec
+stamp-h1
+autom4te.cache
+Makefile.in
+config.h.in
+src/grip
