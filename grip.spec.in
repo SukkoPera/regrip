@@ -35,8 +35,7 @@ capabilities of cdparanoia built in, but can also use external rippers (such
 as cdda2wav). It also provides an automated frontend for MP3 (and other
 audio format) encoders, letting you take a disc and transform it easily
 straight into MP3s. Internet disc lookups are supported for retrieving track
-information from disc database servers. Grip works with DigitalDJ to provide
-a unified "computerized" version of your music collection.
+information from disc database servers.
 
 %description -l zh_CN
 Grip 是一个可以在 GNOME 桌面环境下运行的 CD 音乐播放器和抓轨器。它可以使用
@@ -67,8 +66,6 @@ pour les encodeurs MP3 (ou d'autres format audio), permettant simplement
 de prendre un disque et de le transformer en MP3. La r閏up閞ation des noms 
 sur Internet permet 間alement d'avoir les informations sur les pistes 
 aupr鑣 des serveurs CDDB.
-Grip fonctionne 間alement avec DigitalDJ pour fournir une version unifi閑
-informatique de votre discoth鑡ue.
 
 %description -l de
 Grip ist ein CD-Spieler und CD-Ripper f黵 den Gnome Desktop. Die F鋒igkeiten
@@ -76,8 +73,7 @@ von cdparanoia sind statisch mit eingebunden, es k鰊nen aber auch externe
 Ripper (wie cdda2wav) verwendet werden. Grip dient auch als automatisiertes
 Front-End f黵 MP3/OGG/... Kodierer und erm鰃licht somit eine Audio-CD einfach
 in MP3s zu verwandeln. Aus dem Internet k鰊nen Titelinformationen von CDDB
-Datenbank-Servern abgerufen werden. Grip arbeitet zusammen mit DigitalDJ um
-eine einheitliche "computerisierte" Musikkollektion anbieten zu k鰊nen.
+Datenbank-Servern abgerufen werden.
 
 
 %prep
