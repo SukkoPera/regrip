@@ -12,3 +12,4 @@ config.h.in
 src/grip
 libtool
 po/POTFILES
+configure
