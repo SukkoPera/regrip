@@ -5,7 +5,7 @@
  *
  * All changes Copyright 1999-2004 by Mike Oliphant (grip@nostatic.org)
  *
- *   http://www.nostatic.org/grip
+ *   http://sourceforge.net/projects/grip/
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as

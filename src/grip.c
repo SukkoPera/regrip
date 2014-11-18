@@ -2,7 +2,7 @@
  *
  * Copyright (c) 1998-2004  Mike Oliphant <grip@nostatic.org>
  *
- *   http://www.nostatic.org/grip
+ *   http://sourceforge.net/projects/grip/
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -630,7 +630,12 @@ void MakeAboutPage(GripGUI *uinfo)
   gtk_box_pack_start(GTK_BOX(vbox2),label,FALSE,FALSE,0);
   gtk_widget_show(label);
 
-  label=gtk_label_new("Copyright 1998-2005, Mike Oliphant");
+  label=gtk_label_new("Copyright 1998-2014, Mike Oliphant");
+  gtk_widget_set_style(label,uinfo->style_wb);
+  gtk_box_pack_start(GTK_BOX(vbox2),label,FALSE,FALSE,0);
+  gtk_widget_show(label);
+
+  label=gtk_label_new("De-gnomization by Giorgio Moscardi");
   gtk_widget_set_style(label,uinfo->style_wb);
   gtk_box_pack_start(GTK_BOX(vbox2),label,FALSE,FALSE,0);
   gtk_widget_show(label);
@@ -644,7 +649,7 @@ void MakeAboutPage(GripGUI *uinfo)
 
   hbox=gtk_hbox_new(TRUE,0);
 
-  button=gtk_button_new_with_label("http://www.nostatic.org/grip");
+  button=gtk_button_new_with_label("http://sourceforge.net/projects/grip/");
   gtk_widget_set_style(button,uinfo->style_dark_grey);
   gtk_widget_set_style(GTK_BIN(button)->child,
 		       uinfo->style_dark_grey);
@@ -687,7 +692,7 @@ static void MakeStyles(GripGUI *uinfo)
 
 static void Homepage(void)
 {
-  system("gnome-moz-remote http://www.nostatic.org/grip");
+  system("xdg-open http://sourceforge.net/projects/grip/");
 }
 
 static void LoadImages(GripGUI *uinfo)
