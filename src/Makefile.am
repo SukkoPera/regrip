@@ -1,6 +1,9 @@
+HELP_DIR = $(datadir)/help/grip/C
+
 INCLUDES = -I$(top_srcdir) -I$(includedir) \
 	@GTK_CFLAGS@ \
 	-DGNOME_ICONDIR=\""$(datadir)/pixmaps"\" \
+	-DHELP_DIR=\""$(HELP_DIR)"\" \
          -DG_LOG_DOMAIN=\"grip\" -DGNOMELOCALEDIR=\""$(datadir)/locale"\" \
         -I../intl -I$(top_srcdir)/intl \
 	-DPREFIX=\""$(prefix)"\" \
@@ -49,6 +52,6 @@ grip_SOURCES =         \
 	eggtrayicon.c \
 	eggtrayicon.h \
 	tray.c \
-	tray.h 
+	tray.h
 
 grip_LDADD = @TERMINAL_WIDGET_LIBS@ $(CDPAR_LIBS) $(ID3_LIBS)

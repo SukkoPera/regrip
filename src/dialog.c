@@ -27,14 +27,13 @@
 #include <glib/gi18n.h>
 #include "dialog.h"
 
-void DisplayMsg(char *msg)
-{
+void DisplayError (char *msg) {
 	GtkWidget *dialog = gtk_message_dialog_new (NULL,
 						GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
-						GTK_MESSAGE_INFO, GTK_BUTTONS_OK,
+						GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE,
 						msg);
-//	gtk_window_set_title (GTK_WINDOW (dialog), "Message");
-	gtk_dialog_run (GTK_DIALOG (dialog) );
+	gtk_window_set_title (GTK_WINDOW (dialog), "Error!");
+	gtk_dialog_run (GTK_DIALOG (dialog));
 	gtk_widget_destroy (dialog);
 }
 

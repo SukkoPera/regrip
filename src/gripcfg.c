@@ -898,23 +898,26 @@ void SaveEncoderConfig(GripInfo *ginfo,int encodecfg)
 
 void FindExeInPath(char *exename, char *buf, int bsize)
 {
-  char *path;
-  static char **PATH = 0;
+  char *exe_path;
+  static char **path;
+  const char *env;
 
-  if(!PATH) {
-    const char *env = g_getenv("PATH");
+  env = g_getenv("PATH");
+  path = g_strsplit(env ? env : "/usr/local/bin:/usr/bin:/bin", ":", 0);
+  exe_path = FindExe(exename, path);
 
-    PATH = g_strsplit(env ? env : "/usr/local/bin:/usr/bin:/bin", ":", 0);
-  }
-
-  path = FindExe(exename, PATH);
-
-  if(!path) {
+  if(!exe_path) {
     g_snprintf(buf, bsize, "%s", exename);
   }
   else {
-    g_snprintf(buf, bsize, "%s/%s", path, exename);
+    gchar *fullpath;
+
+    fullpath = g_build_filename(exe_path, exename, NULL);
+    strncpy (buf, fullpath, bsize);
+    g_free (fullpath);
   }
+
+  g_strfreev (path);
 }
 
 char *FindExe(char *exename,char **paths)

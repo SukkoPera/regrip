@@ -180,8 +180,14 @@ GtkWidget *GripNew(const gchar* geometry,char *device,char *scsi_device,
   int major,minor,point;
   char buf[256];
 
-// FIXME
-//  gnome_window_icon_set_default_from_file(GNOME_ICONDIR"/gripicon.png");
+  GError *err = NULL;
+  gchar *icon_file = g_build_filename (GNOME_ICONDIR, "gripicon.png", NULL);
+  if (!gtk_window_set_default_icon_from_file (icon_file, &err)) {
+    gchar *msg = g_strdup_printf (_("Error: Unable to set window icon: %s"), err -> message);
+    DisplayError (msg);
+    g_free (msg);
+  }
+  g_free (icon_file);
 
   app = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   gtk_window_set_title (GTK_WINDOW(app), _("Grip"));
@@ -243,7 +249,7 @@ GtkWidget *GripNew(const gchar* geometry,char *device,char *scsi_device,
   if(!CDInitDevice(ginfo->cd_device,&(ginfo->disc))) {
     sprintf(buf,_("Error: Unable to initialize [%s]\n"),ginfo->cd_device);
 
-    DisplayMsg(buf);
+    DisplayError(buf);
   }
 
   CDStat(&(ginfo->disc),TRUE);
@@ -489,14 +495,47 @@ void LogStatus(GripInfo *ginfo,char *fmt,...)
   g_free(buf);
 }
 
+#define HELP_FILE "grip.xml"
+
 static void DoHelp(GtkWidget *widget,gpointer data)
 {
-  char *section;
+  char *section, yelp_exe[256];
 
   section=(char *)data;
 
-//  gnome_help_display("grip.xml",section,NULL);
-// FIXME
+  FindExeInPath ("yelp", yelp_exe, sizeof (yelp_exe));
+  if (g_path_is_absolute (yelp_exe)) {
+    GError *error;
+    gchar *argv[3], *cwd, *file;
+
+    cwd = g_get_current_dir ();
+    //file = g_build_filename (cwd, HELP_FILE, NULL);
+    file = g_build_filename (HELP_DIR, HELP_FILE, NULL);
+
+    argv[0] = yelp_exe;
+    if (section)
+        argv[1] = g_strdup_printf ("ghelp://%s?%s", file, section);
+    else
+        argv[1] = g_strdup_printf ("ghelp://%s", file);
+    argv[2] = NULL;
+
+    g_free (cwd);
+    g_free (file);
+
+
+    error = NULL;
+    if (!g_spawn_async (NULL, argv, NULL, 0, NULL, NULL, NULL, &error)) {
+        gchar *errmsg;
+
+        errmsg = g_strdup_printf (_("Unable to run yelp: %s"), error -> message);
+        DisplayError (errmsg);
+        g_free (errmsg);
+    }
+
+    g_free (argv[1]);
+  } else {
+    DisplayError (_("Cannot open help file: yelp was not found in PATH"));
+  }
 }
 
 static void MakeHelpPage(GripInfo *ginfo)
