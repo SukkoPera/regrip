@@ -127,24 +127,6 @@ struct poptOption options[] = {
   }
 };
 
-void Debug(char *fmt,...)
-{
-  va_list args;
-  char *msg;
-
-  if(do_debug) {
-    va_start(args,fmt);
-
-    msg=g_strdup_vprintf(fmt,args);
-    if(msg) {
-      g_printerr(msg);
-      g_free(msg);
-    }
-  }
-
-  va_end(args);
-}
-
 int Cmain (int argc, char* argv[]) {
 
   /* Unbuffer stdout */

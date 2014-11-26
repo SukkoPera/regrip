@@ -215,7 +215,7 @@ gboolean DiscDBLookupDisc(GripInfo *ginfo,DiscDBServer *server)
       entry.entry_id = query.query_list[0].list_id;
       DiscDBRead(disc,server,&hello,&entry,ddata,ginfo->discdb_encoding);
 
-      Debug(_("Done\n"));
+      g_debug(_("Done"));
       success=TRUE;
 
       if(DiscDBWriteDiscData(disc,ddata,NULL,TRUE,FALSE,"utf-8")<0)
@@ -1267,7 +1267,7 @@ void EjectDisc(GtkWidget *widget,gpointer data)
   Busy(&(ginfo->gui_info));
 
   if(ginfo->have_disc) {
-    Debug(_("Have disc -- ejecting\n"));
+    g_debug(_("Have disc -- ejecting"));
 
     CDStop(&(ginfo->disc));
     CDEject(&(ginfo->disc));
@@ -1524,15 +1524,15 @@ void CheckNewDisc(GripInfo *ginfo,gboolean force)
   disc=&(ginfo->disc);
 
   if(!ginfo->looking_up) {
-    Debug(_("Checking for a new disc\n"));
+    g_debug(_("Checking for a new disc"));
 
     if(CDStat(disc,FALSE)
        && disc->disc_present
        && CDStat(disc,TRUE)) {
-      Debug(_("CDStat found a disc, checking tracks\n"));
+      g_debug(_("CDStat found a disc, checking tracks"));
 
       if(CheckTracks(disc)) {
-	Debug(_("We have a valid disc!\n"));
+	g_debug(_("We have a valid disc!"));
 
 	new_id=DiscDBDiscid(disc);
 
@@ -1559,7 +1559,7 @@ void CheckNewDisc(GripInfo *ginfo,gboolean force)
 	  ginfo->update_required=TRUE;
 
 	ginfo->have_disc=FALSE;
-	Debug(_("No non-zero length tracks\n"));
+	g_debug(_("No non-zero length tracks"));
       }
     }
     else {
@@ -1568,7 +1568,7 @@ void CheckNewDisc(GripInfo *ginfo,gboolean force)
       }
 
       ginfo->have_disc=FALSE;
-      Debug(_("CDStat said no disc\n"));
+      g_debug(_("CDStat said no disc"));
     }
   }
 }
@@ -1963,7 +1963,7 @@ void SubmitEntry(GtkDialog *dialog, gint reply, gpointer data) {
 
       g_snprintf(mailcmd,256,"%s < %s",MAILER,filename);
 
-      Debug(_("Mailing entry to %s\n"),ginfo->discdb_submit_email);
+      g_debug(_("Mailing entry to %s"),ginfo->discdb_submit_email);
 
       system(mailcmd);
 

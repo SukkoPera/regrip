@@ -174,12 +174,12 @@ gboolean CDStat(DiscInfo *disc,gboolean read_toc)
 
 #ifdef CDROM_DRIVE_STATUS
   retcode=ioctl(disc->cd_desc,CDROM_DRIVE_STATUS,CDSL_CURRENT);
-  Debug(_("Drive status is %d\n"),retcode);
+  g_debug(_("Drive status is %d"),retcode);
   if(retcode < 0) {
-    Debug(_("Drive doesn't support drive status check (assume CDS_NO_INFO)\n"));
+    g_debug(_("Drive doesn't support drive status check (assume CDS_NO_INFO)"));
   }
   else if(retcode != CDS_DISC_OK && retcode != CDS_NO_INFO) {
-    Debug(_("No disc\n"));
+    g_debug(_("No disc"));
     disc->disc_present=FALSE;
 
     return FALSE;
@@ -601,10 +601,10 @@ gboolean TrayOpen(DiscInfo *disc)
 
 #ifdef CDROM_DRIVE_STATUS
   status=ioctl(disc->cd_desc,CDROM_DRIVE_STATUS,CDSL_CURRENT);
-  Debug(_("Drive status is %d\n"), status);
+  g_debug(_("Drive status is %d"), status);
 
   if(status < 0) {
-    Debug(_("Drive doesn't support drive status check\n"));
+    g_debug(_("Drive doesn't support drive status check"));
     return FALSE;
   }
 

@@ -4,8 +4,8 @@
  *
  *   http://sourceforge.net/projects/grip/
  *
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License as 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
  * License, or (at your option) any later version.
  *
@@ -22,9 +22,6 @@
 
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
-
-/* Routines from main.c */
-void Debug(char *fmt,...);
 
 /* Routines from uihelper.c */
 GtkTooltips *MakeToolTip(void);

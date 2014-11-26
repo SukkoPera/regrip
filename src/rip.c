@@ -559,7 +559,7 @@ void KillRip(GtkWidget *widget,gpointer data)
   GripInfo *ginfo;
   int track;
 
-  Debug(_("In KillRip\n"));
+  g_debug(_("In KillRip"));
   ginfo=(GripInfo *)data;
 
   if(!ginfo->ripping_a_disc) return;
@@ -585,7 +585,7 @@ void KillRip(GtkWidget *widget,gpointer data)
       }
     }
 
-    Debug(_("Now total enc size is: %d\n"),ginfo->all_encsize);
+    g_debug(_("Now total enc size is: %zu"),ginfo->all_encsize);
 
     if(ginfo->using_builtin_cdp) {
 #ifdef CDPAR
@@ -819,16 +819,16 @@ void UpdateRipProgress(GripInfo *ginfo)
 	  MP3Encode(ginfo);
 	}
 
-	Debug(_("Rip partial %d  num wavs %d\n"),ginfo->rip_partial,
+	g_debug(_("Rip partial %d  num wavs %d"),ginfo->rip_partial,
 	      ginfo->num_wavs);
 
-	Debug(_("Next track is %d, total is %d\n"),
+	g_debug(_("Next track is %d, total is %d"),
 	      NextTrackToRip(ginfo),ginfo->disc.num_tracks);
 
 	if(!ginfo->rip_partial&&
 	   (ginfo->num_wavs<ginfo->max_wavs||
 	    NextTrackToRip(ginfo)==ginfo->disc.num_tracks)) {
-	  Debug(_("Check if we need to rip another track\n"));
+	  g_debug(_("Check if we need to rip another track"));
 	  if(!RipNextTrack(ginfo)) RipIsFinished(ginfo,FALSE);
 	  else { gtk_label_set(GTK_LABEL(uinfo->rip_prog_label),_("Rip: Idle"));  }
 	}
@@ -1264,7 +1264,7 @@ static void RipWholeCD (GtkDialog *dialog, gint reply, gpointer data) {
   if(reply != GTK_RESPONSE_YES)
     return;
 
-  Debug(_("Ripping whole CD\n"));
+  g_debug(_("Ripping whole CD"));
 
   ginfo=(GripInfo *)data;
 
@@ -1303,14 +1303,14 @@ static gboolean RipNextTrack(GripInfo *ginfo)
 
   uinfo=&(ginfo->gui_info);
 
-  Debug(_("In RipNextTrack\n"));
+  g_debug(_("In RipNextTrack"));
 
   if(ginfo->ripping) return FALSE;
 
   if(!ginfo->rip_partial)
     ginfo->rip_track=NextTrackToRip(ginfo);
 
-  Debug(_("First checked track is %d\n"),ginfo->rip_track+1);
+  g_debug(_("First checked track is %d"),ginfo->rip_track+1);
 
   /* See if we are finished ripping */
   if(ginfo->rip_track==ginfo->disc.num_tracks) {
@@ -1320,7 +1320,7 @@ static gboolean RipNextTrack(GripInfo *ginfo)
   /* We have a track to rip */
 
   if(ginfo->have_disc&&ginfo->rip_track>=0) {
-    Debug(_("Ripping away!\n"));
+    g_debug(_("Ripping away!"));
 
     /*    if(!ginfo->rip_partial){
       gtk_clist_select_row(GTK_CLIST(uinfo->trackclist),ginfo->rip_track,0);
@@ -1487,7 +1487,7 @@ static void ThreadRip(void *arg)
 
   ginfo=(GripInfo *)arg;
 
-  Debug(_("Calling CDPRip\n"));
+  g_debug(_("Calling CDPRip"));
 
   paranoia_mode=PARANOIA_MODE_FULL^PARANOIA_MODE_NEVERSKIP;
   if(ginfo->disable_paranoia)
@@ -1573,7 +1573,7 @@ static void AddToEncode(GripInfo *ginfo,int track)
   else
     ginfo->pending_list=g_list_append(ginfo->pending_list,new_track);
 
-  Debug(_("Added track %d to %s list\n"),track+1,
+  g_debug(_("Added track %d to %s list"),track+1,
           ginfo->delayed_encoding ? "pending" : "encoding");
 }
 
@@ -1599,7 +1599,7 @@ static gboolean MP3Encode(GripInfo *ginfo)
   for(cpu=0;(cpu<ginfo->num_cpu)&&(ginfo->encoding&(1<<cpu));cpu++);
 
   if(cpu==ginfo->num_cpu) {
-    Debug(_("No free cpus\n"));
+    g_debug(_("No free cpus"));
     return FALSE;
   }
 
@@ -1615,7 +1615,7 @@ static gboolean MP3Encode(GripInfo *ginfo)
   ginfo->mp3_started[cpu] = time(NULL);
   ginfo->mp3_enc_track[cpu] = encode_track;
 
-  Debug(_("Enc track %d\n"),encode_track+1);
+  g_debug(_("Enc track %d"),encode_track+1);
 
   strcpy(ginfo->rip_delete_file[cpu],enc_track->wav_filename);
 
@@ -1718,13 +1718,13 @@ void CalculateAll(GripInfo *ginfo)
 
   uinfo=&(ginfo->gui_info);
 
-  Debug(_("In CalculateAll\n"));
+  g_debug(_("In CalculateAll"));
 
   ginfo->all_ripsize=0;
   ginfo->all_ripdone=0;
   ginfo->all_riplast=0;
   if (!ginfo->encoding) {
-    Debug(_("We aren't ripping now, so let's zero encoding values\n"));
+    g_debug(_("We aren't ripping now, so let's zero encoding values"));
     ginfo->all_encsize=0;
     ginfo->all_encdone=0;
     for (cpu=0;cpu<ginfo->num_cpu;++cpu)
@@ -1740,8 +1740,8 @@ void CalculateAll(GripInfo *ginfo)
       ginfo->all_encsize+=CalculateEncSize(ginfo,track);
     }
   }
-  Debug(_("Total rip size is: %d\n"),ginfo->all_ripsize);
-  Debug(_("Total enc size is: %d\n"),ginfo->all_encsize);
+  g_debug(_("Total rip size is: %zu"),ginfo->all_ripsize);
+  g_debug(_("Total enc size is: %zu"),ginfo->all_encsize);
 }
 
 static size_t CalculateWavSize(GripInfo *ginfo, int track)

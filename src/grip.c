@@ -235,7 +235,7 @@ GtkWidget *GripNew(const gchar* geometry,char *device,char *scsi_device,
     strcpy(ginfo->config_filename,".grip");
   }
 
-  Debug("Using config file [%s]\n",ginfo->config_filename);
+  g_debug("Using config file [%s]",ginfo->config_filename);
 
   DoLoadConfig(ginfo);
 
@@ -1060,7 +1060,7 @@ static void DoLoadConfig(GripInfo *ginfo)
       tok=strtok(NULL,"/");
       if(tok) ginfo->proxy_server.port=atoi(tok);
 
-      Debug(_("server is %s, port %d\n"),ginfo->proxy_server.name,
+      g_debug(_("server is %s, port %d"),ginfo->proxy_server.name,
 	    ginfo->proxy_server.port);
     }
   }

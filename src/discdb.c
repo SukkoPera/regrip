@@ -137,7 +137,7 @@ static char *DiscDBReadLine(char **dataptr)
     if(*pos=='\n') {
       *pos='\0';
 
-      Debug("[%s]\n",data);
+      g_debug("[%s]",data);
 
       *dataptr=pos+1;
 
@@ -145,7 +145,7 @@ static char *DiscDBReadLine(char **dataptr)
     }
   }
 
-  Debug("[%s]\n",data);
+  g_debug("[%s]",data);
 
   *dataptr=NULL;
 
@@ -206,7 +206,7 @@ static char *DiscDBMakeRequest(DiscDBServer *server,DiscDBHello *hello,
 
     uri=DiscDBMakeURI(server,hello,cmd);
 
-    Debug(_("URI is %s\n"),uri->str);
+    g_debug(_("URI is %s"),uri->str);
 
     curl_easy_setopt(curl_handle,CURLOPT_URL,uri->str);
 
@@ -286,7 +286,7 @@ gboolean DiscDBDoQuery(DiscInfo *disc,DiscDBServer *server,
 
   g_string_sprintfa(cmd,"+%d",disc->length.mins*60 + disc->length.secs);
 
-  Debug(_("Query is [%s]\n"),cmd->str);
+  g_debug(_("Query is [%s]"),cmd->str);
 
   result=DiscDBMakeRequest(server,hello,cmd->str);
 
@@ -787,23 +787,23 @@ int DiscDBWriteDiscData(DiscInfo *disc,DiscData *ddata,FILE *outfile,
 
     if(stat(root_dir,&st)<0) {
       if(errno != ENOENT) {
-	Debug(_("Stat error %d on %s\n"),errno,root_dir);
+	g_debug(_("Stat error %d on %s"),errno,root_dir);
 	return -1;
       }
       else {
-	Debug(_("Creating directory %s\n"),root_dir);
+	g_debug(_("Creating directory %s"),root_dir);
 	mkdir(root_dir,0777);
       }
     } else {
       if(!S_ISDIR(st.st_mode)) {
-	Debug(_("Error: %s exists, but is a file\n"),root_dir);
+	g_debug(_("Error: %s exists, but is a file"),root_dir);
 	errno=ENOTDIR;
 	return -1;
       }
     }
 
     if((discdb_data=fopen(file,"w"))==NULL) {
-      Debug(_("Error: Unable to open %s for writing\n"),file);
+      g_debug(_("Error: Unable to open %s for writing"),file);
       return -1;
     }
   }

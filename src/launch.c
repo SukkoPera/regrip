@@ -301,7 +301,7 @@ void TranslateAndLaunch (char *cmd, char * (*trans_func) (char, void *, gboolean
 
 		execv (args[0]->str, char_args);
 
-		Debug (_ ("Exec failed\n") );
+		g_debug (_ ("Exec failed") );
 		_exit (0);
 	}
 
