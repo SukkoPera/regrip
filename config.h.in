@@ -1,0 +1,60 @@
+/* Define to 1 if you have the <cdda/cdda_interface.h> header file. */
+#cmakedefine HAVE_CDDA_CDDA_INTERFACE_H
+
+/* Define to 1 if you have the <cdda/cdda_paranoia.h> header file. */
+#cmakedefine HAVE_CDDA_CDDA_PARANOIA_H
+
+/* Define to 1 if you have the <cdda_interface.h> header file. */
+#cmakedefine HAVE_CDDA_INTERFACE_H
+
+/* Define to 1 if you have the <cdda_paranoia.h> header file. */
+#cmakedefine HAVE_CDDA_PARANOIA_H
+
+/* Description */
+#undef HAVE_ID3V2
+
+/* Define to 1 if you have the <io/cam/cdrom.h> header file. */
+#cmakedefine HAVE_IO_CAM_CDROM_H
+
+/* Define to 1 if you have the <linux/cdrom.h> header file. */
+#cmakedefine HAVE_LINUX_CDROM_H
+
+/* Define to 1 if you have the <sys/cdio.h> header file. */
+#cmakedefine HAVE_SYS_CDIO_H
+
+/* Define to 1 if you have the <sys/statvfs.h> header file. */
+#cmakedefine HAVE_SYS_STATVFS_H
+
+/* Define to 1 if you have the <sys/vfs.h> header file. */
+#cmakedefine HAVE_SYS_VFS_H
+
+/* Name of package */
+#define PACKAGE "@CMAKE_PROJECT_NAME@"
+
+/* Version number of package */
+#define VERSION "@VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_REVISION@"
+
+/* Define to the address where bug reports for this package should be sent. */
+//#define PACKAGE_BUGREPORT "software@sukkology.net"
+
+/* Define to the full name of this package. */
+//#define PACKAGE_NAME "@CMAKE_PROJECT_NAME@ " VERSION
+
+/* Define to the full name and version of this package. */
+//#define PACKAGE_STRING
+
+/* Define to the one symbol short name of this package. */
+//#define PACKAGE_TARNAME
+
+/* Define to the home page for this package. */
+//#define PACKAGE_URL
+
+/* Define to the version of this package. */
+//#define PACKAGE_VERSION
+
+/* Gettext package */
+#define GETTEXT_PACKAGE "@CMAKE_PROJECT_NAME@-" VERSION
+#define GNOMELOCALEDIR "@CMAKE_INSTALL_FULL_LOCALEDIR@"
+
+#define GNOME_ICONDIR "@CMAKE_INSTALL_FULL_DATADIR@/pixmaps"
+#define HELP_DIR "@CMAKE_INSTALL_FULL_DATADIR@/help/grip/C"
