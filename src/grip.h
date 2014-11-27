@@ -32,10 +32,6 @@
 #include "status_window.h"
 #include "eggtrayicon.h"
 
-#if defined(HAVE_CDDA_INTERFACE_H) || defined(HAVE_CDDA_CDDA_INTERFACE_H)
-#define CDPAR
-#endif
-
 #define WINWIDTH 400
 #define WINHEIGHT 450
 
@@ -279,10 +275,9 @@ typedef struct _grip_info {
   GList *pending_list;
   gboolean delayed_encoding;
   int selected_ripper;
-  gboolean using_builtin_cdp;
   gboolean in_rip_thread;
   gboolean do_redirect;
-#ifdef CDPAR
+
   pthread_t cdp_thread;
   gboolean stop_thread_rip_now;
   gboolean disable_paranoia;
@@ -292,11 +287,8 @@ typedef struct _grip_info {
   gboolean calc_gain;
   int rip_smile_level;
   gfloat rip_percent_done;
-#endif
-  char ripexename[256];
+
   char ripfileformat[256];
-  char ripcmdline[256];
-  int ripnice;
   int max_wavs;
   gboolean auto_rip;
   gboolean beep_after_rip;

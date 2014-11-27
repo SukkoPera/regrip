@@ -4,8 +4,8 @@
  *
  *   http://sourceforge.net/projects/grip/
  *
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License as 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
  * License, or (at your option) any later version.
  *
@@ -41,10 +41,8 @@ typedef struct _encode_track {
   int mins;
   int secs;
   int discid;
-#ifdef CDPAR
   double track_gain_adjustment;
   double disc_gain_adjustment;
-#endif
 } EncodeTrack;
 
 
@@ -65,12 +63,10 @@ void DoRipEncode(GtkWidget *widget,gpointer data);
 void DoRip(GtkWidget *widget,gpointer data);
 void FillInTrackInfo(GripInfo *ginfo,int track,EncodeTrack *new_track);
 
-#ifdef CDPAR
 gboolean CDPRip(char *device,char *generic_scsi_device,int track,
 		long first_sector,long last_sector,
 		char *outfile,int paranoia_mode,int *rip_smile_level,
 		gfloat *rip_percent_done,gboolean *stop_thread_rip_now,
 		gboolean do_gain_calc,FILE *output_fp);
-#endif
 
 #endif /* ifndef GRIP_RIP_H */

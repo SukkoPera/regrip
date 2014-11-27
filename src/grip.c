@@ -58,18 +58,15 @@ static void LoadImages(GripGUI *uinfo);
 static void DoLoadConfig(GripInfo *ginfo);
 void DoSaveConfig(GripInfo *ginfo);
 
-#define BASE_CFG_ENTRIES \
+#define CFG_ENTRIES \
 {"grip_version",CFG_ENTRY_STRING,256,ginfo->version},\
 {"cd_device",CFG_ENTRY_STRING,256,ginfo->cd_device},\
 {"force_scsi",CFG_ENTRY_STRING,256,ginfo->force_scsi},\
-{"ripexename",CFG_ENTRY_STRING,256,ginfo->ripexename},\
-{"ripcmdline",CFG_ENTRY_STRING,256,ginfo->ripcmdline},\
 {"wav_filter_cmd",CFG_ENTRY_STRING,256,ginfo->wav_filter_cmd},\
 {"disc_filter_cmd",CFG_ENTRY_STRING,256,ginfo->disc_filter_cmd},\
 {"mp3exename",CFG_ENTRY_STRING,256,ginfo->mp3exename},\
 {"mp3cmdline",CFG_ENTRY_STRING,256,ginfo->mp3cmdline},\
 {"dbserver",CFG_ENTRY_STRING,256,ginfo->dbserver.name},\
-{"ripfileformat",CFG_ENTRY_STRING,256,ginfo->ripfileformat},\
 {"mp3fileformat",CFG_ENTRY_STRING,256,ginfo->mp3fileformat},\
 {"mp3extension",CFG_ENTRY_STRING,10,ginfo->mp3extension},\
 {"m3ufileformat",CFG_ENTRY_STRING,256,ginfo->m3ufileformat},\
@@ -83,7 +80,6 @@ void DoSaveConfig(GripInfo *ginfo);
 {"proxy_pswd",CFG_ENTRY_STRING,80,ginfo->proxy_server.pswd},\
 {"cdupdate",CFG_ENTRY_STRING,256,ginfo->cdupdate},\
 {"user_email",CFG_ENTRY_STRING,256,ginfo->user_email},\
-{"ripnice",CFG_ENTRY_INT,0,&ginfo->ripnice},\
 {"mp3nice",CFG_ENTRY_INT,0,&ginfo->mp3nice},\
 {"mp3_filter_cmd",CFG_ENTRY_STRING,256,ginfo->mp3_filter_cmd},\
 {"doid3",CFG_ENTRY_BOOL,0,&ginfo->doid3},\
@@ -136,20 +132,13 @@ void DoSaveConfig(GripInfo *ginfo);
 {"vol_vis",CFG_ENTRY_BOOL,0,&uinfo->volvis},\
 {"track_edit_vis",CFG_ENTRY_BOOL,0,&uinfo->track_edit_visible},\
 {"track_prog_vis",CFG_ENTRY_BOOL,0,&uinfo->track_prog_visible},\
-{"volume",CFG_ENTRY_INT,0,&ginfo->volume},
-
-#define CDPAR_CFG_ENTRIES \
+{"volume",CFG_ENTRY_INT,0,&ginfo->volume}, \
 {"disable_paranoia",CFG_ENTRY_BOOL,0,&ginfo->disable_paranoia},\
 {"disable_extra_paranoia",CFG_ENTRY_BOOL,0,&ginfo->disable_extra_paranoia},\
 {"disable_scratch_detect",CFG_ENTRY_BOOL,0,&ginfo->disable_scratch_detect},\
 {"disable_scratch_repair",CFG_ENTRY_BOOL,0,&ginfo->disable_scratch_repair},\
 {"calc_gain",CFG_ENTRY_BOOL,0,&ginfo->calc_gain},
 
-#ifdef CDPAR
-#define CFG_ENTRIES BASE_CFG_ENTRIES CDPAR_CFG_ENTRIES
-#else
-#define CFG_ENTRIES BASE_CFG_ENTRIES
-#endif
 
 gboolean AppWindowStateCB(GtkWidget *widget, GdkEventWindowState *event, gpointer data)
 {
@@ -917,32 +906,17 @@ static void DoLoadConfig(GripInfo *ginfo)
   ginfo->delayed_encoding = 0;
   ginfo->do_redirect=TRUE;
   ginfo->selected_ripper=0;
-#ifdef CDPAR
+
   ginfo->stop_thread_rip_now=FALSE;
-  ginfo->using_builtin_cdp=TRUE;
   ginfo->disable_paranoia=FALSE;
   ginfo->disable_extra_paranoia=FALSE;
   ginfo->disable_scratch_detect=FALSE;
   ginfo->disable_scratch_repair=FALSE;
   ginfo->calc_gain=FALSE;
-#else
-  ginfo->using_builtin_cdp=FALSE;
-#endif
   ginfo->in_rip_thread=FALSE;
-  strcpy(ginfo->ripfileformat,"~/mp3/%A/%d/%n.wav");
-#ifdef __linux__
-  FindExeInPath("cdparanoia", ginfo->ripexename, sizeof(ginfo->ripexename));
-  strcpy(ginfo->ripcmdline,"-d %c %t:[.%s]-%t:[.%e] %w");
-#else
-  FindExeInPath("cdda2wav", ginfo->ripexename, sizeof(ginfo->ripexename));
-#ifdef __sun__
-  strcpy(ginfo->ripcmdline,"-x -H -t %t -O wav %w");
-#else
-  strcpy(ginfo->ripcmdline,"-D %C -x -H -t %t -O wav %w");
-#endif /* not sun */
-#endif /* not linux */
 
-  ginfo->ripnice=0;
+  strcpy(ginfo->ripfileformat,"~/mp3/%A/%d/%n.wav");
+
   ginfo->max_wavs=99;
   ginfo->auto_rip=FALSE;
   ginfo->beep_after_rip=TRUE;
@@ -998,7 +972,6 @@ static void DoLoadConfig(GripInfo *ginfo)
     DoSaveConfig(ginfo);
   }
 
-  LoadRipperConfig(ginfo,ginfo->selected_ripper);
   LoadEncoderConfig(ginfo,ginfo->selected_encoder);
 
 #ifndef GRIPCD
@@ -1083,7 +1056,6 @@ void DoSaveConfig(GripInfo *ginfo)
     show_warning(ginfo->gui_info.app,
                       _("Error: Unable to save config file."));
 
-  SaveRipperConfig(ginfo,ginfo->selected_ripper);
   SaveEncoderConfig(ginfo,ginfo->selected_encoder);
 
   g_free (filename);

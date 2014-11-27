@@ -32,24 +32,7 @@
 #include "common.h"
 
 static void UseProxyChanged(GtkWidget *widget,gpointer data);
-static void RipperSelected(GtkWidget *widget,gpointer data);
 static void EncoderSelected(GtkWidget *widget,gpointer data);
-
-static Ripper ripper_defaults[]={
-#ifdef CDPAR
-  {"grip (cdparanoia)",""},
-#endif
-#if defined(__linux__)
-  {"cdparanoia","-d %c %t:[.%s]-%t:[.%e] %w"},
-#endif
-#if defined(__sun__)
-  {"cdda2wav","-x -H -t %t -O wav %w"},
-#else
-  {"cdda2wav","-D %C -x -H -t %t -O wav %w"},
-#endif
-  {"other",""},
-  {"",""}
-};
 
 static MP3Encoder encoder_defaults[]={{"bladeenc","-%b -QUIT %w %m","mp3"},
 				      {"lame","-h -b %b %w %m","mp3"},
@@ -101,7 +84,6 @@ void MakeConfigPage(GripInfo *ginfo)
   GtkWidget *menu,*optmenu;
   GtkWidget *item;
   MP3Encoder *enc;
-  Ripper *rip;
 #endif
 
   uinfo=&(ginfo->gui_info);
@@ -174,67 +156,6 @@ void MakeConfigPage(GripInfo *ginfo)
   vbox=gtk_vbox_new(FALSE,4);
   gtk_container_border_width(GTK_CONTAINER(vbox),3);
 
-  hbox=gtk_hbox_new(FALSE,3);
-
-  label=gtk_label_new(_("Ripper:"));
-  gtk_box_pack_start(GTK_BOX(hbox),label,TRUE,TRUE,0);
-  gtk_widget_show(label);
-
-  menu=gtk_menu_new();
-
-  rip=ripper_defaults;
-
-  while(*(rip->name)) {
-    item=gtk_menu_item_new_with_label(rip->name);
-    gtk_object_set_user_data(GTK_OBJECT(item),(gpointer)rip);
-    gtk_signal_connect(GTK_OBJECT(item),"activate",
-    		       GTK_SIGNAL_FUNC(RipperSelected),(gpointer)ginfo);
-    gtk_menu_append(GTK_MENU(menu),item);
-    gtk_widget_show(item);
-
-    rip++;
-  }
-
-  /* Make sure the selected ripper is active */
-  gtk_menu_set_active(GTK_MENU(menu),ginfo->selected_ripper);
-
-#ifdef CDPAR
-  if(ginfo->selected_ripper==0) ginfo->using_builtin_cdp=TRUE;
-  else ginfo->using_builtin_cdp=FALSE;
-#else
-  ginfo->using_builtin_cdp=FALSE;
-#endif
-
-  optmenu=gtk_option_menu_new();
-  gtk_option_menu_set_menu(GTK_OPTION_MENU(optmenu),menu);
-  gtk_widget_show(menu);
-  gtk_box_pack_start(GTK_BOX(hbox),optmenu,TRUE,TRUE,0);
-  gtk_widget_show(optmenu);
-
-  gtk_box_pack_start(GTK_BOX(vbox),hbox,FALSE,FALSE,0);
-  gtk_widget_show(hbox);
-
-  hsep=gtk_hseparator_new();
-  gtk_box_pack_start(GTK_BOX(vbox),hsep,FALSE,FALSE,0);
-  gtk_widget_show(hsep);
-
-  uinfo->rip_exe_box=gtk_vbox_new(FALSE,2);
-
-  entry=MakeStrEntry(&(uinfo->ripexename_entry),ginfo->ripexename,
-		     _("Ripping executable"),255,TRUE);
-  gtk_box_pack_start(GTK_BOX(uinfo->rip_exe_box),entry,FALSE,FALSE,0);
-  gtk_widget_show(entry);
-
-  entry=MakeStrEntry(&(uinfo->ripcmdline_entry),ginfo->ripcmdline,
-		     _("Rip command-line"),255,TRUE);
-  gtk_box_pack_start(GTK_BOX(uinfo->rip_exe_box),entry,FALSE,FALSE,0);
-  gtk_widget_show(entry);
-
-  gtk_box_pack_start(GTK_BOX(vbox),uinfo->rip_exe_box,FALSE,FALSE,0);
-  if(!ginfo->using_builtin_cdp)
-    gtk_widget_show(uinfo->rip_exe_box);
-
-#ifdef CDPAR
   uinfo->rip_builtin_box=gtk_vbox_new(FALSE,2);
 
   check=MakeCheckButton(NULL,&ginfo->disable_paranoia,_("Disable paranoia"));
@@ -269,12 +190,7 @@ void MakeConfigPage(GripInfo *ginfo)
   gtk_widget_show(check);
 
   gtk_box_pack_start(GTK_BOX(vbox),uinfo->rip_builtin_box,FALSE,FALSE,0);
-  if(ginfo->using_builtin_cdp) gtk_widget_show(uinfo->rip_builtin_box);
-#endif
-
-  entry=MakeStrEntry(NULL,ginfo->ripfileformat,_("Rip file format"),255,TRUE);
-  gtk_box_pack_start(GTK_BOX(vbox),entry,FALSE,FALSE,0);
-  gtk_widget_show(entry);
+  gtk_widget_show(uinfo->rip_builtin_box);
 
   entry=MakeStrEntry(NULL,ginfo->force_scsi,_("Generic SCSI device"),
 		     255,TRUE);
@@ -292,14 +208,6 @@ void MakeConfigPage(GripInfo *ginfo)
 
   vbox=gtk_vbox_new(FALSE,2);
   gtk_container_border_width(GTK_CONTAINER(vbox),3);
-
-  entry=MakeNumEntry(NULL,&ginfo->ripnice,_("Rip 'nice' value"),3);
-  gtk_box_pack_start(GTK_BOX(vbox),entry,FALSE,FALSE,0);
-  gtk_widget_show(entry);
-
-  entry=MakeNumEntry(NULL,&ginfo->max_wavs,_("Max non-encoded .wav's"),3);
-  gtk_box_pack_start(GTK_BOX(vbox),entry,FALSE,FALSE,0);
-  gtk_widget_show(entry);
 
   hbox=gtk_hbox_new(FALSE,3);
 
@@ -718,111 +626,6 @@ void MakeConfigPage(GripInfo *ginfo)
 
   gtk_container_add(GTK_CONTAINER(configpage),vbox2);
   gtk_widget_show(vbox2);
-}
-
-static void RipperSelected(GtkWidget *widget,gpointer data)
-{
-  GripInfo *ginfo;
-  GripGUI *uinfo;
-  Ripper *rip;
-  char buf[256];
-  int selected_ripper;
-
-  ginfo=(GripInfo *)data;
-  uinfo=&(ginfo->gui_info);
-  rip=(Ripper *)gtk_object_get_user_data(GTK_OBJECT(widget));
-
-  SaveRipperConfig(ginfo,ginfo->selected_ripper);
-
-  selected_ripper=rip-ripper_defaults;
-
-  /* Don't overwrite if the selection hasn't changed */
-  if(ginfo->selected_ripper == selected_ripper) {
-    return;
-  }
-
-  ginfo->selected_ripper = selected_ripper;
-
-#ifdef CDPAR
-  if(ginfo->selected_ripper==0) {
-    ginfo->using_builtin_cdp=TRUE;
-
-    gtk_widget_hide(uinfo->rip_exe_box);
-    gtk_widget_show(uinfo->rip_builtin_box);
-  }
-  else {
-    ginfo->using_builtin_cdp=FALSE;
-
-    gtk_widget_show(uinfo->rip_exe_box);
-    gtk_widget_hide(uinfo->rip_builtin_box);
-  }
-#endif
-
-  if(!ginfo->using_builtin_cdp) {
-    if(LoadRipperConfig(ginfo,ginfo->selected_ripper)) {
-      strcpy(buf,ginfo->ripexename);
-      gtk_entry_set_text(GTK_ENTRY(uinfo->ripexename_entry),buf);
-      strcpy(buf,ginfo->ripcmdline);
-      gtk_entry_set_text(GTK_ENTRY(uinfo->ripcmdline_entry),buf);
-    }
-    else {
-      if(strcmp(rip->name,"other")) {
-        FindExeInPath(rip->name, buf, sizeof(buf));
-        gtk_entry_set_text(GTK_ENTRY(uinfo->ripexename_entry), buf);
-      }
-      else gtk_entry_set_text(GTK_ENTRY(uinfo->ripexename_entry),"");
-
-      gtk_entry_set_text(GTK_ENTRY(uinfo->ripcmdline_entry),rip->cmdline);
-    }
-  }
-}
-
-#define RIP_CFG_ENTRIES \
-    {"exe",CFG_ENTRY_STRING,256,ginfo->ripexename},\
-    {"cmdline",CFG_ENTRY_STRING,256,ginfo->ripcmdline},\
-    {"",CFG_ENTRY_LAST,0,NULL}
-
-gboolean LoadRipperConfig(GripInfo *ginfo,int ripcfg)
-{
-  gchar *tmp, *buf;
-  gboolean ret;
-  CFGEntry rip_cfg_entries[]={
-    RIP_CFG_ENTRIES
-  };
-
-#ifdef CDPAR
-  if(ripcfg==0)
-    return FALSE;       // Is FALSE correct here? -sukko
-#endif
-
-  tmp = g_strdup_printf ("%s-%s", ginfo->config_filename, ripper_defaults[ripcfg].name);
-  buf = g_build_filename (g_get_home_dir (), tmp, NULL);
-  g_free (tmp);
-
-  ret = LoadConfig(buf,"GRIP",2,2,rip_cfg_entries) == 1;
-
-  g_free (buf);
-
-  return ret;
-}
-
-void SaveRipperConfig(GripInfo *ginfo,int ripcfg)
-{
-  char buf[256];
-  CFGEntry rip_cfg_entries[]={
-    RIP_CFG_ENTRIES
-  };
-
-#ifdef CDPAR
-  if(ripcfg==0) return;
-#endif
-
-  sprintf(buf,"%s/%s-%s",getenv("HOME"),ginfo->config_filename,
-          ripper_defaults[ripcfg].name);
-
-  if(!SaveConfig(buf,"GRIP",2,rip_cfg_entries))
-    show_warning(ginfo->gui_info.app,
-                      _("Error: Unable to save ripper config."));
 }
 
 static void EncoderSelected(GtkWidget *widget,gpointer data)

@@ -48,11 +48,9 @@
 #include "grip_id3.h"
 #include "config.h"
 #include "common.h"
-#ifdef CDPAR
 #include "gain_analysis.h"
 #include "cdpar.h"
 extern int rip_smile_level;
-#endif
 
 static void RipPartialChanged(GtkWidget *widget,gpointer data);
 static void PlaySegmentCB(GtkWidget *widget,gpointer data);
@@ -67,9 +65,7 @@ static void CheckDupNames(GripInfo *ginfo);
 static void RipWholeCD(GtkDialog *dialog, gint reply, gpointer data);
 static int NextTrackToRip(GripInfo *ginfo);
 static gboolean RipNextTrack(GripInfo *ginfo);
-#ifdef CDPAR
 static void ThreadRip(void *arg);
-#endif
 static void AddToEncode(GripInfo *ginfo,int track);
 static gboolean MP3Encode(GripInfo *ginfo);
 static void CalculateAll(GripInfo *ginfo);
@@ -587,12 +583,7 @@ void KillRip(GtkWidget *widget,gpointer data)
 
     g_debug(_("Now total enc size is: %zu"),ginfo->all_encsize);
 
-    if(ginfo->using_builtin_cdp) {
-#ifdef CDPAR
-      ginfo->stop_thread_rip_now=TRUE;
-#endif
-    }
-    else kill(ginfo->rippid,SIGKILL);
+    ginfo->stop_thread_rip_now=TRUE;
   }
 }
 
@@ -750,16 +741,12 @@ void UpdateRipProgress(GripInfo *ginfo)
       CopyPixmap(GTK_PIXMAP(uinfo->rip_pix[quarter]),
 		 GTK_PIXMAP(uinfo->rip_indicator));
 
-#ifdef CDPAR
-    if(ginfo->using_builtin_cdp) {
       if(uinfo->minimized)
 	CopyPixmap(GTK_PIXMAP(uinfo->smile_pix[ginfo->rip_smile_level]),
 		   GTK_PIXMAP(uinfo->lcd_smile_indicator));
       else
 	CopyPixmap(GTK_PIXMAP(uinfo->smile_pix[ginfo->rip_smile_level]),
 		   GTK_PIXMAP(uinfo->smile_indicator));
-    }
-#endif
 
     /* Overall rip */
     if(ginfo->rip_started!=now && !ginfo->rip_partial && ginfo->ripping
@@ -783,41 +770,35 @@ void UpdateRipProgress(GripInfo *ginfo)
     }
 
     /* Check if a rip finished */
-    if((ginfo->using_builtin_cdp&&!ginfo->in_rip_thread) ||
-       (!ginfo->using_builtin_cdp&&waitpid(ginfo->rippid,NULL,WNOHANG))) {
-      if(!ginfo->using_builtin_cdp) waitpid(ginfo->rippid,NULL,0);
-      else {
+    if(!ginfo->in_rip_thread) {
 	CopyPixmap(GTK_PIXMAP(uinfo->empty_image),
 		   GTK_PIXMAP(uinfo->lcd_smile_indicator));
 	CopyPixmap(GTK_PIXMAP(uinfo->empty_image),
 		   GTK_PIXMAP(uinfo->smile_indicator));
-      }
 
       LogStatus(ginfo,_("Rip finished\n"));
       ginfo->all_riplast=0;
       ginfo->ripping=FALSE;
       SetChecked(uinfo,ginfo->rip_track,FALSE);
 
-#ifdef CDPAR
       /* Get the title gain */
-      if(ginfo->using_builtin_cdp && ginfo->calc_gain) {
-	ginfo->track_gain_adjustment=GetTitleGain();
+      if(ginfo->calc_gain) {
+        ginfo->track_gain_adjustment=GetTitleGain();
       }
-#endif
 
       /* Do filtering of .wav file */
-
-      if(*ginfo->wav_filter_cmd) DoWavFilter(ginfo);
+      if(*ginfo->wav_filter_cmd)
+        DoWavFilter(ginfo);
 
       gtk_progress_bar_update(GTK_PROGRESS_BAR(uinfo->ripprogbar),0.0);
       CopyPixmap(GTK_PIXMAP(uinfo->empty_image),
 		 GTK_PIXMAP(uinfo->rip_indicator));
 
-      if(!ginfo->stop_rip) {
-	if(ginfo->doencode) {
-	  AddToEncode(ginfo,ginfo->rip_track);
-	  MP3Encode(ginfo);
-	}
+        if(!ginfo->stop_rip) {
+            if(ginfo->doencode) {
+              AddToEncode(ginfo,ginfo->rip_track);
+              MP3Encode(ginfo);
+        }
 
 	g_debug(_("Rip partial %d  num wavs %d"),ginfo->rip_partial,
 	      ginfo->num_wavs);
@@ -994,11 +975,9 @@ static void RipIsFinished(GripInfo *ginfo,gboolean aborted)
   if(!aborted) {
     if(ginfo->beep_after_rip) printf("%c%c",7,7);
 
-#ifdef CDPAR
-    if(ginfo->using_builtin_cdp && ginfo->calc_gain) {
+    if(ginfo->calc_gain) {
       ginfo->disc_gain_adjustment=GetAlbumGain();
     }
-#endif
 
     if(*ginfo->disc_filter_cmd)
       DoDiscFilter(ginfo);
@@ -1108,7 +1087,6 @@ char *TranslateSwitch(char switch_char,void *data,gboolean *munge)
   case 'G':
     g_snprintf(res,PATH_MAX,"%s",ID3GenreString(enc_track->id3_genre));
     break;
-#ifdef CDPAR
   case 'r':
     g_snprintf(res,PATH_MAX,"%+6.2f",enc_track->track_gain_adjustment);
     *munge=FALSE;
@@ -1117,7 +1095,6 @@ char *TranslateSwitch(char switch_char,void *data,gboolean *munge)
     g_snprintf(res,PATH_MAX,"%+6.2f",enc_track->disc_gain_adjustment);
     *munge=FALSE;
     break;
-#endif
   case 'x':
     g_snprintf(res,PATH_MAX,"%s",enc_track->ginfo->mp3extension);
     *munge=FALSE;
@@ -1185,16 +1162,10 @@ void DoRip(GtkWidget *widget,gpointer data)
     return;
   }
 
-  if(widget) ginfo->doencode=FALSE;
-  else ginfo->doencode=TRUE;
-
-  if(!ginfo->using_builtin_cdp&&!FileExists(ginfo->ripexename)) {
-    show_warning(ginfo->gui_info.app,
-                      _("Invalid rip executable.\nCheck your rip config, and ensure it specifies the full path to the ripper executable."));
-
+  if(widget)
     ginfo->doencode=FALSE;
-    return;
-  }
+  else
+    ginfo->doencode=TRUE;
 
   if(ginfo->doencode&&!FileExists(ginfo->mp3exename)) {
     show_warning(ginfo->gui_info.app,
@@ -1215,18 +1186,17 @@ void DoRip(GtkWidget *widget,gpointer data)
     return;
   }
 
-#ifdef CDPAR
   /* Initialize gain calculation */
-  if(ginfo->using_builtin_cdp && ginfo->calc_gain)
+  if(ginfo->calc_gain)
     InitGainAnalysis(44100);
-#endif
 
   CheckDupNames(ginfo);
 
   if(ginfo->rip_partial)
     ginfo->rip_track=CURRENT_TRACK;
   else {
-    if(ginfo->add_m3u) AddM3U(ginfo);
+    if(ginfo->add_m3u)
+        AddM3U(ginfo);
     SetCurrentTrackIndex(ginfo,0);
     ginfo->rip_track=0;
   }
@@ -1271,8 +1241,10 @@ static void RipWholeCD (GtkDialog *dialog, gint reply, gpointer data) {
   for(track=0;track<ginfo->disc.num_tracks;++track)
     SetChecked(&(ginfo->gui_info),track,TRUE);
 
-  if(ginfo->doencode) DoRip(NULL,(gpointer)ginfo);
-  else DoRip((GtkWidget *)1,(gpointer)ginfo);
+  if(ginfo->doencode)
+    DoRip(NULL,(gpointer)ginfo);
+  else
+    DoRip((GtkWidget *)1,(gpointer)ginfo);
 }
 
 static int NextTrackToRip(GripInfo *ginfo)
@@ -1318,7 +1290,6 @@ static gboolean RipNextTrack(GripInfo *ginfo)
   }
 
   /* We have a track to rip */
-
   if(ginfo->have_disc&&ginfo->rip_track>=0) {
     g_debug(_("Ripping away!"));
 
@@ -1333,14 +1304,13 @@ static gboolean RipNextTrack(GripInfo *ginfo)
 
     if(!ginfo->rip_partial) {
       ginfo->start_sector=0;
-      ginfo->end_sector=(ginfo->disc.track[ginfo->rip_track+1].start_frame-1)-
-	ginfo->disc.track[ginfo->rip_track].start_frame;
+      ginfo->end_sector=(ginfo->disc.track[ginfo->rip_track+1].start_frame-1)-ginfo->disc.track[ginfo->rip_track].start_frame;
 
       /* Compensate for the gap before a data track */
       if((ginfo->rip_track<(ginfo->disc.num_tracks-1)&&
 	  IsDataTrack(&(ginfo->disc),ginfo->rip_track+1)&&
 	  (ginfo->end_sector-ginfo->start_sector)>11399))
-	ginfo->end_sector-=11400;
+        ginfo->end_sector-=11400;
     }
 
     ginfo->ripsize=44+((ginfo->end_sector-ginfo->start_sector)+1)*2352;
@@ -1416,7 +1386,6 @@ static gboolean RipNextTrack(GripInfo *ginfo)
       return FALSE;
     }
 
-#ifdef CDPAR
     if(ginfo->selected_ripper==0) {
       ginfo->in_rip_thread=TRUE;
 
@@ -1424,48 +1393,6 @@ static gboolean RipNextTrack(GripInfo *ginfo)
 		     (void *)ginfo);
       pthread_detach(ginfo->cdp_thread);
     }
-    else {
-#endif
-      strcpy(enc_track.wav_filename,ginfo->ripfile);
-
-      MakeTranslatedArgs(ginfo->ripcmdline,args,100,TranslateSwitch,
-			 &enc_track,FALSE,&(ginfo->sprefs));
-
-/*
-      ArgsToLocale(args);
-*/
-
-      for(arg=0;args[arg];arg++) {
-	char_args[arg+1]=args[arg]->str;
-      }
-
-      char_args[arg+1]=NULL;
-
-      char_args[0]=FindRoot(ginfo->ripexename);
-
-      ginfo->curr_pipe_fd=
-	GetStatusWindowPipe(ginfo->gui_info.rip_status_window);
-
-      ginfo->rippid=fork();
-
-      if(ginfo->rippid==0) {
-	CloseStuff(ginfo);
-	nice(ginfo->ripnice);
-	execv(ginfo->ripexename,char_args);
-
-	LogStatus(ginfo,_("Exec failed\n"));
-	_exit(0);
-      }
-      else {
-	ginfo->curr_pipe_fd=-1;
-      }
-
-      for(arg=0;args[arg];arg++) {
-	g_string_free(args[arg],TRUE);
-      }
-#ifdef CDPAR
-    }
-#endif
 
     ginfo->ripping=TRUE;
     ginfo->ripping_a_disc=TRUE;
@@ -1477,7 +1404,6 @@ static gboolean RipNextTrack(GripInfo *ginfo)
   else return FALSE;
 }
 
-#ifdef CDPAR
 static void ThreadRip(void *arg)
 {
   GripInfo *ginfo;
@@ -1504,8 +1430,6 @@ static void ThreadRip(void *arg)
 
   ginfo->rip_smile_level=0;
 
-  nice(ginfo->ripnice);
-
   dup_output_fd=dup(GetStatusWindowPipe(ginfo->gui_info.rip_status_window));
   output_fp=fdopen(dup_output_fd,"w");
   setlinebuf(output_fp);
@@ -1523,7 +1447,6 @@ static void ThreadRip(void *arg)
 
   pthread_exit(0);
 }
-#endif /* ifdef CDPAR */
 
 void FillInTrackInfo(GripInfo *ginfo,int track,EncodeTrack *new_track)
 {
@@ -1535,10 +1458,8 @@ void FillInTrackInfo(GripInfo *ginfo,int track,EncodeTrack *new_track)
   new_track->track_num=track;
   new_track->start_frame=ginfo->disc.track[track].start_frame;
   new_track->end_frame=ginfo->disc.track[track+1].start_frame-1;
-#ifdef CDPAR
   new_track->track_gain_adjustment=ginfo->track_gain_adjustment;
   new_track->disc_gain_adjustment=ginfo->disc_gain_adjustment;
-#endif
 
   /* Compensate for the gap before a data track */
   if((track<(ginfo->disc.num_tracks-1)&&
