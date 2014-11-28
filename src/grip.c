@@ -121,7 +121,6 @@ void DoSaveConfig(GripInfo *ginfo);
 {"num_cpu",CFG_ENTRY_INT,0,&ginfo->edit_num_cpu},\
 {"kbits_per_sec",CFG_ENTRY_INT,0,&ginfo->kbits_per_sec},\
 {"selected_encoder",CFG_ENTRY_INT,0,&ginfo->selected_encoder},\
-{"selected_ripper",CFG_ENTRY_INT,0,&ginfo->selected_ripper},\
 {"play_mode",CFG_ENTRY_INT,0,&ginfo->play_mode},\
 {"playloop",CFG_ENTRY_BOOL,0,&ginfo->playloop},\
 {"win_width",CFG_ENTRY_INT,0,&uinfo->win_width},\
@@ -905,7 +904,6 @@ static void DoLoadConfig(GripInfo *ginfo)
   ginfo->pending_list=NULL;
   ginfo->delayed_encoding = 0;
   ginfo->do_redirect=TRUE;
-  ginfo->selected_ripper=0;
 
   ginfo->stop_thread_rip_now=FALSE;
   ginfo->disable_paranoia=FALSE;

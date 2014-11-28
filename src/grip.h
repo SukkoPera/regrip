@@ -274,7 +274,6 @@ typedef struct _grip_info {
   GList *encode_list;
   GList *pending_list;
   gboolean delayed_encoding;
-  int selected_ripper;
   gboolean in_rip_thread;
   gboolean do_redirect;
 

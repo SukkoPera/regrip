@@ -65,7 +65,6 @@ static void CheckDupNames(GripInfo *ginfo);
 static void RipWholeCD(GtkDialog *dialog, gint reply, gpointer data);
 static int NextTrackToRip(GripInfo *ginfo);
 static gboolean RipNextTrack(GripInfo *ginfo);
-static void ThreadRip(void *arg);
 static void AddToEncode(GripInfo *ginfo,int track);
 static gboolean MP3Encode(GripInfo *ginfo);
 static void CalculateAll(GripInfo *ginfo);
@@ -1262,9 +1261,9 @@ static gboolean RipNextTrack(GripInfo *ginfo)
 {
   GripGUI *uinfo;
   char tmp[PATH_MAX];
-  int arg;
-  GString *args[100];
-  char *char_args[101];
+//  int arg;
+//  GString *args[100];
+//  char *char_args[101];
   unsigned long long bytesleft;
   struct stat mystat;
   GString *str;
@@ -1386,67 +1385,21 @@ static gboolean RipNextTrack(GripInfo *ginfo)
       return FALSE;
     }
 
-    if(ginfo->selected_ripper==0) {
-      ginfo->in_rip_thread=TRUE;
-
-      pthread_create(&ginfo->cdp_thread,NULL,(void *)ThreadRip,
-		     (void *)ginfo);
-      pthread_detach(ginfo->cdp_thread);
-    }
+    GError *error = NULL;
+    rip_start (ginfo, &error);
 
     ginfo->ripping=TRUE;
     ginfo->ripping_a_disc=TRUE;
 
-    if(ginfo->doencode) ginfo->num_wavs++;
+    if(ginfo->doencode)
+        ginfo->num_wavs++;
 
     return TRUE;
-  }
-  else return FALSE;
+  } else
+    return FALSE;
 }
 
-static void ThreadRip(void *arg)
-{
-  GripInfo *ginfo;
-  int paranoia_mode;
-  int dup_output_fd;
-  FILE *output_fp;
 
-  ginfo=(GripInfo *)arg;
-
-  g_debug(_("Calling CDPRip"));
-
-  paranoia_mode=PARANOIA_MODE_FULL^PARANOIA_MODE_NEVERSKIP;
-  if(ginfo->disable_paranoia)
-    paranoia_mode=PARANOIA_MODE_DISABLE;
-  else if(ginfo->disable_extra_paranoia) {
-    paranoia_mode|=PARANOIA_MODE_OVERLAP;
-    paranoia_mode&=~PARANOIA_MODE_VERIFY;
-  }
-  if(ginfo->disable_scratch_detect)
-    paranoia_mode&=
-      ~(PARANOIA_MODE_SCRATCH|PARANOIA_MODE_REPAIR);
-  if(ginfo->disable_scratch_repair)
-    paranoia_mode&=~PARANOIA_MODE_REPAIR;
-
-  ginfo->rip_smile_level=0;
-
-  dup_output_fd=dup(GetStatusWindowPipe(ginfo->gui_info.rip_status_window));
-  output_fp=fdopen(dup_output_fd,"w");
-  setlinebuf(output_fp);
-
-  CDPRip(ginfo->cd_device,ginfo->force_scsi,ginfo->rip_track+1,
-	 ginfo->start_sector,
-	 ginfo->end_sector,ginfo->ripfile,paranoia_mode,
-	 &(ginfo->rip_smile_level),&(ginfo->rip_percent_done),
-	 &(ginfo->stop_thread_rip_now),ginfo->calc_gain,
-	 output_fp);
-
-  fclose(output_fp);
-
-  ginfo->in_rip_thread=FALSE;
-
-  pthread_exit(0);
-}
 
 void FillInTrackInfo(GripInfo *ginfo,int track,EncodeTrack *new_track)
 {
