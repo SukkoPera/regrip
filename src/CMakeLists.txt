@@ -47,7 +47,9 @@ set (
     ${PROJECT_BINARY_DIR}     # For config.h
     ${GTK2_INCLUDE_DIRS}
     ${VTE_INCLUDE_DIRS}
+    ${CDPARANOIA_INCLUDE_DIRS}
     ${CURL_INCLUDE_DIRS}
+    ${SNDFILE_INCLUDE_DIRS}
 )
 
 set (
@@ -56,16 +58,16 @@ set (
     ${GTK2_LIBRARIES}
     ${VTE_LIBRARIES}
     ${CURL_LIBRARIES}
-    -lcdda_interface
-    -lcdda_paranoia
+    ${SNDFILE_LIBRARIES}
+    ${CDPARANOIA_LIBRARIES}
     -lpthread
     -lm
 )
 
-if (${CDDB_FOUND})
-    set (includes ${includes} ${CDDB_INCLUDES})
-    set (libraries ${libraries} ${CDDB_LIBRARIES})
-endif (${CDDB_FOUND})
+#if (${CDDB_FOUND})
+#    set (includes ${includes} ${CDDB_INCLUDES})
+#    set (libraries ${libraries} ${CDDB_LIBRARIES})
+#endif (${CDDB_FOUND})
 
 include_directories (
     ${includes}
@@ -80,3 +82,9 @@ target_link_libraries (
     regrip
     ${libraries}
 )
+
+
+### INSTALLATION STUFF ###
+
+# install the binaries we just made
+install (TARGETS regrip RUNTIME DESTINATION bin)
