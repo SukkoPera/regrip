@@ -905,6 +905,9 @@ static void DoLoadConfig(GripInfo *ginfo)
   ginfo->delayed_encoding = 0;
   ginfo->do_redirect=TRUE;
 
+  ginfo -> rip_thread = NULL;
+  ginfo -> encoder_data = NULL;
+
   ginfo->stop_thread_rip_now=FALSE;
   ginfo->disable_paranoia=FALSE;
   ginfo->disable_extra_paranoia=FALSE;

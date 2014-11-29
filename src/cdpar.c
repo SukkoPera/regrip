@@ -41,8 +41,6 @@
 #include "grip.h"
 #include "cdpar.h"
 
-//static void CDPCallback (long inpos, int function);
-//static void GainCalc (char *buffer);
 
 typedef struct {
     GripInfo *ginfo;
@@ -55,9 +53,9 @@ typedef struct {
 } rip_thread_data;
 
 /* Ugly hack because we can't pass user data to the callback */
-int *global_rip_smile_level;
-FILE *global_output_fp;
-
+static int *global_rip_smile_level;
+static FILE *global_output_fp;
+static int skipped_flag = 0;
 
 // GError stuff
 
@@ -76,13 +74,53 @@ enum GripRipError {
 };
 
 
-static void CDPCallback (long inpos, int function) {
-	static long c_sector = 0/*,v_sector=0*/;
-	static int last = 0;
+const char * const get_smilie (int slevel) {
+    char *smilie = NULL;
+
+	switch (slevel) {
+        case 0:  /* finished, or no jitter */
+            if (skipped_flag)
+                smilie = "8-X";
+            else
+                smilie = ":^D";
+            break;
+        case 1:  /* normal.  no atom, low jitter */
+            smilie = ":-)";
+            break;
+        case 2:  /* normal, overlap > 1 */
+            smilie = ":-|";
+            break;
+        case 4:  /* drift */
+            smilie = ":-/";
+            break;
+        case 3:  /* unreported loss of streaming */
+            smilie = ":-P";
+            break;
+        case 5:  /* dropped/duped bytes */
+            smilie = "8-|";
+            break;
+        case 6:  /* scsi error */
+            smilie = ":-0";
+            break;
+        case 7:  /* scratch */
+            smilie = ":-(";
+            break;
+        case 8:  /* skip */
+            smilie = ";-(";
+            skipped_flag = 1;
+            break;
+        default:
+            g_assert_not_reached ();
+            break;
+	}
+
+	return smilie;
+}
+
+static void cdparanoia_callback (long inpos, int function) {
 	static long lasttime = 0;
-	long sector, osector = 0;
+	long osector = 0;
 	struct timeval thistime;
-	//  static char heartbeat=' ';
 	static int overlap = 0;
 	static int slevel = 0;
 	static int slast = 0;
@@ -90,14 +128,10 @@ static void CDPCallback (long inpos, int function) {
 	long test;
 
 	osector = inpos;
-	sector = inpos / CD_FRAMEWORDS;
 
 	if (function == -1) {
-		last = 8;
-		//    heartbeat='*';
 		slevel = 0;
-		//    v_sector=sector;
-	} else
+	} else {
 		switch (function) {
 			case PARANOIA_CB_VERIFY:
 				if (stimeout >= 30) {
@@ -107,14 +141,6 @@ static void CDPCallback (long inpos, int function) {
 						slevel = 1;
 					}
 				}
-
-				break;
-
-			case PARANOIA_CB_READ:
-				if (sector > c_sector) {
-					c_sector = sector;
-				}
-
 				break;
 
 			case PARANOIA_CB_FIXUP_EDGE:
@@ -125,14 +151,12 @@ static void CDPCallback (long inpos, int function) {
 						slevel = 1;
 					}
 				}
-
 				break;
 
 			case PARANOIA_CB_FIXUP_ATOM:
 				if (slevel < 3 || stimeout > 5) {
 					slevel = 3;
 				}
-
 				break;
 
 			case PARANOIA_CB_READERR:
@@ -155,7 +179,6 @@ static void CDPCallback (long inpos, int function) {
 				if (slevel < 4 || stimeout > 5) {
 					slevel = 4;
 				}
-
 				break;
 
 			case PARANOIA_CB_FIXUP_DROPPED:
@@ -164,53 +187,18 @@ static void CDPCallback (long inpos, int function) {
 				break;
 
 			default:
-				g_assert_not_reached();
+				// Never mind
 				break;
 		}
-
+	}
 
 	gettimeofday (&thistime, NULL);
 	test = thistime.tv_sec * 10 + thistime.tv_usec / 100000;
 
 	if (lasttime != test || function == -1 || slast != slevel) {
 		if (lasttime != test || function == -1) {
-			last++;
 			lasttime = test;
-
-			if (last > 7) {
-				last = 0;
-			}
-
 			stimeout++;
-
-			switch (last) {
-				case 0:
-					//  heartbeat=' ';
-					break;
-
-				case 1:
-				case 7:
-					//  heartbeat='.';
-					break;
-
-				case 2:
-				case 6:
-					//  heartbeat='o';
-					break;
-
-				case 3:
-				case 5:
-					//  heartbeat='0';
-					break;
-
-				case 4:
-					//  heartbeat='O';
-					break;
-			}
-
-			//      if(function==-1)
-			//  heartbeat='*';
-
 		}
 
 		if (slast != slevel) {
@@ -220,11 +208,7 @@ static void CDPCallback (long inpos, int function) {
 		slast = slevel;
 	}
 
-	if (slevel < 8 && slevel > 0) {
-		*global_rip_smile_level = slevel - 1;
-	} else {
-		*global_rip_smile_level = 0;
-	}
+    *global_rip_smile_level = slevel;
 }
 
 /** \brief Rip thread function
@@ -245,14 +229,16 @@ static gpointer rip_thread_func (gpointer user_data) {
 
     data -> ginfo -> in_rip_thread = TRUE;
 
+    skipped_flag = 0;
+
     long cursor;
     for (cursor = data -> first_sector; cursor <= data -> last_sector; ++cursor) {
-		/* read a sector */
-		gint16 *readbuf = paranoia_read (data -> p, CDPCallback);
+		/* Read a sector */
+		gint16 *readbuf = paranoia_read (data -> p, cdparanoia_callback);
 
 		done = cursor - data -> first_sector;
 		percent = (gfloat) done / (gfloat) todo;
-		g_debug ("Rip progress: %.02f", percent);
+//		g_debug ("Rip progress: %.02f", percent);
 
 		char *mes = cdda_messages (data -> d);
 		if (mes) {
@@ -272,20 +258,22 @@ static gpointer rip_thread_func (gpointer user_data) {
 			break;
 		} else {
             // OK, data is ready, send to callback
-            if (!data -> callback (readbuf, CD_FRAMESIZE_RAW, data -> callback_data)) {
+            if (!data -> callback (readbuf, CD_FRAMESIZE_RAW, percent, *global_rip_smile_level, data -> callback_data)) {
                 g_debug ("Callback requested to abort rip");
                 break;
             }
 		}
+
+		skipped_flag = 0;
 	}
 
     // Finished
-    CDPCallback (cursor * (CD_FRAMESIZE_RAW / 2) - 1, -1);
+    cdparanoia_callback (cursor * (CD_FRAMESIZE_RAW / 2) - 1, -1);
 
     // Clean up
     paranoia_free (data -> p);
     cdda_close (data -> d);
-//    fclose (output_fp);
+//    fclose (output_fp);           // FIXME
 
     data -> ginfo -> in_rip_thread = FALSE;
 
@@ -307,55 +295,24 @@ static gpointer rip_thread_func (gpointer user_data) {
 gboolean rip_start (GripInfo *ginfo, cdrip_callback callback, gpointer callback_data, GError **error) {
     g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
-	g_debug (_("Starting Rip"));
+	g_debug (_("Starting rip"));
     g_assert (ginfo -> rip_thread == NULL);
 
-    int paranoia_mode;
-    int dup_output_fd;
-    FILE *output_fp;
-
-    paranoia_mode = PARANOIA_MODE_FULL ^ PARANOIA_MODE_NEVERSKIP;
-
-    if (ginfo -> disable_paranoia) {
-        paranoia_mode = PARANOIA_MODE_DISABLE;
-    } else if (ginfo -> disable_extra_paranoia) {
-        paranoia_mode |= PARANOIA_MODE_OVERLAP;
-        paranoia_mode &= ~PARANOIA_MODE_VERIFY;
-    }
-
-    if (ginfo -> disable_scratch_detect)
-        paranoia_mode &=
-            ~(PARANOIA_MODE_SCRATCH | PARANOIA_MODE_REPAIR);
-
-    if (ginfo -> disable_scratch_repair) {
-        paranoia_mode &= ~PARANOIA_MODE_REPAIR;
-    }
-
-    ginfo -> rip_smile_level = 0;
-
-    dup_output_fd = dup (GetStatusWindowPipe (ginfo -> gui_info.rip_status_window));
-    output_fp = fdopen (dup_output_fd, "w");
+    // Prepare log windows fd
+    int dup_output_fd = dup (GetStatusWindowPipe (ginfo -> gui_info.rip_status_window));
+    FILE *output_fp = fdopen (dup_output_fd, "w");
     setlinebuf (output_fp);
-
-    //////////////////////
-
-//	CDPRip (ginfo -> cd_device, ginfo -> force_scsi, ginfo -> rip_track + 1,
-//	        ginfo -> start_sector,
-//	        ginfo -> end_sector, ginfo -> ripfile, paranoia_mode,
-//	        & (ginfo -> rip_smile_level), & (ginfo -> rip_percent_done),
-//	        & (ginfo -> stop_thread_rip_now), ginfo -> calc_gain,
-//	        output_fp);
+    global_output_fp = output_fp;
 
 //	int force_cdrom_endian = -1;
 //	int force_cdrom_sectors = -1;
 //	int force_cdrom_overlap = -1;
 
-    /* full paranoia, but allow skipping */
     int verbose = CDDA_MESSAGE_FORGETIT;
     int track = ginfo -> rip_track + 1;
 
+    ginfo -> rip_smile_level = 0;
     global_rip_smile_level = &(ginfo -> rip_smile_level);
-    global_output_fp = output_fp;
 
     /* Query the cdrom/disc; */
     cdrom_drive *d;
@@ -475,6 +432,24 @@ gboolean rip_start (GripInfo *ginfo, cdrip_callback callback, gpointer callback_
         return FALSE;
     }
 
+    // Init CDParanoia - full paranoia, but allow skipping
+    int paranoia_mode = PARANOIA_MODE_FULL ^ PARANOIA_MODE_NEVERSKIP;
+
+    if (ginfo -> disable_paranoia) {
+        paranoia_mode = PARANOIA_MODE_DISABLE;
+    } else if (ginfo -> disable_extra_paranoia) {
+        paranoia_mode |= PARANOIA_MODE_OVERLAP;
+        paranoia_mode &= ~PARANOIA_MODE_VERIFY;
+    }
+
+    if (ginfo -> disable_scratch_detect)
+        paranoia_mode &=
+            ~(PARANOIA_MODE_SCRATCH | PARANOIA_MODE_REPAIR);
+
+    if (ginfo -> disable_scratch_repair) {
+        paranoia_mode &= ~PARANOIA_MODE_REPAIR;
+    }
+
     cdrom_paranoia *p = paranoia_init (d);
     paranoia_modeset (p, paranoia_mode);
 
@@ -503,10 +478,10 @@ gboolean rip_start (GripInfo *ginfo, cdrip_callback callback, gpointer callback_
     ripdata -> callback = callback;
     ripdata -> callback_data = callback_data;
 
-    g_debug ("Starting Rip Thread");
+    g_debug ("Starting rip thread");
     ginfo -> rip_thread = g_thread_try_new ("Grip Rip Thread", rip_thread_func, ripdata, error);
     if (ginfo -> rip_thread) {
-        g_debug ("Rip Thread started");
+        g_debug ("Rip thread started");
     } else {
         g_warning ("Cannot start rip thread: %s", (*error) -> message);
         g_prefix_error (error, "Cannot start rip thread");

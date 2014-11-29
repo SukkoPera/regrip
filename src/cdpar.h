@@ -25,8 +25,10 @@
 
 #include <glib.h>
 
-typedef gboolean (*cdrip_callback) (gint16 *buffer, gsize bufsize, gpointer user_data);
+typedef gboolean (*cdrip_callback) (gint16 *buffer, gsize bufsize, gfloat progress, int smilie_idx, gpointer user_data);
 
 gboolean rip_start (GripInfo *ginfo, cdrip_callback callback, gpointer callback_data, GError **error);
+
+const char * const get_smilie (int slevel);
 
 #endif // CDPAR_H_INCLUDED

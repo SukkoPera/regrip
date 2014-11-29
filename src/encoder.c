@@ -25,23 +25,6 @@ enum GripEncoderError {
     GRIP_ENCODER_ERROR_OUTFILE
 };
 
-/* Do the replay gain calculation on a sector */
-static void GainCalc (char *buffer) {
-	static Float_t l_samples[588];
-	static Float_t r_samples[588];
-	long count;
-	short *data;
-
-	data = (short *) buffer;
-
-	for (count = 0; count < 588; count++) {
-		l_samples[count] = (Float_t) data[count * 2];
-		r_samples[count] = (Float_t) data[ (count * 2) + 1];
-	}
-
-	AnalyzeSamples (l_samples, r_samples, 588, 2);
-}
-
 
 /** \brief Function that gets called whenever a block of audio data has been read from the CD and is read for processing.
  *
@@ -53,7 +36,7 @@ static void GainCalc (char *buffer) {
 gboolean encoder_callback (gint16 *buffer, gsize bufsize, gpointer user_data) {
 //    encoder_callback_data *data = (encoder_callback_data *) user_data;
 
-    g_debug ("encoder_callback()");
+//    g_debug ("encoder_callback()");
 
 //    if (data -> do_gain_calc)
 //        GainCalc ((char *) buffer);
@@ -61,15 +44,10 @@ gboolean encoder_callback (gint16 *buffer, gsize bufsize, gpointer user_data) {
     if (sf_write_short ((SNDFILE *) user_data, buffer, bufsize / 2) != bufsize / 2) {
 //        fprintf (stderr, "Error writing output: %s", sf_strerror (data -> outfile));
 
-//        sf_close (file);
-//        cdda_close (d);
-//        paranoia_free (p);
-
-        g_debug ("encoder_callback() failed");
+        g_debug ("encoder_callback() failed: %s", sf_strerror ((SNDFILE *) user_data));
         return FALSE;
     }
 
-    g_debug ("encoder_callback() returning");
     return TRUE;
 }
 
@@ -77,6 +55,8 @@ gpointer encoder_init (gchar *filename, encoder_options *opts, GError **error) {
     g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
     gpointer ret;
+
+    g_debug ("encoder_init()");
 
     // We only support CD quality output
     SF_INFO sfinfo = {0};
@@ -120,6 +100,8 @@ gpointer encoder_init (gchar *filename, encoder_options *opts, GError **error) {
 
 gboolean encoder_close (gpointer encoder_data, GError **error) {
     g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+    g_debug ("encoder_close()");
 
     SNDFILE *file = (SNDFILE *) encoder_data;
 
