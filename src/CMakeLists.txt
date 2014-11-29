@@ -16,6 +16,8 @@ set (
     discedit.h
     eggtrayicon.c
     eggtrayicon.h
+    encoder.c
+    encoder.h
     gain_analysis.c
     gain_analysis.h
     grip.c

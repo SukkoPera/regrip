@@ -172,7 +172,7 @@ GtkWidget *GripNew(const gchar* geometry,char *device,char *scsi_device,
   gchar *icon_file = g_build_filename (GNOME_ICONDIR, "gripicon.png", NULL);
   if (!gtk_window_set_default_icon_from_file (icon_file, &err)) {
     gchar *msg = g_strdup_printf (_("Error: Unable to set window icon: %s"), err -> message);
-    DisplayError (msg);
+    show_error (NULL, msg);
     g_free (msg);
   }
   g_free (icon_file);
@@ -237,7 +237,7 @@ GtkWidget *GripNew(const gchar* geometry,char *device,char *scsi_device,
   if(!CDInitDevice(ginfo->cd_device,&(ginfo->disc))) {
     sprintf(buf,_("Error: Unable to initialize [%s]\n"),ginfo->cd_device);
 
-    DisplayError(buf);
+    show_error(ginfo -> gui_info.app, buf);
   }
 
   CDStat(&(ginfo->disc),TRUE);
@@ -516,13 +516,13 @@ static void DoHelp(GtkWidget *widget,gpointer data)
         gchar *errmsg;
 
         errmsg = g_strdup_printf (_("Unable to run yelp: %s"), error -> message);
-        DisplayError (errmsg);
+        show_error (NULL, errmsg);
         g_free (errmsg);
     }
 
     g_free (argv[1]);
   } else {
-    DisplayError (_("Cannot open help file: yelp was not found in PATH"));
+    show_error (NULL, _("Cannot open help file: yelp was not found in PATH"));
   }
 }
 

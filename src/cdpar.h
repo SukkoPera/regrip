@@ -20,4 +20,13 @@
  * USA
  */
 
-gboolean rip_start (GripInfo *ginfo, GError **error);
+#ifndef CDPAR_H_INCLUDED
+#define CDPAR_H_INCLUDED
+
+#include <glib.h>
+
+typedef gboolean (*cdrip_callback) (gint16 *buffer, gsize bufsize, gpointer user_data);
+
+gboolean rip_start (GripInfo *ginfo, cdrip_callback callback, gpointer callback_data, GError **error);
+
+#endif // CDPAR_H_INCLUDED

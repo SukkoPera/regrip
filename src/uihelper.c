@@ -4,8 +4,8 @@
  *
  *   http://sourceforge.net/projects/grip/
  *
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License as 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
  * License, or (at your option) any later version.
  *
@@ -89,21 +89,21 @@ GtkWidget *BuildMenuItem(gchar *impath, gchar *text, gboolean stock)
   } else {
     item = gtk_menu_item_new_with_mnemonic(text);
   }
-	
+
   gtk_widget_show_all(item);
-	
+
   return item;
 }
 
 GtkWidget *BuildMenuItemXpm(GtkWidget *xpm, gchar *text)
 {
   GtkWidget *item;
-	
+
   item = gtk_image_menu_item_new_with_mnemonic(text);
   gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item), xpm);
-	
+
   gtk_widget_show_all(item);
-	
+
   return item;
 }
 
@@ -166,14 +166,4 @@ void UpdateGTK(void)
 {
   while(gtk_events_pending())
     gtk_main_iteration();
-}
-
-void show_warning (GtkWidget *parentWin, char *text) {
-	GtkWidget *dialog = gtk_message_dialog_new (GTK_WINDOW (parentWin),
-						GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
-						GTK_MESSAGE_WARNING, GTK_BUTTONS_OK,
-						text);
-	gtk_window_set_title (GTK_WINDOW (dialog), "Warning");
-	gtk_dialog_run (GTK_DIALOG (dialog) );
-	gtk_widget_destroy (dialog);
 }

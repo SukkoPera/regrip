@@ -21,7 +21,8 @@
  */
 
 /* Message routines */
-void DisplayError(char *msg);
+void show_error(GtkWidget *parentWin, char *text);
+void show_warning (GtkWidget *parentWin, char *text);
 void BoolDialog(char *question,char *yes,GtkSignalFunc yesfunc,
 		gpointer yesdata,
 		char *no,GtkSignalFunc nofunc,gpointer nodata);

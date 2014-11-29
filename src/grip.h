@@ -277,7 +277,7 @@ typedef struct _grip_info {
   gboolean in_rip_thread;
   gboolean do_redirect;
 
-  pthread_t cdp_thread;
+  GThread *rip_thread;
   gboolean stop_thread_rip_now;
   gboolean disable_paranoia;
   gboolean disable_extra_paranoia;

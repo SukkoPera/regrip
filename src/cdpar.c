@@ -38,25 +38,21 @@
 #include <glib/gi18n.h>
 #include <cdda_interface.h>
 #include <cdda_paranoia.h>
-#include <sndfile.h>
-#include "gain_analysis.h"
 #include "grip.h"
 #include "cdpar.h"
 
 //static void CDPCallback (long inpos, int function);
 //static void GainCalc (char *buffer);
 
-typedef gboolean (*cdrip_callback) (gint16 *buffer, gsize bufsize, void *user_data);
-
 typedef struct {
+    GripInfo *ginfo;
     cdrom_drive *d;
     cdrom_paranoia *p;
-    gboolean do_gain_calc;
-    SNDFILE *outfile;
     long first_sector;
     long last_sector;
     cdrip_callback callback;
-} cdrip_callback_data;
+    gpointer callback_data;
+} rip_thread_data;
 
 /* Ugly hack because we can't pass user data to the callback */
 int *global_rip_smile_level;
@@ -72,58 +68,13 @@ GQuark grip_rip_error_quark (void) {
 }
 
 enum GripRipError {
-    GRIP_RIP_ERROR_INVALIDENCPARAMS,
     GRIP_RIP_ERROR_CANTOPENDRIVE,
     GRIP_RIP_ERROR_NOAUDIOTRACK,
-    GRIP_RIP_ERROR_OUTFILE
+    GRIP_RIP_ERROR_NOAUDIOCD,
+    GRIP_RIP_ERROR_CANTREADAUDIO,
+    GRIP_RIP_ERROR_CANTOPENDISC
 };
 
-
-/* Do the replay gain calculation on a sector */
-static void GainCalc (char *buffer) {
-	static Float_t l_samples[588];
-	static Float_t r_samples[588];
-	long count;
-	short *data;
-
-	data = (short *) buffer;
-
-	for (count = 0; count < 588; count++) {
-		l_samples[count] = (Float_t) data[count * 2];
-		r_samples[count] = (Float_t) data[ (count * 2) + 1];
-	}
-
-	AnalyzeSamples (l_samples, r_samples, 588, 2);
-}
-
-
-/** \brief Function that gets called whenever a block of audio data has been read from the CD and is read for processing.
- *
- * \param Block of audio data (this should contain pairs of L/R samples)
- * \param Size of block
- * \return FALSE if rip must be aborted, TRUE otherwise.
- *
- */
-static gboolean cdrip_callback_func (gint16 *buffer, gsize bufsize, void *user_data) {
-    cdrip_callback_data *data = (cdrip_callback_data *) user_data;
-
-    g_debug ("cdrip_callback_func()");
-
-    if (data -> do_gain_calc)
-        GainCalc ((char *) buffer);
-
-    if (sf_write_short (data -> outfile, buffer, bufsize / 2) != bufsize / 2) {
-        fprintf (stderr, "Error writing output: %s", sf_strerror (data -> outfile));
-
-//        sf_close (file);
-//        cdda_close (d);
-//        paranoia_free (p);
-
-        return FALSE;
-    }
-
-    return TRUE;
-}
 
 static void CDPCallback (long inpos, int function) {
 	static long c_sector = 0/*,v_sector=0*/;
@@ -284,40 +235,36 @@ static void CDPCallback (long inpos, int function) {
  *
  */
 static gpointer rip_thread_func (gpointer user_data) {
-    cdrip_callback_data *data = (cdrip_callback_data *) user_data;
-    gfloat rip_percent_done;
+    rip_thread_data *data = (rip_thread_data *) user_data;
+    long done, todo;
+    gfloat percent;
 
     paranoia_seek (data -> p, data -> first_sector, SEEK_SET);
+
+    todo = data -> last_sector - data -> first_sector + 1;
+
+    data -> ginfo -> in_rip_thread = TRUE;
 
     long cursor;
     for (cursor = data -> first_sector; cursor <= data -> last_sector; ++cursor) {
 		/* read a sector */
 		gint16 *readbuf = paranoia_read (data -> p, CDPCallback);
-		char *err = cdda_errors (data -> d);
+
+		done = cursor - data -> first_sector;
+		percent = (gfloat) done / (gfloat) todo;
+		g_debug ("Rip progress: %.02f", percent);
+
 		char *mes = cdda_messages (data -> d);
+		if (mes) {
+            g_warning ("CDParanoia message: %s", mes);
+            free (mes);
+		}
 
-		rip_percent_done = (gfloat) cursor / (gfloat) data -> last_sector;
-		g_debug ("Rip progress: %.0f", rip_percent_done);
-
-		if (mes || err)
-			fprintf (stderr, "\r                               "
-			         "                                           \r%s%s\n",
-			         mes ? mes : "", err ? err : "");
-
-		if (err)
-			free (err);
-
-		if (mes)
-			free (mes);
-
-//		if (*stop_thread_rip_now) {
-//			*stop_thread_rip_now = FALSE;
-//
-//			cdda_close (d);
-//			paranoia_free (p);
-//
-//			return FALSE;
-//		}
+		char *err = cdda_errors (data -> d);
+		if (err) {
+            g_warning ("CDParanoia error: %s", err);
+            free (err);
+		}
 
 		if (readbuf == NULL) {
 			fprintf (stderr, "\nparanoia_read: Unrecoverable error, bailing.\n");
@@ -325,11 +272,28 @@ static gpointer rip_thread_func (gpointer user_data) {
 			break;
 		} else {
             // OK, data is ready, send to callback
-            data -> callback (readbuf, CD_FRAMESIZE_RAW, data);
+            if (!data -> callback (readbuf, CD_FRAMESIZE_RAW, data -> callback_data)) {
+                g_debug ("Callback requested to abort rip");
+                break;
+            }
 		}
 	}
 
-	return GUINT_TO_POINTER (cursor > data -> last_sector);
+    // Finished
+    CDPCallback (cursor * (CD_FRAMESIZE_RAW / 2) - 1, -1);
+
+    // Clean up
+    paranoia_free (data -> p);
+    cdda_close (data -> d);
+//    fclose (output_fp);
+
+    data -> ginfo -> in_rip_thread = FALSE;
+
+    gboolean ret = cursor > data -> last_sector;
+
+    g_free (data);
+
+	return GUINT_TO_POINTER (ret);
 }
 
 
@@ -340,244 +304,215 @@ static gpointer rip_thread_func (gpointer user_data) {
  * \return TRUE if the thread was started successfully, FALSE otherwise with error set
  *
  */
-gboolean rip_start (GripInfo *ginfo, GError **error) {
+gboolean rip_start (GripInfo *ginfo, cdrip_callback callback, gpointer callback_data, GError **error) {
     g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	g_debug (_("Starting Rip"));
+    g_assert (ginfo -> rip_thread == NULL);
 
-	// Init encoder
-    SF_INFO sfinfo = {0};
-	sfinfo.samplerate = 44100;
-	sfinfo.channels = 2;
-	sfinfo.format = (SF_FORMAT_OGG | SF_FORMAT_VORBIS);
+    int paranoia_mode;
+    int dup_output_fd;
+    FILE *output_fp;
 
-    if (!sf_format_check (&sfinfo)) {
-        *error = g_error_new_literal (GRIP_RIP_ERROR, GRIP_RIP_ERROR_CANTOPENDRIVE, _("Invalid encoder parameters"));
-        return FALSE;
-    } else {
-        int paranoia_mode;
-        int dup_output_fd;
-        FILE *output_fp;
+    paranoia_mode = PARANOIA_MODE_FULL ^ PARANOIA_MODE_NEVERSKIP;
 
-        paranoia_mode = PARANOIA_MODE_FULL ^ PARANOIA_MODE_NEVERSKIP;
-
-        if (ginfo -> disable_paranoia) {
-            paranoia_mode = PARANOIA_MODE_DISABLE;
-        } else if (ginfo -> disable_extra_paranoia) {
-            paranoia_mode |= PARANOIA_MODE_OVERLAP;
-            paranoia_mode &= ~PARANOIA_MODE_VERIFY;
-        }
-
-        if (ginfo -> disable_scratch_detect)
-            paranoia_mode &=
-                ~(PARANOIA_MODE_SCRATCH | PARANOIA_MODE_REPAIR);
-
-        if (ginfo -> disable_scratch_repair) {
-            paranoia_mode &= ~PARANOIA_MODE_REPAIR;
-        }
-
-        ginfo -> rip_smile_level = 0;
-
-        dup_output_fd = dup (GetStatusWindowPipe (ginfo -> gui_info.rip_status_window));
-        output_fp = fdopen (dup_output_fd, "w");
-        setlinebuf (output_fp);
-
-        //////////////////////
-
-    //	CDPRip (ginfo -> cd_device, ginfo -> force_scsi, ginfo -> rip_track + 1,
-    //	        ginfo -> start_sector,
-    //	        ginfo -> end_sector, ginfo -> ripfile, paranoia_mode,
-    //	        & (ginfo -> rip_smile_level), & (ginfo -> rip_percent_done),
-    //	        & (ginfo -> stop_thread_rip_now), ginfo -> calc_gain,
-    //	        output_fp);
-
-    //	int force_cdrom_endian = -1;
-    //	int force_cdrom_sectors = -1;
-    //	int force_cdrom_overlap = -1;
-
-        /* full paranoia, but allow skipping */
-        int verbose = CDDA_MESSAGE_FORGETIT;
-        int track = ginfo -> rip_track + 1;
-
-        global_rip_smile_level = &(ginfo -> rip_smile_level);
-        global_output_fp = output_fp;
-
-        /* Query the cdrom/disc; */
-        cdrom_drive *d;
-        if (ginfo -> force_scsi && *ginfo -> force_scsi) {
-            d = cdda_identify_scsi (ginfo -> force_scsi, ginfo -> cd_device, verbose, NULL);
-        } else {
-            d = cdda_identify (ginfo -> cd_device, verbose, NULL);
-        }
-
-        if (!d) {
-            *error = g_error_new_literal (GRIP_RIP_ERROR, GRIP_RIP_ERROR_CANTOPENDRIVE, _("Unable to open cdrom drive"));
-            return FALSE;
-        }
-
-        if (verbose) {
-            cdda_verbose_set (d, CDDA_MESSAGE_PRINTIT, CDDA_MESSAGE_PRINTIT);
-        } else {
-            cdda_verbose_set (d, CDDA_MESSAGE_PRINTIT, CDDA_MESSAGE_FORGETIT);
-        }
-
-    #if 0
-        /* possibly force hand on endianness of drive, sector request size */
-        if (force_cdrom_endian != -1) {
-            d -> bigendianp = force_cdrom_endian;
-
-            switch (force_cdrom_endian) {
-                case 0:
-                    fprintf (output_fp,
-                             "Forcing CDROM sense to little-endian; ignoring preset and autosense");
-                    break;
-
-                case 1:
-                    fprintf (output_fp,
-                             "Forcing CDROM sense to big-endian; ignoring preset and autosense");
-                    break;
-            }
-        }
-
-        if (force_cdrom_sectors != -1) {
-            if (force_cdrom_sectors < 0 || force_cdrom_sectors > 100) {
-                fprintf (output_fp, "Default sector read size must be 1<= n <= 100\n");
-                cdda_close (d);
-
-                return FALSE;
-            }
-
-            fprintf (output_fp, "Forcing default to read %d sectors; "
-                     "ignoring preset and autosense", force_cdrom_sectors);
-
-            d -> nsectors = force_cdrom_sectors;
-            d -> bigbuff = force_cdrom_sectors * CD_FRAMESIZE_RAW;
-        }
-
-        if (force_cdrom_overlap != -1) {
-            if (force_cdrom_overlap < 0 || force_cdrom_overlap > 75) {
-                fprintf (output_fp, "Search overlap sectors must be 0<= n <=75\n");
-                cdda_close (d);
-
-                return FALSE;
-            }
-
-            fprintf (output_fp, "Forcing search overlap to %d sectors; "
-                     "ignoring autosense", force_cdrom_overlap);
-        }
-    #endif
-
-        switch (cdda_open (d)) {
-            case -2:
-            case -3:
-            case -4:
-            case -5:
-                fprintf (output_fp,
-                         "\nUnable to open disc.  Is there an audio CD in the drive?");
-                cdda_close (d);
-                return FALSE;
-
-            case -6:
-                fprintf (output_fp,
-                         "\nCdparanoia could not find a way to read audio from this drive.");
-                cdda_close (d);
-                return FALSE;
-
-            case 0:
-                break;
-
-            default:
-                fprintf (output_fp, "\nUnable to open disc.");
-                cdda_close (d);
-                return FALSE;
-        }
-
-        if (d -> interface == GENERIC_SCSI && d -> bigbuff <= CD_FRAMESIZE_RAW) {
-            fprintf (output_fp,
-                     "WARNING: You kernel does not have generic SCSI 'SG_BIG_BUFF'\n"
-                     "         set, or it is set to a very small value.  Paranoia\n"
-                     "         will only be able to perform single sector reads\n"
-                     "         making it very unlikely Paranoia can work.\n\n"
-                     "         To correct this problem, the SG_BIG_BUFF define\n"
-                     "         must be set in /usr/src/linux/include/scsi/sg.h\n"
-                     "         by placing, for example, the following line just\n"
-                     "         before the last #endif:\n\n"
-                     "         #define SG_BIG_BUFF 65536\n\n"
-                     "         and then recompiling the kernel.\n\n"
-                     "         Attempting to continue...\n\n");
-        }
-
-        if (d -> nsectors == 1) {
-            fprintf (output_fp,
-                     "WARNING: The autosensed/selected sectors per read value is\n"
-                     "         one sector, making it very unlikely Paranoia can \n"
-                     "         work.\n\n"
-                     "         Attempting to continue...\n\n");
-        }
-
-        if (!cdda_track_audiop (d, track)) {
-            *error = g_error_new_literal (GRIP_RIP_ERROR, GRIP_RIP_ERROR_NOAUDIOTRACK, _("Selected track is not an audio track"));
-            cdda_close (d);
-            return FALSE;
-        }
-
-        cdrom_paranoia *p = paranoia_init (d);
-        paranoia_modeset (p, paranoia_mode);
-
-    //	if (force_cdrom_overlap != -1) {
-    //		paranoia_overlapset (p, force_cdrom_overlap);
-    //	}
-
-        if (verbose) {
-            cdda_verbose_set (d, CDDA_MESSAGE_LOGIT, CDDA_MESSAGE_LOGIT);
-        } else {
-            cdda_verbose_set (d, CDDA_MESSAGE_FORGETIT, CDDA_MESSAGE_FORGETIT);
-        }
-
-        /* this is probably a good idea in general */
-        /*  seteuid(getuid());
-            setegid(getgid());*/
-
-        // OK, paranoia is ready, open output file
-        SNDFILE *file;
-        if (!(file = sf_open (ginfo -> ripfile, SFM_WRITE, &sfinfo))) {
-            *error = g_error_new_literal (GRIP_RIP_ERROR, GRIP_RIP_ERROR_OUTFILE, _("Unable to open output file"));
-            cdda_close (d);
-            paranoia_free (p);
-
-            return FALSE;
-        }
-
-        /* Off we go! */
-        cdrip_callback_data cbdata;
-        cbdata.d = d;
-        cbdata.p = p;
-        cbdata.do_gain_calc = ginfo -> calc_gain;
-        cbdata.outfile = file;
-        cbdata.first_sector = ginfo -> start_sector + cdda_track_firstsector (d, track);
-        cbdata.last_sector = ginfo -> end_sector + cdda_track_firstsector (d, track);
-        cbdata.callback = cdrip_callback_func;
-
-        g_debug ("Starting Rip Thread");
-        ginfo -> in_rip_thread = TRUE;
-        GThread *rip_thread = g_thread_new ("Grip Rip Thread", rip_thread_func, &cbdata);
-
-        gboolean rip_ok = GPOINTER_TO_INT (g_thread_join (rip_thread));
-        ginfo -> in_rip_thread = FALSE;
-        g_debug ("Rip Thread Finished with %d", rip_ok);
-
-        // Finished
-//        CDPCallback (cursor * (CD_FRAMESIZE_RAW / 2) - 1, -1);
-        sf_close (file);
-
-        paranoia_free (p);
-
-        cdda_close (d);
-
-        fclose (output_fp);
+    if (ginfo -> disable_paranoia) {
+        paranoia_mode = PARANOIA_MODE_DISABLE;
+    } else if (ginfo -> disable_extra_paranoia) {
+        paranoia_mode |= PARANOIA_MODE_OVERLAP;
+        paranoia_mode &= ~PARANOIA_MODE_VERIFY;
     }
 
-	return TRUE;
+    if (ginfo -> disable_scratch_detect)
+        paranoia_mode &=
+            ~(PARANOIA_MODE_SCRATCH | PARANOIA_MODE_REPAIR);
+
+    if (ginfo -> disable_scratch_repair) {
+        paranoia_mode &= ~PARANOIA_MODE_REPAIR;
+    }
+
+    ginfo -> rip_smile_level = 0;
+
+    dup_output_fd = dup (GetStatusWindowPipe (ginfo -> gui_info.rip_status_window));
+    output_fp = fdopen (dup_output_fd, "w");
+    setlinebuf (output_fp);
+
+    //////////////////////
+
+//	CDPRip (ginfo -> cd_device, ginfo -> force_scsi, ginfo -> rip_track + 1,
+//	        ginfo -> start_sector,
+//	        ginfo -> end_sector, ginfo -> ripfile, paranoia_mode,
+//	        & (ginfo -> rip_smile_level), & (ginfo -> rip_percent_done),
+//	        & (ginfo -> stop_thread_rip_now), ginfo -> calc_gain,
+//	        output_fp);
+
+//	int force_cdrom_endian = -1;
+//	int force_cdrom_sectors = -1;
+//	int force_cdrom_overlap = -1;
+
+    /* full paranoia, but allow skipping */
+    int verbose = CDDA_MESSAGE_FORGETIT;
+    int track = ginfo -> rip_track + 1;
+
+    global_rip_smile_level = &(ginfo -> rip_smile_level);
+    global_output_fp = output_fp;
+
+    /* Query the cdrom/disc; */
+    cdrom_drive *d;
+    if (ginfo -> force_scsi && *ginfo -> force_scsi) {
+        d = cdda_identify_scsi (ginfo -> force_scsi, ginfo -> cd_device, verbose, NULL);
+    } else {
+        d = cdda_identify (ginfo -> cd_device, verbose, NULL);
+    }
+
+    if (!d) {
+        g_set_error_literal (error, GRIP_RIP_ERROR, GRIP_RIP_ERROR_CANTOPENDRIVE, _("Unable to open cdrom drive"));
+        return FALSE;
+    }
+
+    if (verbose) {
+        cdda_verbose_set (d, CDDA_MESSAGE_PRINTIT, CDDA_MESSAGE_PRINTIT);
+    } else {
+        cdda_verbose_set (d, CDDA_MESSAGE_PRINTIT, CDDA_MESSAGE_FORGETIT);
+    }
+
+#if 0
+    /* possibly force hand on endianness of drive, sector request size */
+    if (force_cdrom_endian != -1) {
+        d -> bigendianp = force_cdrom_endian;
+
+        switch (force_cdrom_endian) {
+            case 0:
+                fprintf (output_fp,
+                         "Forcing CDROM sense to little-endian; ignoring preset and autosense");
+                break;
+
+            case 1:
+                fprintf (output_fp,
+                         "Forcing CDROM sense to big-endian; ignoring preset and autosense");
+                break;
+        }
+    }
+
+    if (force_cdrom_sectors != -1) {
+        if (force_cdrom_sectors < 0 || force_cdrom_sectors > 100) {
+            fprintf (output_fp, "Default sector read size must be 1<= n <= 100\n");
+            cdda_close (d);
+
+            return FALSE;
+        }
+
+        fprintf (output_fp, "Forcing default to read %d sectors; "
+                 "ignoring preset and autosense", force_cdrom_sectors);
+
+        d -> nsectors = force_cdrom_sectors;
+        d -> bigbuff = force_cdrom_sectors * CD_FRAMESIZE_RAW;
+    }
+
+    if (force_cdrom_overlap != -1) {
+        if (force_cdrom_overlap < 0 || force_cdrom_overlap > 75) {
+            fprintf (output_fp, "Search overlap sectors must be 0<= n <=75\n");
+            cdda_close (d);
+
+            return FALSE;
+        }
+
+        fprintf (output_fp, "Forcing search overlap to %d sectors; "
+                 "ignoring autosense", force_cdrom_overlap);
+    }
+#endif
+
+    switch (cdda_open (d)) {
+        case -2:
+        case -3:
+        case -4:
+        case -5:
+            g_set_error_literal (error, GRIP_RIP_ERROR, GRIP_RIP_ERROR_NOAUDIOCD, _("Unable to open disc, is there an audio CD in the drive?"));
+            cdda_close (d);
+            return FALSE;
+
+        case -6:
+            g_set_error_literal (error, GRIP_RIP_ERROR, GRIP_RIP_ERROR_CANTREADAUDIO, _("CDParanoia could not find a way to read audio from this drive."));
+            cdda_close (d);
+            return FALSE;
+
+        case 0:
+            // Allright!
+            break;
+
+        default:
+            g_set_error_literal (error, GRIP_RIP_ERROR, GRIP_RIP_ERROR_CANTOPENDISC, _("Unable to open disc."));
+            cdda_close (d);
+            return FALSE;
+    }
+
+    if (d -> interface == GENERIC_SCSI && d -> bigbuff <= CD_FRAMESIZE_RAW) {
+        fprintf (output_fp,
+                 "WARNING: You kernel does not have generic SCSI 'SG_BIG_BUFF'\n"
+                 "         set, or it is set to a very small value.  Paranoia\n"
+                 "         will only be able to perform single sector reads\n"
+                 "         making it very unlikely Paranoia can work.\n\n"
+                 "         To correct this problem, the SG_BIG_BUFF define\n"
+                 "         must be set in /usr/src/linux/include/scsi/sg.h\n"
+                 "         by placing, for example, the following line just\n"
+                 "         before the last #endif:\n\n"
+                 "         #define SG_BIG_BUFF 65536\n\n"
+                 "         and then recompiling the kernel.\n\n"
+                 "         Attempting to continue...\n\n");
+    }
+
+    if (d -> nsectors == 1) {
+        fprintf (output_fp,
+                 "WARNING: The autosensed/selected sectors per read value is\n"
+                 "         one sector, making it very unlikely Paranoia can \n"
+                 "         work.\n\n"
+                 "         Attempting to continue...\n\n");
+    }
+
+    if (!cdda_track_audiop (d, track)) {
+        g_set_error_literal (error, GRIP_RIP_ERROR, GRIP_RIP_ERROR_NOAUDIOTRACK, _("Selected track is not an audio track"));
+        cdda_close (d);
+        return FALSE;
+    }
+
+    cdrom_paranoia *p = paranoia_init (d);
+    paranoia_modeset (p, paranoia_mode);
+
+//	if (force_cdrom_overlap != -1) {
+//		paranoia_overlapset (p, force_cdrom_overlap);
+//	}
+
+    if (verbose) {
+        cdda_verbose_set (d, CDDA_MESSAGE_LOGIT, CDDA_MESSAGE_LOGIT);
+    } else {
+        cdda_verbose_set (d, CDDA_MESSAGE_FORGETIT, CDDA_MESSAGE_FORGETIT);
+    }
+
+    /* this is probably a good idea in general */
+    /*  seteuid(getuid());
+        setegid(getgid());*/
+
+    /* Off we go! */
+    rip_thread_data *ripdata = g_new (rip_thread_data, 1);
+    g_assert (ripdata);
+    ripdata -> ginfo = ginfo;
+    ripdata -> d = d;
+    ripdata -> p = p;
+    ripdata -> first_sector = ginfo -> start_sector + cdda_track_firstsector (d, track);
+    ripdata -> last_sector = ginfo -> end_sector + cdda_track_firstsector (d, track);
+    ripdata -> callback = callback;
+    ripdata -> callback_data = callback_data;
+
+    g_debug ("Starting Rip Thread");
+    ginfo -> rip_thread = g_thread_try_new ("Grip Rip Thread", rip_thread_func, ripdata, error);
+    if (ginfo -> rip_thread) {
+        g_debug ("Rip Thread started");
+    } else {
+        g_warning ("Cannot start rip thread: %s", (*error) -> message);
+        g_prefix_error (error, "Cannot start rip thread");
+    }
+
+	return ginfo -> rip_thread != NULL;
 }
 
 

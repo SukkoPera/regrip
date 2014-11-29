@@ -35,4 +35,3 @@ GtkWidget *Loadxpm(GtkWidget *widget,char **xpm);
 void CopyPixmap(GtkPixmap *src,GtkPixmap *dest);
 gint SizeInDubs(GdkFont *font,gint numchars);
 void UpdateGTK(void);
-void show_warning (GtkWidget *parentWin, char *text);
