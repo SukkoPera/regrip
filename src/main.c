@@ -20,147 +20,82 @@
  * USA
  */
 
-#include <config.h>
-#include <popt.h>
+#include <stdlib.h>
 #include <glib.h>
 #include <glib/gi18n.h>
-#include <stdlib.h>
-
+#include <config.h>
 #include "grip.h"
 
-static gint TimeOut(gpointer data);
+static gint TimeOut (gpointer data);
 
-gboolean do_debug=TRUE;
-GtkWidget* grip_app;
+GtkWidget *grip_app;
 
 /* popt table */
-static char *geometry=NULL;
-static char *config_filename=NULL;
-static char *device=NULL;
-static char *scsi_device=NULL;
-static int force_small=FALSE;
-static int local_mode=FALSE;
-static int no_redirect=FALSE;
-static int verbose=FALSE;
+static char *geometry = NULL;
+static char *config_filename = NULL;
+static char *device = NULL;
+static char *scsi_device = NULL;
+static int force_small = FALSE;
+static int local_mode = FALSE;
+static int no_redirect = FALSE;
+static int verbose = FALSE;
 
-struct poptOption options[] = {
-  {
-    "geometry",
-    '\0',
-    POPT_ARG_STRING,
-    &geometry,
-    0,
-    N_("Specify the geometry of the main window"),
-    N_("GEOMETRY")
-  },
-  {
-    "config",
-    '\0',
-    POPT_ARG_STRING,
-    &config_filename,
-    0,
-    N_("Specify the config file to use (in your home dir)"),
-    N_("CONFIG")
-  },
-  {
-    "device",
-    '\0',
-    POPT_ARG_STRING,
-    &device,
-    0,
-    N_("Specify the cdrom device to use"),
-    N_("DEVICE")
-  },
-  {
-    "scsi-device",
-    '\0',
-    POPT_ARG_STRING,
-    &scsi_device,
-    0,
-    N_("Specify the generic scsi device to use"),
-    N_("DEVICE")
-  },
-  {
-    "small",
-    '\0',
-    POPT_ARG_NONE,
-    &force_small,
-    0,
-    N_("Launch in \"small\" (cd-only) mode"),
-    NULL
-  },
-  {
-    "local",
-    '\0',
-    POPT_ARG_NONE,
-    &local_mode,
-    0,
-    N_("\"Local\" mode -- do not look up disc info on the net"),
-    NULL
-  },
-  {
-    "no-redirect",
-    '\0',
-    POPT_ARG_NONE,
-    &no_redirect,
-    0,
-    N_("Do not do I/O redirection"),
-    NULL
-  },
-  {
-    "verbose",
-    '\0',
-    POPT_ARG_NONE,
-    &verbose,
-    0,
-    N_("Run in verbose (debug) mode"),
-    NULL
-  },
-  {
-    NULL,
-    '\0',
-    0,
-    NULL,
-    0,
-    NULL,
-    NULL
-  }
+static GOptionEntry cmd_options[] = {
+	{"config", 'c', 0, G_OPTION_ARG_STRING, &config_filename, N_ ("Specify the config file to use (in your home dir)"), N_ ("CONFIG") },
+	{"device", 'd', 0, G_OPTION_ARG_STRING, &device, N_ ("Specify the cdrom device to use"), N_ ("DEVICE") },
+	{"scsi-device", 0, 0, G_OPTION_ARG_STRING, &scsi_device, N_ ("Specify the generic scsi device to use"), N_ ("DEVICE") },
+//    { "max-size", 'm', 0, G_OPTION_ARG_INT, &max_size, "Test up to 2^M items", "M" },
+	{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose, "Be verbose", NULL },
+	{ "small", 0, 0, G_OPTION_ARG_NONE, &force_small, N_ ("Launch in \"small\" (CD-only) mode"), NULL },
+	{ "local", 0, 0, G_OPTION_ARG_NONE, &local_mode, N_ ("\"Local\" mode -- do not look up disc info on the net"), NULL },
+	{ "no-redirect", 0, 0, G_OPTION_ARG_NONE, &no_redirect, N_ ("Do not do I/O redirection"), NULL },
+	{ NULL }
 };
 
-int Cmain (int argc, char* argv[]) {
 
-  /* Unbuffer stdout */
-  setvbuf(stdout, 0, _IONBF, 0);
+int Cmain (int argc, char *argv[]) {
+    GError *error;
+    GOptionContext *context;
 
-  /* setup locale, i18n */
-  gtk_set_locale();
-  bindtextdomain(GETTEXT_PACKAGE,GNOMELOCALEDIR);
-  textdomain(GETTEXT_PACKAGE);
+	/* Unbuffer stdout */
+	setvbuf (stdout, 0, _IONBF, 0);
 
-  gtk_init (&argc, &argv);
-  bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF8");
+	/* setup locale, i18n */
+	gtk_set_locale ();
+	bindtextdomain (GETTEXT_PACKAGE, GNOMELOCALEDIR);
+	textdomain (GETTEXT_PACKAGE);
+	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF8");
 
-  do_debug=verbose;
+    context = g_option_context_new (_("- AudioCD Ripper"));
+    g_option_context_add_main_entries (context, cmd_options, GETTEXT_PACKAGE);
+    g_option_context_add_group (context, gtk_get_option_group (TRUE));
 
-  if(scsi_device) printf("scsi=[%s]\n",scsi_device);
+    error = NULL;
+    if (!g_option_context_parse (context, &argc, &argv, &error)) {
+        g_print ("Commandline option parsing failed: %s\n", error -> message);
+        exit (1);
+    }
 
-  /* Start a new Grip app */
-  grip_app=GripNew(geometry,device,scsi_device,config_filename,
-		   force_small,local_mode,
-		   no_redirect);
+	if (scsi_device) {
+		printf ("scsi=[%s]\n", scsi_device);
+	}
 
-  gtk_widget_show(grip_app);
+	/* Start a new Grip app */
+	grip_app = GripNew (geometry, device, scsi_device, config_filename,
+	                    force_small, local_mode,
+	                    no_redirect);
 
-  gtk_timeout_add(1000,TimeOut,0);
+	gtk_widget_show (grip_app);
 
-  gtk_main();
+	gtk_timeout_add (1000, TimeOut, 0);
 
-  return 0;
+	gtk_main();
+
+	return 0;
 }
 
-static gint TimeOut(gpointer data)
-{
-  GripUpdate(grip_app);
+static gint TimeOut (gpointer data) {
+	GripUpdate (grip_app);
 
-  return TRUE;
+	return TRUE;
 }

@@ -192,26 +192,6 @@ GtkWidget *GripNew(const gchar* geometry,char *device,char *scsi_device,
   uinfo->win_width_min=MIN_WINWIDTH;
   uinfo->win_height_min=MIN_WINHEIGHT;
 
-  /*  if(geometry != NULL) {
-    gint x,y,w,h;
-
-    if(gnome_parse_geometry(geometry,
-			    &x,&y,&w,&h)) {
-      if(x != -1) {
-	gtk_widget_set_uposition(app,x,y);
-      }
-
-      if(w != -1) {
-        uinfo->win_width=w;
-        uinfo->win_height=h;
-      }
-    }
-    else {
-      g_error(_("Could not parse geometry string `%s'"), geometry);
-    }
-  }
-  */
-
   if(config_filename && *config_filename)
     g_snprintf(ginfo->config_filename,256,"%s",config_filename);
   else {
