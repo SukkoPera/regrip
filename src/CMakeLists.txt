@@ -66,6 +66,38 @@ set (
     -lm
 )
 
+if (${SNDFILE_FOUND})
+    set (
+        regrip_src
+        ${regrip_src}
+
+        encoder_sndfile.c
+        encoder_sndfile.h
+    )
+endif (${SNDFILE_FOUND})
+
+if (${FAAC_FOUND})
+    set (
+        regrip_src
+        ${regrip_src}
+
+        encoder_faac.c
+        encoder_faac.h
+    )
+
+    set (
+        includes
+        ${includes}
+        ${FAAC_INCLUDE_DIR}
+    )
+
+    set (
+        libraries
+        ${libraries}
+        ${FAAC_LIBRARIES}
+    )
+endif (${FAAC_FOUND})
+
 #if (${CDDB_FOUND})
 #    set (includes ${includes} ${CDDB_INCLUDES})
 #    set (libraries ${libraries} ${CDDB_LIBRARIES})

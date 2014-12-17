@@ -33,6 +33,7 @@ CHECK_INCLUDE_FILES (sys/vfs.h HAVE_SYS_VFS_H)
 list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
 find_package (CURL)
 find_package (CDParanoia REQUIRED)
+find_package (FAAC)
 
 configure_file (
     config.h.in

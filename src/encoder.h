@@ -3,26 +3,40 @@
 
 #include <glib.h>
 
-typedef enum {
-    FILEFMT_WAV,
-    FILEFMT_VORBIS,
-    FILEFMT_FLAC,
-    FILEFMT_MP3
-} file_format;
+//typedef struct {
+////    file_format format;
+//
+//    /* WAV: Ignored
+//     * VORBIS: Quality
+//     * FLAC: Compression
+//     * MP3: Bitrate
+//     */
+//    int quality;
+//} encoder_options;
+
 
 typedef struct {
-    file_format format;
+    gchar *name;    // Human-readable name, e.g.: MP3, OGG Vorbis, etc.
+    gpointer data;
+//	char *extension;
+} supported_format;
 
-    /* WAV: Ignored
-     * VORBIS: Quality
-     * FLAC: Compression
-     * MP3: Bitrate
-     */
-    int quality;
-} encoder_options;
 
-gboolean encoder_callback (gint16 *buffer, gsize bufsize, gpointer user_data);
-gpointer encoder_init (gchar *filename, encoder_options *opts, GError **error);
-gboolean encoder_close (gpointer encoder_data, GError **error);
+// fmt is encoder_data above
+typedef gpointer (*encoder_init) (gpointer *fmt, gchar *filename, gpointer user_data, GError **error);
+typedef gboolean (*encoder_close) (gpointer encoder_data, GError **error);
+typedef gboolean (*encoder_callback) (gint16 *buffer, gsize bufsize, gpointer user_data);
+
+
+typedef struct {
+	gchar *name;    // "sndfile encoder Version x.y.z"
+    supported_format *supported_formats;        // NULL-terminated array
+    encoder_init init;
+    encoder_close close;
+    encoder_callback callback;
+} supported_encoder;
+
+//extern supported_encoder supported_encoders[];
+extern supported_encoder *supported_encoders[];
 
 #endif // ENCODER_H_INCLUDED

@@ -66,8 +66,8 @@ static void CheckDupNames (GripInfo *ginfo);
 static void RipWholeCD (GtkDialog *dialog, gint reply, gpointer data);
 static int NextTrackToRip (GripInfo *ginfo);
 static gboolean RipNextTrack (GripInfo *ginfo);
-static void AddToEncode (GripInfo *ginfo, int track);
-static gboolean MP3Encode (GripInfo *ginfo);
+//static void AddToEncode (GripInfo *ginfo, int track);
+//static gboolean MP3Encode (GripInfo *ginfo);
 static void CalculateAll (GripInfo *ginfo);
 static size_t CalculateEncSize (GripInfo *ginfo, int track);
 static size_t CalculateWavSize (GripInfo *ginfo, int track);
@@ -543,8 +543,8 @@ static gboolean AddM3U (GripInfo *ginfo) {
 			g_string_truncate (str, 0);
 
 			FillInTrackInfo (ginfo, i, &enc_track);
-			TranslateString (ginfo -> mp3fileformat, str, TranslateSwitch,
-			                 &enc_track, TRUE, &(ginfo -> sprefs));
+//			TranslateString (ginfo -> mp3fileformat, str, TranslateSwitch,
+//			                 &enc_track, TRUE, &(ginfo -> sprefs));
 
 			conv_str = g_filename_from_utf8 (str -> str, strlen (str -> str), &rb, &wb, NULL);
 
@@ -826,8 +826,9 @@ void UpdateRipProgress (GripInfo *ginfo) {
 			            GTK_PIXMAP (uinfo -> smile_indicator));
 
             // Terminate encoding
+			g_assert (ginfo -> encoder);
             GError *error = NULL;
-            encoder_close (ginfo -> encoder_data, &error);
+            ginfo -> encoder -> close (ginfo -> encoder_data, &error);
             // FIXME Handle error
 
 			ginfo -> all_riplast = 0;
@@ -849,10 +850,10 @@ void UpdateRipProgress (GripInfo *ginfo) {
 			            GTK_PIXMAP (uinfo -> rip_indicator));
 
 			if (!ginfo -> stop_rip) {
-				if (ginfo -> doencode) {
-					AddToEncode (ginfo, ginfo -> rip_track);
-					MP3Encode (ginfo);
-				}
+//				if (ginfo -> doencode) {
+//					AddToEncode (ginfo, ginfo -> rip_track);
+//					MP3Encode (ginfo);
+//				}
 
 				g_debug (_("Rip partial %d  num wavs %d"), ginfo -> rip_partial,
 				         ginfo -> num_wavs);
@@ -991,9 +992,9 @@ void UpdateRipProgress (GripInfo *ginfo) {
 
 					g_free (ginfo -> encoded_track[mycpu]);
 
-					if (!ginfo -> rip_partial && ginfo -> encode_list) {
-						MP3Encode (ginfo);
-					}
+//					if (!ginfo -> rip_partial && ginfo -> encode_list) {
+//						MP3Encode (ginfo);
+//					}
 				} else {
 					ginfo -> stop_encode = FALSE;
 				}
@@ -1058,15 +1059,15 @@ static void RipIsFinished (GripInfo *ginfo, gboolean aborted) {
 			DoDiscFilter (ginfo);
 		}
 
-		if (ginfo -> delayed_encoding) {
-			ginfo -> encode_list = g_list_concat (ginfo -> encode_list,
-			                                    ginfo -> pending_list);
-			ginfo -> pending_list = NULL;
-
-			/* Start an encoder on all free CPUs
-			 * This is really only useful the first time through */
-			while (MP3Encode (ginfo));
-		}
+//		if (ginfo -> delayed_encoding) {
+//			ginfo -> encode_list = g_list_concat (ginfo -> encode_list,
+//			                                    ginfo -> pending_list);
+//			ginfo -> pending_list = NULL;
+//
+//			/* Start an encoder on all free CPUs
+//			 * This is really only useful the first time through */
+//			while (MP3Encode (ginfo));
+//		}
 
 		if (ginfo -> eject_after_rip) {
 			/* Reset rip_finished since we're ejecting */
@@ -1202,10 +1203,10 @@ char *TranslateSwitch (char switch_char, void *data, gboolean *munge) {
 			*munge = FALSE;
 			break;
 
-		case 'x':
-			g_snprintf (res, PATH_MAX, "%s", enc_track -> ginfo -> mp3extension);
-			*munge = FALSE;
-			break;
+//		case 'x':
+//			g_snprintf (res, PATH_MAX, "%s", enc_track -> ginfo -> mp3extension);
+//			*munge = FALSE;
+//			break;
 
 		default:
 			*res = '\0';
@@ -1269,19 +1270,19 @@ void DoRip (GtkWidget *widget, gpointer data) {
 		return;
 	}
 
-	if (widget) {
-		ginfo -> doencode = FALSE;
-	} else {
+//	if (widget) {
+//		ginfo -> doencode = FALSE;
+//	} else {
 		ginfo -> doencode = TRUE;
-	}
+//	}
 
-	if (ginfo -> doencode && !FileExists (ginfo -> mp3exename)) {
-		show_warning (ginfo -> gui_info.app,
-		              _("Invalid encoder executable.\nCheck your encoder config, and ensure it specifies the full path to the encoder executable."));
-
-		ginfo -> doencode = FALSE;
-		return;
-	}
+//	if (ginfo -> doencode && !FileExists (ginfo -> mp3exename)) {
+//		show_warning (ginfo -> gui_info.app,
+//		              _("Invalid encoder executable.\nCheck your encoder config, and ensure it specifies the full path to the encoder executable."));
+//
+//		ginfo -> doencode = FALSE;
+//		return;
+//	}
 
 	CDStop (&(ginfo -> disc));
 	ginfo -> stopped = TRUE;
@@ -1398,7 +1399,8 @@ static gboolean rip_callback (gint16 *buffer, gsize bufsize, gfloat progress, in
 
 //    g_debug ("%s", get_smilie (smilie_idx));
 
-    return encoder_callback (buffer, bufsize, ginfo -> encoder_data);
+    g_assert (ginfo -> encoder != NULL);
+    return ginfo -> encoder -> callback (buffer, bufsize, ginfo -> encoder_data);
 }
 
 static gboolean RipNextTrack (GripInfo *ginfo) {
@@ -1516,9 +1518,9 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
 
 				g_free (utf8_ripfile);
 
-				if (ginfo -> doencode) {
-					ginfo -> num_wavs++;
-				}
+//				if (ginfo -> doencode) {
+//					ginfo -> num_wavs++;
+//				}
 
 				ginfo -> ripping = TRUE;
 				ginfo -> ripping_a_disc = TRUE;
@@ -1543,10 +1545,11 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
 
 		// Init encoder
 		GError *error = NULL;
-		encoder_options encopts;
-		encopts.format = FILEFMT_FLAC;
-		encopts.quality = 0;
-		gpointer encoder = encoder_init (ginfo -> ripfile, &encopts, &error);
+//		encoder_options encopts;
+//		encopts.format = FILEFMT_FLAC;
+//		encopts.quality = 0;
+		g_assert (ginfo -> encoder != NULL);
+		gpointer encoder = ginfo -> encoder -> init (ginfo -> format -> data, ginfo -> ripfile, NULL, &error);
 		if (!encoder) {
             gchar *warn = g_strdup_printf (_("Cannot init encoder: %s"), error -> message);
 			show_error (ginfo -> gui_info.app, warn);
@@ -1614,6 +1617,7 @@ void FillInTrackInfo (GripInfo *ginfo, int track, EncodeTrack *new_track) {
 	new_track -> discid = ginfo -> ddata.data_id;
 }
 
+#if 0
 static void AddToEncode (GripInfo *ginfo, int track) {
 	EncodeTrack *new_track;
 
@@ -1769,6 +1773,7 @@ static gboolean MP3Encode (GripInfo *ginfo) {
 
 	return TRUE;
 }
+#endif
 
 void CalculateAll (GripInfo *ginfo) {
 	int cpu;

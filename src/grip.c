@@ -64,12 +64,7 @@ void DoSaveConfig(GripInfo *ginfo);
 {"force_scsi",CFG_ENTRY_STRING,256,ginfo->force_scsi},\
 {"wav_filter_cmd",CFG_ENTRY_STRING,256,ginfo->wav_filter_cmd},\
 {"disc_filter_cmd",CFG_ENTRY_STRING,256,ginfo->disc_filter_cmd},\
-{"mp3exename",CFG_ENTRY_STRING,256,ginfo->mp3exename},\
-{"mp3cmdline",CFG_ENTRY_STRING,256,ginfo->mp3cmdline},\
 {"dbserver",CFG_ENTRY_STRING,256,ginfo->dbserver.name},\
-{"mp3fileformat",CFG_ENTRY_STRING,256,ginfo->mp3fileformat},\
-{"mp3extension",CFG_ENTRY_STRING,10,ginfo->mp3extension},\
-{"m3ufileformat",CFG_ENTRY_STRING,256,ginfo->m3ufileformat},\
 {"delete_wavs",CFG_ENTRY_BOOL,0,&ginfo->delete_wavs},\
 {"add_m3u",CFG_ENTRY_BOOL,0,&ginfo->add_m3u},\
 {"rel_m3u",CFG_ENTRY_BOOL,0,&ginfo->rel_m3u},\
@@ -928,10 +923,10 @@ static void DoLoadConfig(GripInfo *ginfo)
   *ginfo->wav_filter_cmd='\0';
   *ginfo->disc_filter_cmd='\0';
   ginfo->selected_encoder=1;
-  strcpy(ginfo->mp3cmdline,"-h -b %b %w %m");
-  FindExeInPath("lame", ginfo->mp3exename, sizeof(ginfo->mp3exename));
-  strcpy(ginfo->mp3fileformat,"~/mp3/%A/%d/%n.%x");
-  strcpy(ginfo->mp3extension,"mp3");
+//  strcpy(ginfo->mp3cmdline,"-h -b %b %w %m");
+//  FindExeInPath("lame", ginfo->mp3exename, sizeof(ginfo->mp3exename));
+//  strcpy(ginfo->mp3fileformat,"~/mp3/%A/%d/%n.%x");
+//  strcpy(ginfo->mp3extension,"mp3");
   ginfo->mp3nice=0;
   *ginfo->mp3_filter_cmd='\0';
   ginfo->delete_wavs=TRUE;
@@ -981,13 +976,13 @@ static void DoLoadConfig(GripInfo *ginfo)
   if(*outputdir) {
     strcpy(filename,outputdir);
     MakePath(filename);
-    strcat(filename,ginfo->mp3fileformat);
-    strcpy(ginfo->mp3fileformat,filename);
+//    strcat(filename,ginfo->mp3fileformat);
+//    strcpy(ginfo->mp3fileformat,filename);
 
     strcpy(filename,outputdir);
-    MakePath(filename);
-    strcat(filename,ginfo->ripfileformat);
-    strcpy(ginfo->ripfileformat,filename);
+//    MakePath(filename);
+//    strcat(filename,ginfo->ripfileformat);
+//    strcpy(ginfo->ripfileformat,filename);
 
     *outputdir='\0';
   }
