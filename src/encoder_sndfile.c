@@ -4,22 +4,15 @@
 #include "encoder_sndfile.h"
 
 
-typedef enum {
-    FILEFMT_WAV,
-    FILEFMT_VORBIS,
-    FILEFMT_FLAC,
-} file_format;
-
 typedef struct {
-    file_format fmt;
     gchar *extension;
     int sf_format;
 } fmtdata;
 
 static fmtdata format_data[] = {
-    {FILEFMT_WAV, "wav", SF_FORMAT_WAV | SF_FORMAT_PCM_16},
-    {FILEFMT_VORBIS, "ogg", SF_FORMAT_OGG | SF_FORMAT_VORBIS},
-    {FILEFMT_FLAC, "flac", SF_FORMAT_FLAC | SF_FORMAT_PCM_16}
+    {"wav", SF_FORMAT_WAV | SF_FORMAT_PCM_16},
+    {"ogg", SF_FORMAT_OGG | SF_FORMAT_VORBIS},
+    {"flac", SF_FORMAT_FLAC | SF_FORMAT_PCM_16}
 };
 
 static supported_format sndfile_formats[] = {
@@ -53,7 +46,6 @@ gpointer encoder_sndfile_init (gpointer *fmt, gchar *filename, gpointer opts, GE
 
     fmtdata *fmtd = (fmtdata *) fmt;
     g_assert (fmtd);
-    g_assert (fmtd -> fmt == FILEFMT_FLAC || fmtd -> fmt == FILEFMT_VORBIS || fmtd -> fmt == FILEFMT_WAV);
 
     // We only support CD quality output
     SF_INFO sfinfo = {0};
