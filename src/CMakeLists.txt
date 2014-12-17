@@ -51,7 +51,6 @@ set (
     ${VTE_INCLUDE_DIRS}
     ${CDPARANOIA_INCLUDE_DIRS}
     ${CURL_INCLUDE_DIRS}
-    ${SNDFILE_INCLUDE_DIRS}
 )
 
 set (
@@ -60,7 +59,6 @@ set (
     ${GTK2_LIBRARIES}
     ${VTE_LIBRARIES}
     ${CURL_LIBRARIES}
-    ${SNDFILE_LIBRARIES}
     ${CDPARANOIA_LIBRARIES}
     -lpthread
     -lm
@@ -73,6 +71,18 @@ if (${SNDFILE_FOUND})
 
         encoder_sndfile.c
         encoder_sndfile.h
+    )
+
+    set (
+        includes
+        ${includes}
+        ${SNDFILE_INCLUDE_DIRS}
+    )
+
+    set (
+        libraries
+        ${libraries}
+        ${SNDFILE_LIBRARIES}
     )
 endif (${SNDFILE_FOUND})
 

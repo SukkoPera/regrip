@@ -37,9 +37,9 @@ typedef struct {
 
 
 gpointer encoder_faac_init (gpointer *fmt, gchar *filename, gpointer opts, GError **error) {
-    gchar *version, *copyright;
-    faacEncGetVersion (&version, &copyright);
-    g_debug ("FAAC Encoder Module - Using FAAC %s (%s)", version, copyright);
+    gchar *version;
+    faacEncGetVersion (&version, NULL);
+    g_debug ("FAAC Encoder Module - Using FAAC %s", version);
 
 	encoder_faac_data *efd = g_new (encoder_faac_data, 1);
 	if (!efd) {
@@ -47,7 +47,6 @@ gpointer encoder_faac_init (gpointer *fmt, gchar *filename, gpointer opts, GErro
 		return NULL;
 	}
 
-	// FIXME GError
 	efd -> codec = faacEncOpen (44100, 2, &(efd -> input_samples), & (efd -> outbufsize));
 	if (!efd -> codec) {
 		g_set_error_literal (error, GRIP_FAACENC_ERROR, GRIP_FAACENC_ERROR_INIT, _("Unable to init FAAC encoder"));
@@ -108,23 +107,23 @@ gboolean encoder_faac_callback (gint16 *buffer, gsize bufsize, gpointer user_dat
     g_assert (efd -> buffer_avail + bufsize <= efd -> input_samples * 4);
     memcpy (efd -> outbuf + efd -> buffer_avail, buffer, bufsize);
     efd -> buffer_avail += bufsize;
-    g_debug ("Appended %Zu bytes to buffer, now size is %Zu", bufsize, efd -> buffer_avail);
+//    g_debug ("Appended %Zu bytes to buffer, now size is %Zu", bufsize, efd -> buffer_avail);
 
     // Consume till we can!
     while (efd -> buffer_avail >= efd -> input_samples * 2) {
-        g_debug ("Consuming %lu 16-bit samples", efd -> input_samples);
+//        g_debug ("Consuming %lu 16-bit samples", efd -> input_samples);
 
         outsize = faacEncEncode (efd -> codec, (gint32 *) efd -> outbuf, efd -> input_samples, efd -> outbuf, efd -> outbufsize);
         size_t n = fwrite (efd -> outbuf, sizeof (guint8), outsize, efd -> fout);
         if (n != outsize) {
-            g_debug (_("Unable to write to output file"));
+            g_warning (_("Unable to write to output file"));
             return FALSE;
         }
 
         // Discard used bytes
         memmove (efd -> outbuf, efd -> outbuf + efd -> input_samples * 2, efd -> buffer_avail - efd -> input_samples * 2);
         efd -> buffer_avail -= efd -> input_samples * 2;
-        g_debug ("efd -> buffer_avail = %Zu", efd -> buffer_avail);
+//        g_debug ("efd -> buffer_avail = %Zu", efd -> buffer_avail);
     }
 
 	return TRUE;
@@ -135,25 +134,25 @@ gboolean encoder_faac_close (gpointer user_data, GError **error) {
 	encoder_faac_data *efd = (encoder_faac_data *) user_data;
 	g_assert (efd);
 
-    g_debug ("encoder_faac_close()");
+//    g_debug ("encoder_faac_close()");
 
     // Consume remaining buffer and flush FAAC output
     do {
         gulong m = MIN (efd -> input_samples, efd -> buffer_avail / 2);
 
-        g_debug ("Consuming %lu 16-bit samples", m);
+//        g_debug ("Consuming %lu 16-bit samples", m);
 
         outsize = faacEncEncode (efd -> codec, (gint32 *) efd -> outbuf, m, efd -> outbuf, efd -> outbufsize);
         size_t n = fwrite (efd -> outbuf, sizeof (guint8), outsize, efd -> fout);
         if (n != outsize) {
-            g_debug (_("Unable to write to output file"));
+            g_warning (_("Unable to write to output file"));
             return FALSE;
         }
 
         // Discard used bytes
         memmove (efd -> outbuf, efd -> outbuf + efd -> input_samples * 2, efd -> buffer_avail - m * 2);
         efd -> buffer_avail -= m * 2;
-        g_debug ("efd -> buffer_avail = %Zu", efd -> buffer_avail);
+//        g_debug ("efd -> buffer_avail = %Zu", efd -> buffer_avail);
     } while (outsize != 0);
 
 	fclose (efd -> fout);

@@ -18,7 +18,7 @@ pkg_check_modules (GTK2 REQUIRED gtk+-2.0)
 pkg_check_modules (GTHREAD REQUIRED gthread-2.0)
 pkg_check_modules (VTE REQUIRED vte)
 #pkg_check_modules (CDDB REQUIRED libcddb)
-pkg_check_modules (SNDFILE REQUIRED sndfile)
+pkg_check_modules (SNDFILE sndfile)
 
 include (CheckIncludeFiles)
 CHECK_INCLUDE_FILES (sys/cdio.h HAVE_SYS_CDIO_H)

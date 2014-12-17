@@ -61,14 +61,18 @@ endif (FAAC_INCLUDE_DIR AND FAAC_LIBRARY)
 
 if (FAAC_FOUND)
    if (NOT FAAC_FIND_QUIETLY)
-      message(STATUS "Found Faac: ${FAAC_LIBRARY}")
+      message(STATUS "Found FAAC: ${FAAC_LIBRARY}")
    endif (NOT FAAC_FIND_QUIETLY)
 else (FAAC_FOUND)
+    if (NOT FAAC_FIND_QUIETLY)
+      message(STATUS "FAAC not found")
+   endif (NOT FAAC_FIND_QUIETLY)
+
    if (FAAC_FIND_REQUIRED)
-      message(STATUS "Looked for Faac libraries named ${FAAC_NAMES}.")
+      message(STATUS "Looked for FAAC libraries named ${FAAC_NAMES}.")
       message(STATUS "Include file detected: [${FAAC_INCLUDE_DIR}].")
       message(STATUS "Lib file detected: [${FAAC_LIBRARY}].")
-      message(FATAL_ERROR "=========> Could NOT find Faac library")
+      message(FATAL_ERROR "=========> Could NOT find FAAC library")
    endif (FAAC_FIND_REQUIRED)
 endif (FAAC_FOUND)
 
@@ -76,4 +80,3 @@ mark_as_advanced(
   FAAC_LIBRARY
   FAAC_INCLUDE_DIR
 )
-

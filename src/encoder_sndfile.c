@@ -49,7 +49,7 @@ gpointer encoder_sndfile_init (gpointer *fmt, gchar *filename, gpointer opts, GE
 
     gpointer ret;
 
-    g_debug ("encoder_sndfile_init()");
+//    g_debug ("encoder_sndfile_init()");
 
     // We only support CD quality output
     SF_INFO sfinfo = {0};
@@ -85,7 +85,7 @@ gpointer encoder_sndfile_init (gpointer *fmt, gchar *filename, gpointer opts, GE
         } else {
             // libsndfile is ready!
             ret = file;
-            g_debug ("libsndfile ready!");
+//            g_debug ("libsndfile ready!");
         }
     }
 
@@ -95,7 +95,7 @@ gpointer encoder_sndfile_init (gpointer *fmt, gchar *filename, gpointer opts, GE
 gboolean encoder_sndfile_close (gpointer user_data, GError **error) {
     g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
-    g_debug ("encoder_sndfile_close()");
+//    g_debug ("encoder_sndfile_close()");
 
     SNDFILE *file = (SNDFILE *) user_data;
 
@@ -117,7 +117,7 @@ gboolean encoder_sndfile_callback (gint16 *buffer, gsize bufsize, gpointer user_
     if (sf_write_short ((SNDFILE *) user_data, buffer, bufsize / 2) != bufsize / 2) {
 //        fprintf (stderr, "Error writing output: %s", sf_strerror (data -> outfile));
 
-        g_debug ("encoder_sndfile_callback() failed: %s", sf_strerror ((SNDFILE *) user_data));
+        g_warning ("sf_write_short() failed: %s", sf_strerror ((SNDFILE *) user_data));
         return FALSE;
     }
 

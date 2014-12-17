@@ -663,8 +663,6 @@ void MakeConfigPage (GripInfo *ginfo) {
 static void EncoderSelected (GtkComboBox *widget, gpointer data) {
 	GripInfo *ginfo;
 	GripGUI *uinfo;
-	supported_encoder *enc;
-//	char buf[256];
 
 	ginfo = (GripInfo *) data;
 	uinfo = &(ginfo -> gui_info);
