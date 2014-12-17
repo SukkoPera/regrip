@@ -679,7 +679,7 @@ static void EncoderSelected (GtkComboBox *widget, gpointer data) {
         /* Obtain encoder from model. */
         gchar *format_name;
         gtk_tree_model_get (model, &iter, 0, &format_name, 1, &(ginfo -> format), 2, &(ginfo -> encoder), -1);
-        g_warning ("Selected format: %s", format_name);
+        g_debug ("Selected format: %s", format_name);
     }
 
 //	SaveEncoderConfig (ginfo, ginfo->selected_encoder);

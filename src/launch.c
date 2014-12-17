@@ -101,7 +101,7 @@ void TranslateString (char *instr, GString *outstr,
 		   Matthew Grossman */
 
 		if ( (*instr == '\0') || (*instr == '/') ) { /* This user's dir */
-			g_string_sprintf (outstr, "%s", getenv ("HOME") );
+			g_string_sprintf (outstr, "%s", g_get_home_dir() );
 		} else { /* Another user's dir */
 			tok = strchr (instr, '/');
 

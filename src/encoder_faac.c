@@ -5,7 +5,7 @@
 #include "encoder_faac.h"
 
 static supported_format faac_formats[] = {
-    {"AAC", NULL},
+    {"AAC", "aac"},
     {NULL}
 };
 
@@ -21,7 +21,6 @@ enum GripFAACEncError {
     GRIP_FAACENC_ERROR_NOMEM,
     GRIP_FAACENC_ERROR_INIT,
     GRIP_FAACENC_ERROR_INVALIDFORMAT,
-//    GRIP_FAACENC_ERROR_UNSUPPORTEDFORMAT,
     GRIP_FAACENC_ERROR_OUTFILE
 };
 
@@ -41,11 +40,15 @@ gpointer encoder_faac_init (gpointer *fmt, gchar *filename, gpointer opts, GErro
     faacEncGetVersion (&version, NULL);
     g_debug ("FAAC Encoder Module - Using FAAC %s", version);
 
+    gchar *extension = (gchar *) fmt;
+    g_assert (extension);
+
 	encoder_faac_data *efd = g_new (encoder_faac_data, 1);
 	if (!efd) {
 		g_set_error_literal (error, GRIP_FAACENC_ERROR, GRIP_FAACENC_ERROR_NOMEM, _("Out of memory"));
 		return NULL;
 	}
+
 
 	efd -> codec = faacEncOpen (44100, 2, &(efd -> input_samples), & (efd -> outbufsize));
 	if (!efd -> codec) {
@@ -72,13 +75,16 @@ gpointer encoder_faac_init (gpointer *fmt, gchar *filename, gpointer opts, GErro
 	}
 
 	// Prepare output file
-	efd -> fout = fopen (filename, "wb");
+	gchar *filename_ext = g_strdup_printf ("%s.%s", filename, extension);
+	efd -> fout = fopen (filename_ext, "wb");
 	if (!efd -> fout) {
-		g_set_error_literal (error, GRIP_FAACENC_ERROR, GRIP_FAACENC_ERROR_OUTFILE, _("Unable to open output file"));
+		g_set_error (error, GRIP_FAACENC_ERROR, GRIP_FAACENC_ERROR_OUTFILE, _("Unable to open output file \"%s\""), filename_ext);
+		g_free (filename_ext);
 		faacEncClose (efd -> codec);
 		g_free (efd);
 		return NULL;
 	}
+	g_free (filename_ext);
 
 	// Prepare output buffer
 	// Here we multiply input_samples by 4 because every sample is 16-bit and we need to hold at least two samples set

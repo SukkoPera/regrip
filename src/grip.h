@@ -301,10 +301,6 @@ typedef struct _grip_info {
   char wav_filter_cmd[256];
   char disc_filter_cmd[256];
   int selected_encoder;
-//  char mp3cmdline[256];
-//  char mp3extension[10];
-//  char mp3fileformat[256];
-//  char mp3exename[256];
   supported_encoder *encoder;
   supported_format *format;
   gboolean delete_wavs;

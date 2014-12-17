@@ -4,30 +4,31 @@
 #include "encoder_sndfile.h"
 
 
-//typedef enum {
-//    FILEFMT_WAV,
-//    FILEFMT_VORBIS,
-//    FILEFMT_FLAC,
-////    FILEFMT_MP3
-//} file_format;
+typedef enum {
+    FILEFMT_WAV,
+    FILEFMT_VORBIS,
+    FILEFMT_FLAC,
+} file_format;
 
-//typedef struct {
-//    gchar *extension;
-//    int format;
-//} sndfile_encoder;
+typedef struct {
+    file_format fmt;
+    gchar *extension;
+    int sf_format;
+} fmtdata;
+
+static fmtdata format_data[] = {
+    {FILEFMT_WAV, "wav", SF_FORMAT_WAV | SF_FORMAT_PCM_16},
+    {FILEFMT_VORBIS, "ogg", SF_FORMAT_OGG | SF_FORMAT_VORBIS},
+    {FILEFMT_FLAC, "flac", SF_FORMAT_FLAC | SF_FORMAT_PCM_16}
+};
 
 static supported_format sndfile_formats[] = {
-    {"WAV", GINT_TO_POINTER (SF_FORMAT_WAV | SF_FORMAT_PCM_16)},
-    {"OGG Vorbis", GINT_TO_POINTER (SF_FORMAT_OGG | SF_FORMAT_VORBIS)},
-    {"FLAC", GINT_TO_POINTER (SF_FORMAT_FLAC | SF_FORMAT_PCM_16)},
+    {"WAV", &(format_data[0])},
+    {"OGG Vorbis", &(format_data[1])},
+    {"FLAC", &(format_data[2])},
     {NULL}
 };
 
-
-//typedef struct {
-//    gboolean do_gain_calc;
-//    SNDFILE *outfile;
-//} encoder_callback_data;
 
 
 // GError stuff
@@ -39,7 +40,6 @@ GQuark grip_sfenc_error_quark (void) {
 
 enum GripSFEncError {
     GRIP_SFENC_ERROR_INVALIDFORMAT,
-    GRIP_SFENC_ERROR_UNSUPPORTEDFORMAT,
     GRIP_SFENC_ERROR_OUTFILE
 };
 
@@ -51,42 +51,31 @@ gpointer encoder_sndfile_init (gpointer *fmt, gchar *filename, gpointer opts, GE
 
 //    g_debug ("encoder_sndfile_init()");
 
+    fmtdata *fmtd = (fmtdata *) fmt;
+    g_assert (fmtd);
+    g_assert (fmtd -> fmt == FILEFMT_FLAC || fmtd -> fmt == FILEFMT_VORBIS || fmtd -> fmt == FILEFMT_WAV);
+
     // We only support CD quality output
     SF_INFO sfinfo = {0};
 	sfinfo.samplerate = 44100;
 	sfinfo.channels = 2;
-	sfinfo.format = GPOINTER_TO_INT (fmt);
-
-//	switch (opts -> format) {
-//        case FILEFMT_WAV:
-//            sfinfo.format = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
-//            break;
-//        case FILEFMT_VORBIS:
-//            sfinfo.format = SF_FORMAT_OGG | SF_FORMAT_VORBIS;
-//            //sf_command (sndfile, SFC_SET_COMPRESSION_LEVEL, &quality, sizeof (quality));
-//            break;
-//        case FILEFMT_FLAC:
-//            sfinfo.format = SF_FORMAT_FLAC | SF_FORMAT_PCM_16;
-//            break;
-//        default:
-//            *error = g_error_new_literal (GRIP_SFENC_ERROR, GRIP_SFENC_ERROR_UNSUPPORTEDFORMAT, _("The requested encoder format is not (yet) supported"));
-//            return NULL;
-//            break;
-//	}
+	sfinfo.format = fmtd -> sf_format;
 
     ret = NULL;
     if (!sf_format_check (&sfinfo)) {
-        *error = g_error_new_literal (GRIP_SFENC_ERROR, GRIP_SFENC_ERROR_INVALIDFORMAT, _("Invalid encoder parameters"));
+        g_set_error_literal (error, GRIP_SFENC_ERROR, GRIP_SFENC_ERROR_INVALIDFORMAT, _("Invalid encoder parameters"));
     } else {
         // OK, open output file
+        gchar *filename_ext = g_strdup_printf ("%s.%s", filename, fmtd -> extension);
         SNDFILE *file;
-        if (!(file = sf_open (filename, SFM_WRITE, &sfinfo))) {
-            *error = g_error_new_literal (GRIP_SFENC_ERROR, GRIP_SFENC_ERROR_OUTFILE, _("Unable to open output file"));
+        if (!(file = sf_open (filename_ext, SFM_WRITE, &sfinfo))) {
+            g_set_error (error, GRIP_SFENC_ERROR, GRIP_SFENC_ERROR_OUTFILE, _("Unable to open output file \"%s\""), filename_ext);
         } else {
             // libsndfile is ready!
             ret = file;
 //            g_debug ("libsndfile ready!");
         }
+        g_free (filename_ext);
     }
 
     return ret;

@@ -911,7 +911,7 @@ static void DoLoadConfig(GripInfo *ginfo)
   ginfo->calc_gain=FALSE;
   ginfo->in_rip_thread=FALSE;
 
-  strcpy(ginfo->ripfileformat,"~/mp3/%A/%d/%n.wav");
+  strcpy(ginfo->ripfileformat,"~/Music/%A/%d/%n");
 
   ginfo->max_wavs=99;
   ginfo->auto_rip=FALSE;
@@ -932,7 +932,7 @@ static void DoLoadConfig(GripInfo *ginfo)
   ginfo->delete_wavs=TRUE;
   ginfo->add_m3u=TRUE;
   ginfo->rel_m3u=TRUE;
-  strcpy(ginfo->m3ufileformat,"~/mp3/%A-%d.m3u");
+  strcpy(ginfo->m3ufileformat,"~/Music/%A-%d.m3u");
   ginfo->kbits_per_sec=128;
   ginfo->edit_num_cpu=1;
   ginfo->doid3=TRUE;

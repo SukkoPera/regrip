@@ -1488,7 +1488,7 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
 
 		if (!CanWrite (ginfo -> ripfile)) {
 			show_warning (ginfo -> gui_info.app,
-			              _("No write access to write wav file"));
+			              _("No write access to write output file"));
 			return FALSE;
 		}
 
