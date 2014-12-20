@@ -428,23 +428,6 @@ gboolean CanWrite (char *path) {
 	return can_write;
 }
 
-void MakeDirs (char *path) {
-	char dir[256];
-	char *s;
-	int len;
-
-	for (len = 0, s = path; *s; s++, len++) {
-		if (*s == '/') {
-			strncpy (dir, path, len);
-			dir[len] = '\0';
-
-			if (!FileExists (dir)) {
-				mkdir (dir, 0777);
-			}
-		}
-	}
-}
-
 char *MakePath (char *str) {
 	int len;
 
@@ -518,20 +501,27 @@ static gboolean AddM3U (GripInfo *ginfo) {
 	                 &enc_track, TRUE, &(ginfo -> sprefs));
 
 	conv_str = g_filename_from_utf8 (str -> str, strlen (str -> str), &rb, &wb, NULL);
-
 	if (!conv_str) {
 		conv_str = g_strdup (str -> str);
 	}
 
 	g_snprintf (m3unam, PATH_MAX, "%s", conv_str);
 
-	MakeDirs (conv_str);
+	gchar *dir = g_path_get_dirname (conv_str);
+	if (dir == NULL || g_mkdir_with_parents (conv_str, 0755) < 0) {
+		show_error (ginfo -> gui_info.app,
+                    _("Error: can't create diretories for m3u file."));
+        g_free (dir);
+        g_free (conv_str);
+		return FALSE;
+	}
+	g_free (dir);
 
 	fp = fopen (conv_str, "w");
-
 	if (fp == NULL) {
-		show_warning (ginfo -> gui_info.app,
-		              _("Error: can't open m3u file."));
+		show_error (ginfo -> gui_info.app,
+                    _("Error: can't open m3u file."));
+        g_free (conv_str);
 		return FALSE;
 	}
 
@@ -732,18 +722,6 @@ void UpdateRipProgress (GripInfo *ginfo) {
 	uinfo = &(ginfo -> gui_info);
 
 	if (ginfo -> ripping) {
-//		if (stat (ginfo -> ripfile, &mystat) >= 0) {
-//			percent = (gfloat)mystat.st_size / (gfloat)ginfo -> ripsize;            // FIXME
-//
-//			if (percent > 1.0) {
-//				percent = 1.0;
-//			}
-//		} else {
-//			percent = 0;
-//		}
-
-//		ginfo -> rip_percent = percent;
-//
 		gtk_progress_bar_update (GTK_PROGRESS_BAR (uinfo -> ripprogbar), ginfo -> rip_percent);
 
 		now = time (NULL);
@@ -1474,7 +1452,6 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
 		g_get_charset (&charset);
 
 		conv_str = g_filename_from_utf8 (str -> str, strlen (str -> str), &rb, &wb, NULL);
-
 		if (!conv_str) {
 			conv_str = g_strdup (str -> str);
 		}
@@ -1484,13 +1461,14 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
 		g_free (conv_str);
 		g_string_free (str, TRUE);
 
-		MakeDirs (ginfo -> ripfile);
-
-		if (!CanWrite (ginfo -> ripfile)) {
-			show_warning (ginfo -> gui_info.app,
-			              _("No write access to write output file"));
+		gchar *dir = g_path_get_dirname (ginfo -> ripfile);
+		if (dir == NULL || g_mkdir_with_parents (dir, 0755) < 0 || !CanWrite (ginfo -> ripfile)) {
+			show_error (ginfo -> gui_info.app,
+                        _("No write access to write output file"));
+            g_free (dir);
 			return FALSE;
 		}
+		g_free (dir);
 
 		/* Workaround for drives that spin up slowly */
 		if (ginfo -> delay_before_rip) {

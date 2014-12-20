@@ -41,15 +41,14 @@ static int no_redirect = FALSE;
 static int verbose = FALSE;
 
 static GOptionEntry cmd_options[] = {
-	{"config", 'c', 0, G_OPTION_ARG_STRING, &config_filename, N_ ("Specify the config file to use (in your home dir)"), N_ ("CONFIG") },
-	{"device", 'd', 0, G_OPTION_ARG_STRING, &device, N_ ("Specify the cdrom device to use"), N_ ("DEVICE") },
-	{"scsi-device", 0, 0, G_OPTION_ARG_STRING, &scsi_device, N_ ("Specify the generic scsi device to use"), N_ ("DEVICE") },
-//    { "max-size", 'm', 0, G_OPTION_ARG_INT, &max_size, "Test up to 2^M items", "M" },
-	{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose, "Be verbose", NULL },
-	{ "small", 0, 0, G_OPTION_ARG_NONE, &force_small, N_ ("Launch in \"small\" (CD-only) mode"), NULL },
-	{ "local", 0, 0, G_OPTION_ARG_NONE, &local_mode, N_ ("\"Local\" mode -- do not look up disc info on the net"), NULL },
-	{ "no-redirect", 0, 0, G_OPTION_ARG_NONE, &no_redirect, N_ ("Do not do I/O redirection"), NULL },
-	{ NULL }
+	{"config", 'c', 0, G_OPTION_ARG_STRING, &config_filename, N_ ("Specify the config file to use (in your home dir)"), N_ ("CONFIG")},
+	{"device", 'd', 0, G_OPTION_ARG_STRING, &device, N_ ("Specify the cdrom device to use"), N_ ("DEVICE")},
+	{"scsi-device", 0, 0, G_OPTION_ARG_STRING, &scsi_device, N_ ("Specify the generic scsi device to use"), N_ ("DEVICE")},
+	{"verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose, "Be verbose", NULL},
+	{"small", 0, 0, G_OPTION_ARG_NONE, &force_small, N_ ("Launch in \"small\" (CD-only) mode"), NULL},
+	{"local", 0, 0, G_OPTION_ARG_NONE, &local_mode, N_ ("\"Local\" mode -- do not look up disc info on the net"), NULL},
+	{"no-redirect", 0, 0, G_OPTION_ARG_NONE, &no_redirect, N_ ("Do not do I/O redirection"), NULL},
+	{NULL}
 };
 
 
@@ -66,7 +65,7 @@ int Cmain (int argc, char *argv[]) {
 	textdomain (GETTEXT_PACKAGE);
 	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF8");
 
-    context = g_option_context_new (_("- AudioCD Ripper"));
+    context = g_option_context_new (_("- Paranoid Audio CD Ripper"));
     g_option_context_add_main_entries (context, cmd_options, GETTEXT_PACKAGE);
     g_option_context_add_group (context, gtk_get_option_group (TRUE));
 

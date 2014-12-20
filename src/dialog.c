@@ -29,272 +29,284 @@
 
 void show_warning (GtkWidget *parentWin, char *text) {
 	GtkWidget *dialog = gtk_message_dialog_new (GTK_WINDOW (parentWin),
-						GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
-						GTK_MESSAGE_WARNING, GTK_BUTTONS_OK,
-						text);
-	gtk_window_set_title (GTK_WINDOW (dialog), _("Warning"));
-	gtk_dialog_run (GTK_DIALOG (dialog) );
+	                    GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+	                    GTK_MESSAGE_WARNING, GTK_BUTTONS_OK,
+	                    text);
+	gtk_window_set_title (GTK_WINDOW (dialog), _ ("Warning"));
+	gtk_dialog_run (GTK_DIALOG (dialog));
 	gtk_widget_destroy (dialog);
 }
 
 void show_error (GtkWidget *parentWin, char *text) {
 	GtkWidget *dialog = gtk_message_dialog_new (GTK_WINDOW (parentWin),
-						GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
-						GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE,
-						text);
-	gtk_window_set_title (GTK_WINDOW (dialog), _("Error"));
+	                    GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+	                    GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE,
+	                    text);
+	gtk_window_set_title (GTK_WINDOW (dialog), _ ("Error"));
 	gtk_dialog_run (GTK_DIALOG (dialog));
 	gtk_widget_destroy (dialog);
 }
 
-void BoolDialog(char *question,char *yes,GtkSignalFunc yesfunc,
-		gpointer yesdata,
-		char *no,GtkSignalFunc nofunc,gpointer nodata)
-{
-  GtkWidget *dialog;
-  GtkWidget *label;
-  GtkWidget *yesbutton;
-  GtkWidget *nobutton;
+void BoolDialog (char *question, char *yes, GtkSignalFunc yesfunc,
+                 gpointer yesdata,
+                 char *no, GtkSignalFunc nofunc, gpointer nodata) {
+	GtkWidget *dialog;
+	GtkWidget *label;
+	GtkWidget *yesbutton;
+	GtkWidget *nobutton;
 
-  dialog=gtk_dialog_new();
-  gtk_window_set_title(GTK_WINDOW(dialog),_("System Message"));
+	dialog = gtk_dialog_new();
+	gtk_window_set_title (GTK_WINDOW (dialog), _ ("System Message"));
 
-  gtk_container_border_width(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),5);
+	gtk_container_border_width (GTK_CONTAINER (GTK_DIALOG (dialog)->vbox), 5);
 
-  label=gtk_label_new(question);
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),label,TRUE,TRUE,0);
-  gtk_widget_show(label);
+	label = gtk_label_new (question);
+	gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), label, TRUE, TRUE, 0);
+	gtk_widget_show (label);
 
-  yesbutton=gtk_button_new_with_label(yes);
-  if(yesfunc)
-    gtk_signal_connect(GTK_OBJECT(yesbutton),"clicked",
-		       yesfunc,yesdata);
-  gtk_signal_connect_object(GTK_OBJECT(yesbutton),"clicked",
-			    GTK_SIGNAL_FUNC(gtk_widget_destroy),
-			    GTK_OBJECT(dialog));
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->action_area),yesbutton,
-		     TRUE,TRUE,0);
-  gtk_widget_show(yesbutton);
+	yesbutton = gtk_button_new_with_label (yes);
 
-  if(no) {
-    nobutton=gtk_button_new_with_label(no);
-    if(nofunc)
-      gtk_signal_connect(GTK_OBJECT(nobutton),"clicked",
-			 nofunc,nodata);
-    gtk_signal_connect_object(GTK_OBJECT(nobutton),"clicked",
-			      GTK_SIGNAL_FUNC(gtk_widget_destroy),
-			      GTK_OBJECT(dialog));
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->action_area),nobutton,
-		       TRUE,TRUE,0);
-    gtk_widget_show(nobutton);
-  }
+	if (yesfunc)
+		gtk_signal_connect (GTK_OBJECT (yesbutton), "clicked",
+		                    yesfunc, yesdata);
 
-  gtk_widget_show(dialog);
+	gtk_signal_connect_object (GTK_OBJECT (yesbutton), "clicked",
+	                           GTK_SIGNAL_FUNC (gtk_widget_destroy),
+	                           GTK_OBJECT (dialog));
+	gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->action_area), yesbutton,
+	                    TRUE, TRUE, 0);
+	gtk_widget_show (yesbutton);
 
-  gtk_grab_add(dialog);
+	if (no) {
+		nobutton = gtk_button_new_with_label (no);
+
+		if (nofunc)
+			gtk_signal_connect (GTK_OBJECT (nobutton), "clicked",
+			                    nofunc, nodata);
+
+		gtk_signal_connect_object (GTK_OBJECT (nobutton), "clicked",
+		                           GTK_SIGNAL_FUNC (gtk_widget_destroy),
+		                           GTK_OBJECT (dialog));
+		gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->action_area), nobutton,
+		                    TRUE, TRUE, 0);
+		gtk_widget_show (nobutton);
+	}
+
+	gtk_widget_show (dialog);
+
+	gtk_grab_add (dialog);
 }
 
 
-void InputDialog(char *prompt,char *default_str,int len,char *doit,
-		 GtkSignalFunc doitfunc,
-		 char *cancel,GtkSignalFunc cancelfunc)
-{
-  GtkWidget *dialog;
-  GtkWidget *label;
-  GtkWidget *doitbutton;
-  GtkWidget *cancelbutton;
-  GtkWidget *entry;
+void InputDialog (char *prompt, char *default_str, int len, char *doit,
+                  GtkSignalFunc doitfunc,
+                  char *cancel, GtkSignalFunc cancelfunc) {
+	GtkWidget *dialog;
+	GtkWidget *label;
+	GtkWidget *doitbutton;
+	GtkWidget *cancelbutton;
+	GtkWidget *entry;
 
-  dialog=gtk_dialog_new();
+	dialog = gtk_dialog_new();
 
-  gtk_container_border_width(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),5);
+	gtk_container_border_width (GTK_CONTAINER (GTK_DIALOG (dialog)->vbox), 5);
 
-  label=gtk_label_new(prompt);
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),label,TRUE,TRUE,0);
-  gtk_widget_show(label);
+	label = gtk_label_new (prompt);
+	gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), label, TRUE, TRUE, 0);
+	gtk_widget_show (label);
 
-  entry=gtk_entry_new_with_max_length(len);
-  if(default_str) gtk_entry_set_text(GTK_ENTRY(entry),default_str);
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),entry,TRUE,TRUE,0);
-  gtk_widget_show(entry);
+	entry = gtk_entry_new_with_max_length (len);
 
-  doitbutton=gtk_button_new_with_label(doit);
-  if(doitfunc)
-    gtk_signal_connect(GTK_OBJECT(doitbutton),"clicked",
-		       doitfunc,(gpointer)entry);
-  gtk_signal_connect_object(GTK_OBJECT(doitbutton),"clicked",
-			    GTK_SIGNAL_FUNC(gtk_widget_destroy),
-			    GTK_OBJECT(dialog));
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->action_area),doitbutton,
-		     TRUE,TRUE,0);
-  gtk_widget_show(doitbutton);
+	if (default_str) {
+		gtk_entry_set_text (GTK_ENTRY (entry), default_str);
+	}
 
-  if(cancel) {
-    cancelbutton=gtk_button_new_with_label(cancel);
-    if(cancelfunc)
-      gtk_signal_connect(GTK_OBJECT(cancelbutton),"clicked",
-			 cancelfunc,NULL);
-    gtk_signal_connect_object(GTK_OBJECT(cancelbutton),"clicked",
-			      GTK_SIGNAL_FUNC(gtk_widget_destroy),
-			      GTK_OBJECT(dialog));
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->action_area),cancelbutton,
-		       TRUE,TRUE,0);
-    gtk_widget_show(cancelbutton);
-  }
+	gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), entry, TRUE, TRUE, 0);
+	gtk_widget_show (entry);
 
-  gtk_widget_show(dialog);
+	doitbutton = gtk_button_new_with_label (doit);
 
-  gtk_grab_add(dialog);
+	if (doitfunc)
+		gtk_signal_connect (GTK_OBJECT (doitbutton), "clicked",
+		                    doitfunc, (gpointer)entry);
+
+	gtk_signal_connect_object (GTK_OBJECT (doitbutton), "clicked",
+	                           GTK_SIGNAL_FUNC (gtk_widget_destroy),
+	                           GTK_OBJECT (dialog));
+	gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->action_area), doitbutton,
+	                    TRUE, TRUE, 0);
+	gtk_widget_show (doitbutton);
+
+	if (cancel) {
+		cancelbutton = gtk_button_new_with_label (cancel);
+
+		if (cancelfunc)
+			gtk_signal_connect (GTK_OBJECT (cancelbutton), "clicked",
+			                    cancelfunc, NULL);
+
+		gtk_signal_connect_object (GTK_OBJECT (cancelbutton), "clicked",
+		                           GTK_SIGNAL_FUNC (gtk_widget_destroy),
+		                           GTK_OBJECT (dialog));
+		gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->action_area), cancelbutton,
+		                    TRUE, TRUE, 0);
+		gtk_widget_show (cancelbutton);
+	}
+
+	gtk_widget_show (dialog);
+
+	gtk_grab_add (dialog);
 }
 
-void ChangeStrVal(GtkWidget *widget,gpointer data)
-{
-  strcpy((char *)data,gtk_entry_get_text(GTK_ENTRY(widget)));
+void ChangeStrVal (GtkWidget *widget, gpointer data) {
+	strcpy ((char *) data, gtk_entry_get_text (GTK_ENTRY (widget)));
 }
 
-GtkWidget *MakeStrEntry(GtkWidget **entry,char *var,char *name,
-			int len,gboolean editable)
-{
-  GtkWidget *widget;
-  GtkWidget *label;
-  GtkWidget *hbox;
+GtkWidget *MakeStrEntry (GtkWidget **entry, char *var, char *name,
+                         int len, gboolean editable) {
+	GtkWidget *widget;
+	GtkWidget *label;
+	GtkWidget *hbox;
 
-  hbox=gtk_hbox_new(FALSE,5);
+	hbox = gtk_hbox_new (FALSE, 5);
 
-  label=gtk_label_new(name);
-  gtk_label_set_justify(GTK_LABEL(label),GTK_JUSTIFY_LEFT);
-  gtk_box_pack_start(GTK_BOX(hbox),label,FALSE,FALSE,0);
-  gtk_widget_show(label);
+	label = gtk_label_new (name);
+	gtk_label_set_justify (GTK_LABEL (label), GTK_JUSTIFY_LEFT);
+	gtk_box_pack_start (GTK_BOX (hbox), label, FALSE, FALSE, 0);
+	gtk_widget_show (label);
 
-  widget=gtk_entry_new_with_max_length(len);
-  gtk_entry_set_editable(GTK_ENTRY(widget),editable);
-  if(var) {
-    gtk_entry_set_text(GTK_ENTRY(widget),var);
+	widget = gtk_entry_new_with_max_length (len);
+	gtk_entry_set_editable (GTK_ENTRY (widget), editable);
 
-    gtk_signal_connect(GTK_OBJECT(widget),"changed",
-		       GTK_SIGNAL_FUNC(ChangeStrVal),(gpointer)var);
-  }
+	if (var) {
+		gtk_entry_set_text (GTK_ENTRY (widget), var);
 
-  gtk_box_pack_start(GTK_BOX(hbox),widget,TRUE,TRUE,0);
+		gtk_signal_connect (GTK_OBJECT (widget), "changed",
+		                    GTK_SIGNAL_FUNC (ChangeStrVal), (gpointer) var);
+	}
 
-  gtk_entry_set_position(GTK_ENTRY(widget),0);
+	gtk_box_pack_start (GTK_BOX (hbox), widget, TRUE, TRUE, 0);
 
-  gtk_widget_show(widget);
+	gtk_entry_set_position (GTK_ENTRY (widget), 0);
 
-  if(entry) *entry=widget;
+	gtk_widget_show (widget);
 
-  return hbox;
+	if (entry) {
+		*entry = widget;
+	}
+
+	return hbox;
 }
 
-void ChangeIntVal(GtkWidget *widget,gpointer data)
-{
-  *((int *)data)=atoi(gtk_entry_get_text(GTK_ENTRY(widget)));
+void ChangeIntVal (GtkWidget *widget, gpointer data) {
+	*((int *)data) = atoi (gtk_entry_get_text (GTK_ENTRY (widget)));
 }
 
-GtkWidget *MakeNumEntry(GtkWidget **entry,int *var,char *name,int len)
-{
-  GtkWidget *widget;
-  char buf[80];
-  GtkWidget *label;
-  GtkWidget *hbox;
+GtkWidget *MakeNumEntry (GtkWidget **entry, int *var, char *name, int len) {
+	GtkWidget *widget;
+	char buf[80];
+	GtkWidget *label;
+	GtkWidget *hbox;
 
-  hbox=gtk_hbox_new(FALSE,5);
+	hbox = gtk_hbox_new (FALSE, 5);
 
-  label=gtk_label_new(name);
-  gtk_box_pack_start(GTK_BOX(hbox),label,FALSE,FALSE,0);
-  gtk_widget_show(label);
+	label = gtk_label_new (name);
+	gtk_box_pack_start (GTK_BOX (hbox), label, FALSE, FALSE, 0);
+	gtk_widget_show (label);
 
-  widget=gtk_entry_new_with_max_length(len);
-  gtk_widget_set_usize(widget,len*8+5,0);
+	widget = gtk_entry_new_with_max_length (len);
+	gtk_entry_set_alignment (GTK_ENTRY (widget), 1);        // Right-align
+//	gtk_widget_set_usize (widget, len * 8 + 5, 0);
 
-  if(var) {
-    sprintf(buf,"%d",*var);
-    gtk_entry_set_text(GTK_ENTRY(widget),buf);
-    gtk_signal_connect(GTK_OBJECT(widget),"changed",
-		       GTK_SIGNAL_FUNC(ChangeIntVal),(gpointer)var);
-  }
+	if (var) {
+		sprintf (buf, "%d", *var);
+		gtk_entry_set_text (GTK_ENTRY (widget), buf);
+		gtk_signal_connect (GTK_OBJECT (widget), "changed",
+		                    GTK_SIGNAL_FUNC (ChangeIntVal), (gpointer)var);
+	}
 
-  gtk_box_pack_end(GTK_BOX(hbox),widget,FALSE,FALSE,0);
-  gtk_widget_show(widget);
+	gtk_box_pack_end (GTK_BOX (hbox), widget, FALSE, FALSE, 0);
+	gtk_widget_show (widget);
 
-  if(entry) *entry=widget;
+	if (entry) {
+		*entry = widget;
+	}
 
-  return hbox;
+	return hbox;
 }
 
-void ChangeDoubleVal(GtkWidget *widget,gpointer data)
-{
-  *((gdouble *)data)=gtk_spin_button_get_value_as_float
-    (GTK_SPIN_BUTTON(widget));
+void ChangeDoubleVal (GtkWidget *widget, gpointer data) {
+	* ((gdouble *)data) = gtk_spin_button_get_value_as_float
+	                      (GTK_SPIN_BUTTON (widget));
 }
 
-GtkWidget *MakeDoubleEntry(GtkWidget **entry,gdouble *var,char *name)
-{
-  GtkWidget *widget;
-  GtkWidget *label;
-  GtkWidget *hbox;
-  GtkObject *adj;
+GtkWidget *MakeDoubleEntry (GtkWidget **entry, gdouble *var, char *name) {
+	GtkWidget *widget;
+	GtkWidget *label;
+	GtkWidget *hbox;
+	GtkObject *adj;
 
-  hbox=gtk_hbox_new(FALSE,5);
+	hbox = gtk_hbox_new (FALSE, 5);
 
-  label=gtk_label_new(name);
-  gtk_box_pack_start(GTK_BOX(hbox),label,FALSE,FALSE,0);
-  gtk_widget_show(label);
+	label = gtk_label_new (name);
+	gtk_box_pack_start (GTK_BOX (hbox), label, FALSE, FALSE, 0);
+	gtk_widget_show (label);
 
-  adj=gtk_adjustment_new(0,0,1.0,0.001,0.1,0);
+	adj = gtk_adjustment_new (0, 0, 1.0, 0.001, 0.1, 0);
 
-  widget=gtk_spin_button_new(GTK_ADJUSTMENT(adj),0.1,3);
-
-
-
-  /***************************
+	widget = gtk_spin_button_new (GTK_ADJUSTMENT (adj), 0.1, 3);
 
 
 
-  gtk_widget_set_usize(widget,
-		       gdk_string_width((widget)->style->font,
-					"0.000")+25,0);
-
-
-  ************************/
+	/***************************
 
 
 
+	gtk_widget_set_usize(widget,
+	         gdk_string_width((widget)->style->font,
+	              "0.000")+25,0);
 
-  if(var) {
-    gtk_spin_button_set_value(GTK_SPIN_BUTTON(widget),*var);
-    gtk_signal_connect(GTK_OBJECT(widget),"changed",
-		       GTK_SIGNAL_FUNC(ChangeDoubleVal),(gpointer)var);
-  }
 
-  gtk_box_pack_end(GTK_BOX(hbox),widget,FALSE,FALSE,0);
-  gtk_widget_show(widget);
+	************************/
 
-  if(entry) *entry=widget;
 
-  return hbox;
+
+
+	if (var) {
+		gtk_spin_button_set_value (GTK_SPIN_BUTTON (widget), *var);
+		gtk_signal_connect (GTK_OBJECT (widget), "changed",
+		                    GTK_SIGNAL_FUNC (ChangeDoubleVal), (gpointer)var);
+	}
+
+	gtk_box_pack_end (GTK_BOX (hbox), widget, FALSE, FALSE, 0);
+	gtk_widget_show (widget);
+
+	if (entry) {
+		*entry = widget;
+	}
+
+	return hbox;
 }
 
-void ChangeBoolVal(GtkWidget *widget,gpointer data)
-{
-  *((gboolean *)data)=!*((gboolean *)data);
+void ChangeBoolVal (GtkWidget *widget, gpointer data) {
+	* ((gboolean *)data) = !* ((gboolean *)data);
 }
 
-GtkWidget *MakeCheckButton(GtkWidget **button,gboolean *var,char *name)
-{
-  GtkWidget *widget;
+GtkWidget *MakeCheckButton (GtkWidget **button, gboolean *var, char *name) {
+	GtkWidget *widget;
 
-  widget=gtk_check_button_new_with_label(name);
+	widget = gtk_check_button_new_with_label (name);
 
-  if(var) {
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(widget),
-				 *var);
-    gtk_signal_connect(GTK_OBJECT(widget),"clicked",
-		       GTK_SIGNAL_FUNC(ChangeBoolVal),
-		       (gpointer)var);
-  }
+	if (var) {
+		gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (widget),
+		                              *var);
+		gtk_signal_connect (GTK_OBJECT (widget), "clicked",
+		                    GTK_SIGNAL_FUNC (ChangeBoolVal),
+		                    (gpointer)var);
+	}
 
-  if(button) *button=widget;
+	if (button) {
+		*button = widget;
+	}
 
-  return widget;
+	return widget;
 }

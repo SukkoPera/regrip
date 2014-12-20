@@ -125,10 +125,6 @@ typedef struct _grip_gui {
   GtkWidget *start_sector_entry;
   GtkWidget *end_sector_entry;
 
-  GtkWidget *rip_exe_box;
-  GtkWidget *rip_builtin_box;
-  GtkWidget *ripexename_entry;
-  GtkWidget *ripcmdline_entry;
   GtkWidget *mp3exename_entry;
   GtkWidget *mp3cmdline_entry;
   GtkWidget *mp3extension_entry;
@@ -274,7 +270,7 @@ typedef struct _grip_info {
   struct _encode_track *encoded_track[MAX_NUM_CPU];
   GList *encode_list;
   GList *pending_list;
-  gboolean delayed_encoding;
+//  gboolean delayed_encoding;
   gboolean in_rip_thread;
   gboolean do_redirect;
 
@@ -339,6 +335,13 @@ typedef struct _grip_info {
   size_t all_encsize;
   size_t all_encdone;
   size_t all_enclast[MAX_NUM_CPU];
+
+  // App settings
+  GSettings *settings;
+  GSettings *settings_cdplay;
+  GSettings *settings_cdparanoia;
+  GSettings *settings_cddb;
+  GSettings *settings_rip;
 } GripInfo;
 
 GtkWidget *GripNew(const gchar* geometry,char *device,char *scsi_device,

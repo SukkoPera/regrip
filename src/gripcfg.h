@@ -20,16 +20,6 @@
  * USA
  */
 
-
-/* Encoder default info structure */
-
-typedef struct _mp3_encoder {
-	char name[20];
-	char cmdline[256];
-	char extension[10];
-} MP3Encoder;
-
-
 void MakeConfigPage (GripInfo *ginfo);
 gboolean LoadEncoderConfig (GripInfo *ginfo, int encodecfg);
 void SaveEncoderConfig (GripInfo *ginfo, int encodecfg);
