@@ -81,9 +81,7 @@ void MakeConfigPage (GripInfo *ginfo) {
 	GtkWidget *entry;
 	GtkWidget *realentry;
 	GtkWidget *label;
-	GtkWidget *page;
 	GtkWidget *check;
-	GtkWidget *notebook;
 	GtkWidget *config_notebook;
 	GtkWidget *configpage;
 	GtkWidget *button;
@@ -103,7 +101,6 @@ void MakeConfigPage (GripInfo *ginfo) {
 	/* CD PAGE                                                               */
 	/*************************************************************************/
 
-	page = gtk_frame_new (NULL);
 	vbox = gtk_vbox_new (FALSE, 2);
 
 	hbox = MakeStrEntry (&entry, ginfo -> cd_device, _("CD-Rom device"), 255, TRUE);
@@ -170,63 +167,9 @@ void MakeConfigPage (GripInfo *ginfo) {
 	/*************************************************************************/
 
 #ifndef GRIPCD
-	notebook = gtk_notebook_new ();
-
-	page = gtk_frame_new (NULL);
-
 	vbox = gtk_vbox_new (FALSE, 4);
 	gtk_container_border_width (GTK_CONTAINER (vbox), 3);
 
-	check = MakeCheckButton (NULL, &ginfo -> disable_paranoia,
-	                         _("Disable paranoia"));
-	gtk_box_pack_start (GTK_BOX (vbox), check, FALSE, FALSE, 0);
-	gtk_widget_show (check);
-	g_settings_bind (ginfo -> settings_cdparanoia, "disable-paranoia", check, "active", G_SETTINGS_BIND_DEFAULT);
-
-	check = MakeCheckButton (NULL, &ginfo -> disable_extra_paranoia,
-	                         _("Disable extra paranoia"));
-	gtk_box_pack_start (GTK_BOX (vbox), check, FALSE, FALSE, 0);
-	gtk_widget_show (check);
-	g_settings_bind (ginfo -> settings_cdparanoia, "disable-extra-paranoia", check, "active", G_SETTINGS_BIND_DEFAULT);
-
-	hbox = gtk_hbox_new (FALSE, 3);
-
-	label = gtk_label_new (_("Disable scratch"));
-	gtk_box_pack_start (GTK_BOX (hbox), label, TRUE, TRUE, 0);
-	gtk_widget_show (label);
-
-	check = MakeCheckButton (NULL, &ginfo -> disable_scratch_detect, _("detection"));
-	gtk_box_pack_start (GTK_BOX (hbox), check, TRUE, TRUE, 0);
-	gtk_widget_show (check);
-	g_settings_bind (ginfo -> settings_cdparanoia, "disable-scratch-detect", check, "active", G_SETTINGS_BIND_DEFAULT);
-
-	check = MakeCheckButton (NULL, &ginfo -> disable_scratch_repair, _("repair"));
-	gtk_box_pack_start (GTK_BOX (hbox), check, TRUE, TRUE, 0);
-	gtk_widget_show (check);
-	g_settings_bind (ginfo -> settings_cdparanoia, "disable-scratch-repair", check, "active", G_SETTINGS_BIND_DEFAULT);
-
-	gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
-	gtk_widget_show (hbox);
-
-	hbox = MakeStrEntry (&entry, ginfo -> force_scsi, _("Generic SCSI device"),
-	                      255, TRUE);
-	gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
-	gtk_widget_show (hbox);
-	g_settings_bind (ginfo -> settings_cdparanoia, "force-scsi", check, "text", G_SETTINGS_BIND_DEFAULT);
-
-	gtk_container_add (GTK_CONTAINER (page), vbox);
-	gtk_widget_show (vbox);
-
-
-
-	label = gtk_label_new (_("Ripper"));
-	gtk_notebook_append_page (GTK_NOTEBOOK (notebook), page, label);
-	gtk_widget_show (page);
-
-	page = gtk_frame_new (NULL);
-
-	vbox = gtk_vbox_new (FALSE, 2);
-	gtk_container_border_width (GTK_CONTAINER (vbox), 3);
 
 	hbox = gtk_hbox_new (FALSE, 3);
 
@@ -242,6 +185,7 @@ void MakeConfigPage (GripInfo *ginfo) {
 
 	gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
 	gtk_widget_show (hbox);
+
 
 	hbox = gtk_hbox_new (FALSE, 3);
 
@@ -272,6 +216,51 @@ void MakeConfigPage (GripInfo *ginfo) {
 	gtk_widget_show (check);
 	g_settings_bind (ginfo -> settings_rip, "stop-between-tracks", check, "active", G_SETTINGS_BIND_DEFAULT);
 
+
+		hbox = gtk_hbox_new (FALSE, 2);
+
+	check = MakeCheckButton (NULL, &ginfo -> disable_paranoia,
+	                         _("Disable paranoia"));
+	gtk_box_pack_start (GTK_BOX (hbox), check, TRUE, TRUE, 0);
+	gtk_widget_show (check);
+	g_settings_bind (ginfo -> settings_cdparanoia, "disable-paranoia", check, "active", G_SETTINGS_BIND_DEFAULT);
+
+	check = MakeCheckButton (NULL, &ginfo -> disable_extra_paranoia,
+	                         _("Disable extra paranoia"));
+	gtk_box_pack_start (GTK_BOX (hbox), check, TRUE, TRUE, 0);
+	gtk_widget_show (check);
+	g_settings_bind (ginfo -> settings_cdparanoia, "disable-extra-paranoia", check, "active", G_SETTINGS_BIND_DEFAULT);
+
+	gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
+	gtk_widget_show (hbox);
+
+
+	hbox = gtk_hbox_new (FALSE, 3);
+
+	label = gtk_label_new (_("Disable scratch"));
+	gtk_box_pack_start (GTK_BOX (hbox), label, TRUE, TRUE, 0);
+	gtk_widget_show (label);
+
+	check = MakeCheckButton (NULL, &ginfo -> disable_scratch_detect, _("detection"));
+	gtk_box_pack_start (GTK_BOX (hbox), check, TRUE, TRUE, 0);
+	gtk_widget_show (check);
+	g_settings_bind (ginfo -> settings_cdparanoia, "disable-scratch-detect", check, "active", G_SETTINGS_BIND_DEFAULT);
+
+	check = MakeCheckButton (NULL, &ginfo -> disable_scratch_repair, _("repair"));
+	gtk_box_pack_start (GTK_BOX (hbox), check, TRUE, TRUE, 0);
+	gtk_widget_show (check);
+	g_settings_bind (ginfo -> settings_cdparanoia, "disable-scratch-repair", check, "active", G_SETTINGS_BIND_DEFAULT);
+
+	gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
+	gtk_widget_show (hbox);
+
+	hbox = MakeStrEntry (&entry, ginfo -> force_scsi, _("Generic SCSI device"),
+	                      255, TRUE);
+	gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
+	gtk_widget_show (hbox);
+	g_settings_bind (ginfo -> settings_cdparanoia, "force-scsi", entry, "text", G_SETTINGS_BIND_DEFAULT);
+
+
 	hbox = MakeStrEntry (&entry, ginfo -> wav_filter_cmd, _("WAV filter command"),
 	                      255, TRUE);
 	gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
@@ -284,16 +273,9 @@ void MakeConfigPage (GripInfo *ginfo) {
 	gtk_widget_show (hbox);
 	g_settings_bind (ginfo -> settings_rip, "disc-filter-cmd", entry, "text", G_SETTINGS_BIND_DEFAULT);
 
-	gtk_container_add (GTK_CONTAINER (page), vbox);
-	gtk_widget_show (vbox);
-
-	label = gtk_label_new (_("Options"));
-	gtk_notebook_append_page (GTK_NOTEBOOK (notebook), page, label);
-	gtk_widget_show (page);
-
 	label = gtk_label_new (_("Rip"));
-	gtk_notebook_append_page (GTK_NOTEBOOK (config_notebook), notebook, label);
-	gtk_widget_show (notebook);
+	gtk_notebook_append_page (GTK_NOTEBOOK (config_notebook), vbox, label);
+	gtk_widget_show (vbox);
 
 
     /*************************************************************************/
