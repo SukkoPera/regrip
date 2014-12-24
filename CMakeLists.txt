@@ -19,6 +19,9 @@ pkg_check_modules (GTHREAD REQUIRED gthread-2.0)
 pkg_check_modules (VTE REQUIRED vte)
 #pkg_check_modules (CDDB REQUIRED libcddb)
 pkg_check_modules (SNDFILE sndfile)
+pkg_check_modules (OPUS opus)
+pkg_check_modules (OGG ogg)
+pkg_check_modules (SAMPLERATE samplerate)
 
 include (CheckIncludeFiles)
 CHECK_INCLUDE_FILES (sys/cdio.h HAVE_SYS_CDIO_H)
@@ -30,7 +33,7 @@ CHECK_INCLUDE_FILES (sys/vfs.h HAVE_SYS_VFS_H)
 #CHECK_INCLUDE_FILES ("cddb/cddb.h" HAVE_CDDB_H)
 #check_library_exists ("cddb" "cddb_disc_new" "" HAVE_CDDB_LIB)
 
-list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
+list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 find_package (CURL)
 find_package (CDParanoia REQUIRED)
 find_package (FAAC)
@@ -43,6 +46,7 @@ configure_file (
 add_subdirectory (src)
 add_subdirectory (doc)
 add_subdirectory (pixmaps)
+add_subdirectory (gschema)
 
 
 ### INSTALLATION STUFF ###

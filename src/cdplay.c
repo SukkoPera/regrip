@@ -1055,8 +1055,8 @@ void MinMax(GtkWidget *widget,gpointer data)
     CopyPixmap(GTK_PIXMAP(uinfo->empty_image),
     GTK_PIXMAP(uinfo->lcd_smile_indicator));
 
-    gtk_widget_set_size_request(GTK_WIDGET(uinfo->app),
-                                WINWIDTH,WINHEIGHT);
+//    gtk_widget_set_size_request(GTK_WIDGET(uinfo->app),
+//                                WINWIDTH,WINHEIGHT);
 
     gtk_window_resize(GTK_WINDOW(uinfo->app),
                       uinfo->win_width,
@@ -1076,8 +1076,8 @@ void MinMax(GtkWidget *widget,gpointer data)
     if(uinfo->volvis) ToggleVol(NULL,(gpointer)ginfo);
     if(uinfo->track_prog_visible) ToggleProg(NULL,(gpointer)ginfo);
 
-    gtk_widget_set_size_request(GTK_WIDGET(uinfo->app),
-                                MIN_WINWIDTH,MIN_WINHEIGHT);
+//    gtk_widget_set_size_request(GTK_WIDGET(uinfo->app),
+//                                MIN_WINWIDTH,MIN_WINHEIGHT);
 
     gtk_window_resize(GTK_WINDOW(uinfo->app),
                       uinfo->win_width_min,

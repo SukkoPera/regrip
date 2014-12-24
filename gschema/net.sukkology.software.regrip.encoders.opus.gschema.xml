@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <enum id="net.sukkology.software.regrip.encoders.opus.encmode">
+    <value nick="Variable Bitrate" value="1"/>
+    <value nick="Constant Bitrate" value="2"/>
+    <value nick="Constrained Bitrate" value="3"/>
+  </enum>
+  <enum id="net.sukkology.software.regrip.encoders.opus.sampling-frequency">
+    <value nick="48000" value="48000"/>
+    <value nick="24000" value="24000"/>
+    <value nick="16000" value="16000"/>
+    <value nick="12000" value="12000"/>
+    <value nick="8000" value="8000"/>
+  </enum>
+  <enum id="net.sukkology.software.regrip.encoders.opus.framesize">
+    <value nick="2.5 ms" value="25"/>
+    <value nick="5 ms" value="50"/>
+    <value nick="10 ms" value="100"/>
+    <value nick="20 ms" value="200"/>
+    <value nick="40 ms" value="400"/>
+    <value nick="60 ms" value="600"/>
+  </enum>
+
+  <schema id="net.sukkology.software.regrip.encoders.opus" path="/net/sukkology/software/regrip/encoders/opus/">
+    <key enum="net.sukkology.software.regrip.encoders.opus.sampling-frequency" name="sampling-frequency">
+      <default>'24000'</default>
+      <description>Target sampling frequency in Hz</description>
+    </key>
+	<key type="b" name="auto-bitrate">
+		<default>true</default>
+		<description>Automatically calculate a suitable bitrate based on other encoding parameters</description>
+	</key>
+    <key type="u" name="bitrate">
+	  <range min="6" max="256" />
+      <default>128</default>
+      <description>Target bitrate per channel in kbit/sec (ignored if auto-bitrate is set to true)</description>
+    </key>
+	<key enum="net.sukkology.software.regrip.encoders.opus.encmode" name="encoding-mode">
+	  <default>'Variable Bitrate'</default>
+	</key>
+    <!--
+	<key type="b" name="hard-cbr">
+      <default>''</default>
+      <description>Use hard constant bitrate encoding</description>
+    </key>
+    <key type="b" name="vbr">
+      <default>true</default>
+      <description>Use variable bitrate encoding</description>
+    </key>
+    <key type="b" name="cvbr">
+      <default>''</default>
+      <description>Use constrained variable bitrate encoding</description>
+    </key>
+	-->
+    <key type="u" name="complexity">
+	  <range min="0" max="10" />
+      <default>10</default>
+      <description>Encoding complexity (10 is slowest)</description>
+    </key>
+    <key enum="net.sukkology.software.regrip.encoders.opus.framesize" name="framesize">
+      <default>'20 ms'</default>
+      <description>Maximum frame size in milliseconds</description>
+    </key>
+    <key type="u" name="expect-loss">
+	  <range min="0" max="1000" />
+      <default>0</default>
+      <description>Percentage packet loss to expect (default: 0)</description>
+    </key>
+    <key type="u" name="max-delay">
+      <default>1000</default>
+      <description>Maximum container delay in milliseconds (0-1000, default: 1000)</description>
+    </key>
+    <key type="s" name="serial">
+      <default>''</default>
+      <description>Forces a specific stream serial number</description>
+    </key>
+  </schema>
+</schemalist>
+
+<!--
+*{"comment", required_argument, NULL, 0},
+-->

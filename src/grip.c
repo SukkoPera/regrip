@@ -153,6 +153,23 @@ gboolean AppWindowStateCB (GtkWidget *widget, GdkEventWindowState *event,
 	return FALSE;
 }
 
+static gboolean on_window_resize (GtkWindow *window, GdkEvent *event, gpointer user_data) {
+    g_assert (event -> type == GDK_CONFIGURE);
+
+    GdkEventConfigure *e = (GdkEventConfigure *) event;
+    GripInfo *ginfo = (GripInfo *) user_data;
+
+    g_debug ("New window size: %dx%d", e -> width, e -> height);
+    g_debug ("New window position: %dx%d", e -> x, e -> y);
+
+    g_settings_set_uint (ginfo -> settings, "win-width", e -> width);
+    g_settings_set_uint (ginfo -> settings, "win-height", e -> height);
+    // FIXME: Also save position
+
+    // FALSE propagates event further
+    return FALSE;
+}
+
 GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
                     char *config_filename,
                     gboolean force_small,
@@ -168,47 +185,50 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 
 	if (!gtk_window_set_default_icon_from_file (icon_file, &err)) {
 		gchar *msg = g_strdup_printf (_("Error: Unable to set window icon: %s"),
-		                              err  ->  message);
+		                              err -> message);
 		show_error (NULL, msg);
 		g_free (msg);
 	}
 
 	g_free (icon_file);
 
-	app = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-	gtk_window_set_title (GTK_WINDOW (app), _("Regrip"));
-
+	// Init global object
 	ginfo = g_new0 (GripInfo, 1);
 
-	gtk_object_set_user_data (GTK_OBJECT (app), (gpointer)ginfo);
+	app = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+	gtk_window_set_title (GTK_WINDOW (app), _("Regrip"));
+	gtk_widget_add_events(app, GDK_CONFIGURE);
+	g_signal_connect (app, "configure-event", G_CALLBACK (on_window_resize), ginfo);
+	gtk_object_set_user_data (GTK_OBJECT (app), (gpointer) ginfo);
 
-	uinfo = & (ginfo -> gui_info);
+    // First of all, load settings
+    ginfo -> settings = g_settings_new ("net.sukkology.software.regrip");
+    ginfo -> settings_cdplay = g_settings_get_child (ginfo -> settings, "cdplay");
+    ginfo -> settings_cdparanoia = g_settings_get_child (ginfo -> settings, "cdparanoia");
+    ginfo -> settings_cddb = g_settings_get_child (ginfo -> settings, "cddb");
+    ginfo -> settings_rip = g_settings_get_child (ginfo -> settings, "rip");
+    // FIXME: Check for errors
+
+	uinfo = &(ginfo -> gui_info);
 	uinfo -> app = app;
 	uinfo -> status_window = NULL;
 	uinfo -> rip_status_window = NULL;
 	uinfo -> encode_status_window = NULL;
 	uinfo -> track_list = NULL;
 
-	uinfo -> win_width = WINWIDTH;
-	uinfo -> win_height = WINHEIGHT;
-	uinfo -> win_height_edit = WINHEIGHTEDIT;
-	uinfo -> win_width_min = MIN_WINWIDTH;
-	uinfo -> win_height_min = MIN_WINHEIGHT;
+	uinfo -> win_width = g_settings_get_uint (ginfo -> settings, "win-width");
+	uinfo -> win_height = g_settings_get_uint (ginfo -> settings, "win-height");
+	uinfo -> win_height_edit = g_settings_get_uint (ginfo -> settings, "win-height-edit");
+	uinfo -> win_width_min = g_settings_get_uint (ginfo -> settings, "win-width-min");
+	uinfo -> win_height_min = g_settings_get_uint (ginfo -> settings, "win-height-min");
 
-    // GSettings
-    ginfo  ->  settings = g_settings_new ("net.sukkology.software.regrip");
-    ginfo  ->  settings_cdplay = g_settings_get_child (ginfo  ->  settings, "cdplay");
-    ginfo  ->  settings_cdparanoia = g_settings_get_child (ginfo  ->  settings, "cdparanoia");
-    ginfo  ->  settings_cddb = g_settings_get_child (ginfo  ->  settings, "cddb");
-    ginfo  ->  settings_rip = g_settings_get_child (ginfo  ->  settings, "rip");
+//	if (config_filename && *config_filename) {
+//		g_snprintf (ginfo -> config_filename, 256, "%s", config_filename);
+//	} else {
+//		strcpy (ginfo -> config_filename, ".grip");
+//	}
 
-	if (config_filename && *config_filename) {
-		g_snprintf (ginfo -> config_filename, 256, "%s", config_filename);
-	} else {
-		strcpy (ginfo -> config_filename, ".grip");
-	}
-
-	g_debug ("Using config file [%s]", ginfo -> config_filename);
+//	g_debug ("Using config file [%s]", ginfo -> config_filename);
 
 	DoLoadConfig (ginfo);
 
@@ -227,7 +247,7 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 	if (!CDInitDevice (ginfo -> cd_device, & (ginfo -> disc))) {
 		sprintf (buf, _("Error: Unable to initialize [%s]\n"), ginfo -> cd_device);
 
-		show_error (ginfo  ->  gui_info.app, buf);
+		show_error (ginfo -> gui_info.app, buf);
 	}
 
 	CDStat (&(ginfo -> disc), TRUE);
@@ -238,14 +258,14 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 	                  G_CALLBACK (gripDieOnWinCloseCB), ginfo);
 
 	if (uinfo -> minimized) {
-		gtk_widget_set_size_request (GTK_WIDGET (app), MIN_WINWIDTH,
-		                             MIN_WINHEIGHT);
+		gtk_widget_set_size_request (GTK_WIDGET (app), uinfo->win_width_min,
+		                             uinfo->win_height_min);
 
 		gtk_window_resize (GTK_WINDOW (app), uinfo -> win_width_min,
 		                   uinfo -> win_height_min);
 	} else {
-		gtk_widget_set_size_request (GTK_WIDGET (app), WINWIDTH,
-		                             WINHEIGHT);
+//		gtk_widget_set_size_request (GTK_WIDGET (app), uinfo -> win_width,
+//		                             uinfo -> win_height);
 
 		if (uinfo -> track_edit_visible) {
 			gtk_window_resize (GTK_WINDOW (app), uinfo -> win_width,
@@ -531,7 +551,7 @@ static void DoHelp (GtkWidget *widget, gpointer data) {
 		if (!g_spawn_async (NULL, argv, NULL, 0, NULL, NULL, NULL, &error)) {
 			gchar *errmsg;
 
-			errmsg = g_strdup_printf (_("Unable to run yelp: %s"), error  ->  message);
+			errmsg = g_strdup_printf (_("Unable to run yelp: %s"), error -> message);
 			show_error (NULL, errmsg);
 			g_free (errmsg);
 		}
@@ -811,15 +831,15 @@ static void DoLoadConfig (GripInfo *ginfo) {
 	gchar *filename;
 	char renamefile[256];
 	char *proxy_env, *tok;
-	char outputdir[256];
+//	char outputdir[256];
 	int confret;
-	CFGEntry cfg_entries[] = {
-		CFG_ENTRIES
-		{"outputdir", CFG_ENTRY_STRING, 256, outputdir},
-		{"", CFG_ENTRY_LAST, 0, NULL}
-	};
+//	CFGEntry cfg_entries[] = {
+//		CFG_ENTRIES
+//		{"outputdir", CFG_ENTRY_STRING, 256, outputdir},
+//		{"", CFG_ENTRY_LAST, 0, NULL}
+//	};
 
-	outputdir[0] = '\0';
+//	outputdir[0] = '\0';
 
 	uinfo -> minimized = FALSE;
 	uinfo -> volvis = FALSE;
@@ -839,7 +859,7 @@ static void DoLoadConfig (GripInfo *ginfo) {
     strncpy (ginfo -> cd_device, tmp, sizeof (ginfo -> cd_device));
     g_free (tmp);
 	tmp = g_settings_get_string (ginfo -> settings_cdparanoia, "force-scsi");
-    strncpy (ginfo -> cd_device, tmp, sizeof (ginfo -> force_scsi));
+    strncpy (ginfo -> force_scsi, tmp, sizeof (ginfo -> force_scsi));
     g_free (tmp);
 
 	ginfo -> local_mode = FALSE;
@@ -916,10 +936,10 @@ static void DoLoadConfig (GripInfo *ginfo) {
 	ginfo -> stop_rip = FALSE;
 	ginfo -> stop_encode = FALSE;
 	ginfo -> rip_finished = 0;
-	ginfo -> num_wavs = 0;
-	ginfo -> doencode = FALSE;
-	ginfo -> encode_list = NULL;
-	ginfo -> pending_list = NULL;
+//	ginfo -> num_wavs = 0;
+//	ginfo -> doencode = FALSE;
+//	ginfo -> encode_list = NULL;
+//	ginfo -> pending_list = NULL;
 	ginfo -> do_redirect = TRUE;
 
 	ginfo -> rip_thread = NULL;
@@ -944,7 +964,7 @@ static void DoLoadConfig (GripInfo *ginfo) {
 //	ginfo -> stop_between_tracks = FALSE;
 //	*ginfo -> wav_filter_cmd = '\0';
 //	*ginfo -> disc_filter_cmd = '\0';
-	ginfo -> selected_encoder = 1;
+//	ginfo -> selected_encoder = 1;
 //  strcpy(ginfo -> mp3cmdline,"-h -b %b %w %m");
 //  FindExeInPath("lame", ginfo -> mp3exename, sizeof(ginfo -> mp3exename));
 //  strcpy(ginfo -> mp3fileformat,"~/mp3/%A/%d/%n.%x");
@@ -960,7 +980,7 @@ static void DoLoadConfig (GripInfo *ginfo) {
 	ginfo -> doid3 = TRUE;
 	ginfo -> doid3 = FALSE;
 	ginfo -> tag_mp3_only = TRUE;
-	strcpy (ginfo -> id3_comment, _("Created by Grip"));
+	strcpy (ginfo -> id3_comment, _("Ripped with Regrip"));
 	*ginfo -> cdupdate = '\0';
 	ginfo -> sprefs.no_lower_case = FALSE;
 	ginfo -> sprefs.allow_high_bits = FALSE;
@@ -969,6 +989,7 @@ static void DoLoadConfig (GripInfo *ginfo) {
 	*ginfo -> sprefs.allow_these_chars = '\0';
 	ginfo -> show_tray_icon = TRUE;
 
+#if 0
 	filename = g_build_filename (g_get_home_dir(), ginfo -> config_filename, NULL);
 
 	confret = LoadConfig (filename, "GRIP", 2, 2, cfg_entries);
@@ -995,23 +1016,24 @@ static void DoLoadConfig (GripInfo *ginfo) {
 #ifndef GRIPCD
 	/* Phase out 'outputdir' variable */
 
-	if (*outputdir) {
-		strcpy (filename, outputdir);
-		MakePath (filename);
+//	if (*outputdir) {
+//		strcpy (filename, outputdir);
+//		MakePath (filename);
 //    strcat(filename,ginfo -> mp3fileformat);
 //    strcpy(ginfo -> mp3fileformat,filename);
 
-		strcpy (filename, outputdir);
+//		strcpy (filename, outputdir);
 //    MakePath(filename);
 //    strcat(filename,ginfo -> ripfileformat);
 //    strcpy(ginfo -> ripfileformat,filename);
 
-		*outputdir = '\0';
-	}
+//		*outputdir = '\0';
+//	}
 
 #endif
 
 	g_free (filename);
+#endif
 
 	ginfo -> dbserver2.use_proxy = ginfo -> dbserver.use_proxy = ginfo -> use_proxy;
 	ginfo -> dbserver2.proxy = ginfo -> dbserver.proxy;
@@ -1023,21 +1045,17 @@ static void DoLoadConfig (GripInfo *ginfo) {
 		char *user;
 
 		host = getenv ("HOST");
-
 		if (!host) {
 			host = getenv ("HOSTNAME");
 		}
-
 		if (!host) {
 			host = "localhost";
 		}
 
 		user = getenv ("USER");
-
 		if (!user) {
 			user = getenv ("USERNAME");
 		}
-
 		if (!user) {
 			user = "user";
 		}
@@ -1049,21 +1067,17 @@ static void DoLoadConfig (GripInfo *ginfo) {
 		proxy_env = getenv ("http_proxy");
 
 		if (proxy_env) {
-
 			/* Skip the "http://" if it's present */
-
 			if (!strncasecmp (proxy_env, "http://", 7)) {
 				proxy_env += 7;
 			}
 
 			tok = strtok (proxy_env, ":");
-
 			if (tok) {
 				strncpy (ginfo -> proxy_server.name, tok, 256);
 			}
 
 			tok = strtok (NULL, "/");
-
 			if (tok) {
 				ginfo -> proxy_server.port = atoi (tok);
 			}
@@ -1075,6 +1089,7 @@ static void DoLoadConfig (GripInfo *ginfo) {
 }
 
 void DoSaveConfig (GripInfo *ginfo) {
+#if 0
 	gchar *filename;
 	GripGUI *uinfo = & (ginfo -> gui_info);
 	CFGEntry cfg_entries[] = {
@@ -1095,6 +1110,7 @@ void DoSaveConfig (GripInfo *ginfo) {
 	SaveEncoderConfig (ginfo, ginfo -> selected_encoder);
 
 	g_free (filename);
+#endif
 }
 
 /* Shut down stuff (generally before an exec) */
@@ -1102,7 +1118,7 @@ void CloseStuff (void *user_data) {
 	GripInfo *ginfo;
 	int fd;
 
-	ginfo = (GripInfo *)user_data;
+	ginfo = (GripInfo *) user_data;
 
 	close (ConnectionNumber (GDK_DISPLAY()));
 	close (ginfo -> disc.cd_desc);

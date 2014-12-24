@@ -62,3 +62,4 @@
 /* Encoding libraries */
 #cmakedefine FAAC_FOUND
 #cmakedefine SNDFILE_FOUND
+#cmakedefine OPUS_FOUND

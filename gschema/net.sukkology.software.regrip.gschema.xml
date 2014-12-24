@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="net.sukkology.software.regrip" path="/net/sukkology/software/regrip/">
+    <key type="s" name="xxx">
+      <default>''</default>
+      <summary>xxx</summary>
+      <description>xxx</description>
+    </key>
+
+    <key type="u" name="win-width">
+      <default>400</default>
+    </key>
+    <key type="u" name="win-height">
+      <default>450</default>
+    </key>
+    <key type="u" name="win-height-edit">
+      <default>600</default>
+    </key>
+    <key type="u" name="win-width-min">
+      <default>200</default>
+    </key>
+    <key type="u" name="win-height-min">
+      <default>80</default>
+    </key>
+
+    <key type="s" name="cd-device">
+      <default>'/dev/cdrom'</default>
+      <summary>CD-ROM Block Device</summary>
+      <description>Block device that will be used for ripping</description>
+    </key>
+    <key type="b" name="show-tray-icon">
+      <default>true</default>
+      <summary>Show tray icon</summary>
+      <description>Shows an icon for Regrip in the tray</description>
+    </key>
+    <key type="s" name="selected-encoder">
+      <default>''</default>
+      <summary>Selected encoder</summary>
+      <description>The encoder to use for encoding the ripped tracks</description>
+    </key>
+    <key type="s" name="selected-format">
+      <default>''</default>
+      <summary>Selected output format</summary>
+      <description>The format to use for encoding the ripped tracks</description>
+    </key>
+    <key type="b" name="calc-gain">
+      <default>true</default>
+      <summary>Enable ReplayGain calculation</summary>
+    </key>
+
+    <child name="cddb" schema="net.sukkology.software.regrip.cddb" />
+    <child name="cdplay" schema="net.sukkology.software.regrip.cdplay" />
+    <child name="cdparanoia" schema="net.sukkology.software.regrip.cdparanoia" />
+    <child name="rip" schema="net.sukkology.software.regrip.rip" />
+  </schema>
+
+  <schema id="net.sukkology.software.regrip.cdplay" path="/net/sukkology/software/regrip/cdplay/">
+    <key type="b" name="no-interrupt">
+      <default>false</default>
+      <summary>Don't interrupt playback on exit/startup</summary>
+      <description>If this is not selected, Grip will stop play when it starts and when it stops</description>
+    </key>
+    <key type="b" name="stop-first">
+      <default>false</default>
+      <summary>Rewind when stopped</summary>
+      <description>If selected, Grip will rewind to the first track when play is stopped</description>
+    </key>
+    <key type="b" name="play-first">
+      <default>true</default>
+      <summary>Startup with first track if not playing</summary>
+      <description>If this is not selected, Grip will begin with whatever track the cd-player played last</description>
+    </key>
+    <key type="b" name="play-on-insert">
+      <default>false</default>
+      <summary>Auto-play on disc insert</summary>
+      <description></description>
+    </key>
+    <key type="b" name="automatic-reshuffle">
+      <default>true</default>
+      <summary>Reshuffle before each playback</summary>
+      <description>If selected, Grip will re-randomize the tracks each time playback begins when in shuffle-play mode</description>
+    </key>
+    <key type="b" name="faulty-eject">
+      <default>false</default>
+      <summary>Work around faulty eject</summary>
+      <description></description>
+    </key>
+    <key type="b" name="poll-drive">
+      <default>true</default>
+      <summary>Poll disc drive for new disc</summary>
+      <description></description>
+    </key>
+    <key type="u" name="poll-interval">
+      <range min="1" max="60" />
+      <default>1</default>
+      <summary>Poll interval (seconds)</summary>
+      <description></description>
+    </key>
+  </schema>
+
+  <schema id="net.sukkology.software.regrip.cddb" path="/net/sukkology/software/regrip/cddb/">
+	<key type="b" name="automatic-discdb">
+      <default>true</default>
+      <summary>Query CDDB automatically</summary>
+    </key>
+	<!--
+	{"use-proxy",CFG-ENTRY-BOOL,0,&ginfo->use-proxy},\
+	{"proxy-name",CFG-ENTRY-STRING,256,ginfo->proxy-server.name},\
+	{"proxy-port",CFG-ENTRY-INT,0,&(ginfo->proxy-server.port)},\
+	{"proxy-user",CFG-ENTRY-STRING,80,ginfo->proxy-server.username},\
+	{"proxy-pswd",CFG-ENTRY-STRING,80,ginfo->proxy-server.pswd},\
+	{"cdupdate",CFG-ENTRY-STRING,256,ginfo->cdupdate},\
+	{"user-email",CFG-ENTRY-STRING,256,ginfo->user-email},\
+	-->
+  </schema>
+
+  <schema id="net.sukkology.software.regrip.cdparanoia" path="/net/sukkology/software/regrip/cdparanoia/">
+	<key type="b" name="disable-paranoia">
+      <default>false</default>
+      <summary>Disable paranoia</summary>
+      <description>Disable all data verification and correction features. When enabled, cdparanoia reads data exactly as would cdda2wav with an overlap setting of zero. This option implies that extra paranoia is	also disabled.</description>
+    </key>
+	<key type="b" name="disable-extra-paranoia">
+      <default>false</default>
+      <summary></summary>
+      <description>Only cdda2wav-style overlap checking will be done.</description>
+    </key>
+	<key type="b" name="disable-scratch-detect">
+      <default>false</default>
+      <summary>Do not look for scratches</summary>
+    </key>
+	<key type="b" name="disable-scratch-repair">
+      <default>false</default>
+      <summary>Disable scratch repair (still detect)</summary>
+    </key>
+    <key type="s" name="force-scsi">
+      <default>''</default>
+    </key>
+  </schema>
+
+  <schema id="net.sukkology.software.regrip.rip" path="/net/sukkology/software/regrip/rip/">
+	<key type="b" name="auto-rip">
+      <default>false</default>
+      <summary>Auto-rip on insert</summary>
+      <description>If selected, Grip will automatically select all tracks and begin ripping when a new (ie: no local disc data) disc is inserted</description>
+    </key>
+    <key type="b" name="beep-after-rip">
+      <default>true</default>
+      <summary>Beep after rip</summary>
+      <description></description>
+    </key>
+    <key type="b" name="eject-after-rip">
+      <default>true</default>
+      <summary>Auto-eject after rip</summary>
+      <description>If selected, Grip will automatically eject the disc when ripping is finished</description>
+    </key>
+    <key type="u" name="eject-delay">
+      <range min="0" max="60" />
+      <default>0</default>
+      <summary>Auto-eject delay (seconds)</summary>
+      <description></description>
+    </key>
+    <key type="b" name="delay-before-rip">
+      <default>false</default>
+      <summary>Delay before ripping</summary>
+      <description></description>
+    </key>
+    <key type="b" name="stop-between-tracks">
+      <default>false</default>
+      <summary>Stop CD-Rom drive between tracks</summary>
+      <description></description>
+    </key>
+    <key type="s" name="wav-filter-cmd">
+      <default>''</default>
+      <summary>WAV filter command</summary>
+      <description>This command will be run after ripping but before encoding. It can be used to call a program to manipulate the .wav file in some way (such as doing normalization).; it accepts a single switch, %f, which translates as the ripped .wav file</description>
+    </key>
+    <key type="s" name="disc-filter-cmd">
+      <default>''</default>
+      <summary>Disc filter command</summary>
+      <description></description>
+    </key>
+  </schema>
+</schemalist>
+
+<!--
+{"dbserver",CFG-ENTRY-STRING,256,ginfo->dbserver.name},\
+?{"ripfileformat",CFG-ENTRY-STRING,256,ginfo->ripfileformat},\
+{"m3ufileformat",CFG-ENTRY-STRING,256,ginfo->m3ufileformat},\
+{"add-m3u",CFG-ENTRY-BOOL,0,&ginfo->add-m3u},\
+{"rel-m3u",CFG-ENTRY-BOOL,0,&ginfo->rel-m3u},\
+{"ripnice",CFG-ENTRY-INT,0,&ginfo->ripnice},\
+*{"mp3-filter-cmd",CFG-ENTRY-STRING,256,ginfo->mp3-filter-cmd},\
+{"doid3",CFG-ENTRY-BOOL,0,&ginfo->doid3},\
+{"doid3v2",CFG-ENTRY-BOOL,0,&ginfo->doid3v2},\
+*{"tag-mp3-only",CFG-ENTRY-BOOL,0,&ginfo->tag-mp3-only},\
+{"id3-comment",CFG-ENTRY-STRING,30,ginfo->id3-comment},\
+**{"use-proxy-env",CFG-ENTRY-BOOL,0,&ginfo->use-proxy-env},\
+*{"db-cgi",CFG-ENTRY-STRING,256,ginfo->dbserver.cgi-prog},\
+{"cddb-submit-email",CFG-ENTRY-STRING,256,ginfo->discdb-submit-email},\
+*{"discdb-encoding",CFG-ENTRY-STRING,16,ginfo->discdb-encoding},\
+{"id3-encoding",CFG-ENTRY-STRING,16,ginfo->id3-encoding},\
+{"id3v2-encoding",CFG-ENTRY-STRING,16,ginfo->id3v2-encoding},\
+{"db-use-freedb",CFG-ENTRY-BOOL,0,&ginfo->db-use-freedb},\
+{"no-lower-case",CFG-ENTRY-BOOL,0,&ginfo->sprefs.no-lower-case},\
+{"no-underscore",CFG-ENTRY-BOOL,0,&ginfo->sprefs.no-underscore},\
+{"allow-high-bits",CFG-ENTRY-BOOL,0,&ginfo->sprefs.allow-high-bits},\
+{"escape",CFG-ENTRY-BOOL,0,&ginfo->sprefs.escape},\
+{"allow-these-chars",CFG-ENTRY-STRING,256,ginfo->sprefs.allow-these-chars},\
+{"kbits-per-sec",CFG-ENTRY-INT,0,&ginfo->kbits-per-sec},\
+{"play-mode",CFG-ENTRY-INT,0,&ginfo->play-mode},\
+{"playloop",CFG-ENTRY-BOOL,0,&ginfo->playloop},\
+{"win-width",CFG-ENTRY-INT,0,&uinfo->win-width},\
+{"win-height",CFG-ENTRY-INT,0,&uinfo->win-height},\
+{"win-height-edit",CFG-ENTRY-INT,0,&uinfo->win-height-edit},\
+{"win-width-min",CFG-ENTRY-INT,0,&uinfo->win-width-min},\
+{"win-height-min",CFG-ENTRY-INT,0,&uinfo->win-height-min},\
+{"vol-vis",CFG-ENTRY-BOOL,0,&uinfo->volvis},\
+{"track-edit-vis",CFG-ENTRY-BOOL,0,&uinfo->track-edit-visible},\
+{"track-prog-vis",CFG-ENTRY-BOOL,0,&uinfo->track-prog-visible},\
+{"volume",CFG-ENTRY-INT,0,&ginfo->volume},
+
+-->

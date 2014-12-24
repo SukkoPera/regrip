@@ -3,6 +3,7 @@
 
 #include "encoder_sndfile.h"
 #include "encoder_faac.h"
+#include "encoder_opus.h"
 
 supported_encoder *supported_encoders[] = {
 #ifdef SNDFILE_FOUND
@@ -12,6 +13,10 @@ supported_encoder *supported_encoders[] = {
 #ifdef FAAC_FOUND
     &faac_encoder,
 #endif // FAAC_FOUND
+
+#ifdef OPUS_FOUND
+    &opus_encoder,
+#endif // OPUS_FOUND
 
     NULL
 };

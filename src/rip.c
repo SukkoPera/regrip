@@ -580,12 +580,6 @@ void KillRip (GtkWidget *widget, gpointer data) {
 	ginfo -> ripping_a_disc = FALSE;
 
 	if (ginfo -> ripping) {
-		/* Need to decrement num_wavs since we didn't finish ripping
-		   the current track */
-		if (ginfo -> doencode && ginfo -> num_wavs > 0) {
-			ginfo -> num_wavs--;
-		}
-
 		/* Need to decrement all_mp3size */
 		for (track = 0; track < ginfo -> disc.num_tracks; ++track) {
 			if ((!IsDataTrack (&(ginfo -> disc), track)) &&
@@ -927,10 +921,6 @@ void UpdateRipProgress (GripInfo *ginfo) {
 				                         0.0);
 				CopyPixmap (GTK_PIXMAP (uinfo -> empty_image),
 				            GTK_PIXMAP (uinfo -> mp3_indicator[mycpu]));
-
-				if (ginfo -> doencode) {
-					ginfo -> num_wavs--;
-				}
 
 				if (!ginfo -> stop_encode) {
 					if (ginfo -> delete_wavs) {

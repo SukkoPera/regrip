@@ -1,0 +1,80 @@
+<!--
+https://forum.dbpoweramp.com/showthread.php?20641-AccurateRip-CRC-Calculation
+
+http://wiki.hydrogenaud.io/index.php?title=Python_Audio_Tools
+
+https://github.com/thomasvs/morituri
+-->
+
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+	<enum id="net.sukkology.software.regrip.encoders.faac.object-type">
+		<value nick="LC (Low Complexity)" value="1"/>
+		<value nick="Main" value="2"/>
+		<value nick="LTP (Long Term Prediction)" value="3"/>
+	</enum>
+	<enum id="net.sukkology.software.regrip.encoders.faac.mpeg-version">
+		<value nick="MPEG2" value="2"/>
+		<value nick="MPEG4" value="4"/>
+	</enum>
+	<enum id="net.sukkology.software.regrip.encoders.faac.block-type">
+		<value nick="Short and long" value="0"/>
+		<value nick="Long only" value="1"/>
+		<value nick="Short only" value="2"/>
+	</enum>
+
+	<schema id="net.sukkology.software.regrip.encoders.faac" path="/net/sukkology/software/regrip/encoders/faac/">
+	    <key type="u" name="quality">
+			<range min="10" max="500" />
+			<default>100</default>
+			<description>Set default variable bitrate (VBR) quantizer quality (Averages at approx. 120 kbps VBR for a normal stereo input file with 16 bit and 44.1 kHz sample rate)</description>
+		</key>
+	<!--
+	    <key type="u" name="quality">
+			<range min="0" max="10" />
+			<default>6</default>
+			<description>Set quantizer quality</description>
+		</key>
+	-->
+		<key type="u" name="bitrate">
+			<range min="48" max="320" />
+			<default>128</default>
+			<description>Approximate average bitrate (kbps) in ABR (lower quality mode)</description>
+		</key>
+		<key type="b" name="auto-bandwidth">
+			<default>true</default>
+			<description>Automatically calculate a suitable bandwidth based on other encoding parameters</description>
+		</key>
+		<key type="u" name="bandwidth">
+			<range min="50" max="20000" />
+			<default>16000</default>
+			<description>Set the bandwidth in Hz, also known as cutoff frequency (ignored if auto-bandwidth is set to true)</description>
+		</key>
+		<key type="b" name="tns">
+			<default>false</default>
+			<description>Toggle coding of TNS (Temporal Noise Shaping)</description>
+		</key>
+		<key type="b" name="midside">
+			<default>true</default>
+			<description>Toggle mid/side coding</description>
+		</key>
+		<key enum="net.sukkology.software.regrip.encoders.faac.object-type" name="object-type">
+			<default>'LC (Low Complexity)'</default>
+			<description>AAC object type</description>
+		</key>
+		<key enum="net.sukkology.software.regrip.encoders.faac.mpeg-version" name="mpeg-version">
+			<default>'MPEG4'</default>
+			<description>AAC MPEG version</description>
+		</key>
+		<key enum="net.sukkology.software.regrip.encoders.faac.block-type" name="block-type">
+			<default>'Short and long'</default>
+			<description>Enforce block type</description>
+		</key>
+	</schema>
+</schemalist>
+
+<!--  
+#ifdef HAVE_LIBMP4V2
+  "  -w\t\tWrap AAC data in MP4 container. (default for *.mp4 and *.m4a)\n"
+  "  -s\t\tOptimize MP4 container layout after encoding\n"
+-->

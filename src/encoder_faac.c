@@ -14,7 +14,7 @@ static supported_format faac_formats[] = {
 #define GRIP_FAACENC_ERROR faac_encoder_error_quark ()
 
 GQuark faac_encoder_error_quark (void) {
-    return g_quark_from_static_string ("grip-encoder-error-quark");
+    return g_quark_from_static_string ("grip-faacenc-error-quark");
 }
 
 enum GripFAACEncError {
@@ -43,14 +43,13 @@ gpointer encoder_faac_init (gpointer *fmt, gchar *filename, gpointer opts, GErro
     gchar *extension = (gchar *) fmt;
     g_assert (extension);
 
-	encoder_faac_data *efd = g_new (encoder_faac_data, 1);
+	encoder_faac_data *efd = g_new0 (encoder_faac_data, 1);
 	if (!efd) {
 		g_set_error_literal (error, GRIP_FAACENC_ERROR, GRIP_FAACENC_ERROR_NOMEM, _("Out of memory"));
 		return NULL;
 	}
 
-
-	efd -> codec = faacEncOpen (44100, 2, &(efd -> input_samples), & (efd -> outbufsize));
+	efd -> codec = faacEncOpen (44100, 2, &(efd -> input_samples), &(efd -> outbufsize));
 	if (!efd -> codec) {
 		g_set_error_literal (error, GRIP_FAACENC_ERROR, GRIP_FAACENC_ERROR_INIT, _("Unable to init FAAC encoder"));
 		g_free (efd);
@@ -110,10 +109,10 @@ gboolean encoder_faac_callback (gint16 *buffer, gsize bufsize, gpointer user_dat
 	g_assert (efd);
 
     // Append to buffer
-    g_assert (efd -> buffer_avail + bufsize <= efd -> input_samples * 4);
+    g_assert (efd -> buffer_avail + bufsize < efd -> input_samples * 4);
     memcpy (efd -> outbuf + efd -> buffer_avail, buffer, bufsize);
     efd -> buffer_avail += bufsize;
-//    g_debug ("Appended %Zu bytes to buffer, now size is %Zu", bufsize, efd -> buffer_avail);
+    g_debug ("Appended %Zu bytes to buffer, now size is %Zu", bufsize, efd -> buffer_avail);
 
     // Consume till we can!
     while (efd -> buffer_avail >= efd -> input_samples * 2) {
