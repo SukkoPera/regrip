@@ -34,7 +34,7 @@
 
 
 static void UseProxyChanged (GtkWidget *widget, gpointer data);
-static void EncoderSelected (GtkComboBox *widget, gpointer data);
+static void on_encoder_selected (GtkComboBox *widget, gpointer data);
 
 // From settings (uint) to object property (text)
 static gboolean gsettings_map_int_to_string (GValue *value, GVariant *variant, gpointer user_data) {
@@ -72,7 +72,7 @@ static void UseProxyChanged (GtkWidget *widget, gpointer data) {
 
 	ginfo = (GripInfo *)data;
 
-	ginfo -> dbserver2.use_proxy = ginfo -> dbserver.use_proxy = ginfo -> use_proxy;
+	ginfo -> dbserver.use_proxy = ginfo -> use_proxy;
 }
 
 void MakeConfigPage (GripInfo *ginfo) {
@@ -293,8 +293,8 @@ void MakeConfigPage (GripInfo *ginfo) {
 
 	/* *** Encoders menu START *** */
     gchar *selected_encoder, *selected_format;
-    g_settings_get (ginfo -> settings, "selected-encoder", "s", &selected_encoder);
-    g_settings_get (ginfo -> settings, "selected-format", "s", &selected_format);
+    g_settings_get (ginfo -> settings_encoder, "selected-encoder", "s", &selected_encoder);
+    g_settings_get (ginfo -> settings_encoder, "selected-format", "s", &selected_format);
 //    g_debug ("Selected encoder/format: %s/%s", selected_encoder, selected_format);
 
 	GtkListStore *store = gtk_list_store_new (3, G_TYPE_STRING, G_TYPE_POINTER, G_TYPE_POINTER);    // Name, supported_format, supported_encoder
@@ -337,7 +337,7 @@ void MakeConfigPage (GripInfo *ginfo) {
     gtk_cell_layout_set_attributes (GTK_CELL_LAYOUT (menu), cell, "text", 0, NULL);
 
 	g_signal_connect (GTK_OBJECT (menu), "changed",
-	                    G_CALLBACK (EncoderSelected), (gpointer) ginfo);
+	                    G_CALLBACK (on_encoder_selected), (gpointer) ginfo);
 
     // Make default encoder selected. This MUST be called after connecting the signal handler
     if (selected_found)
@@ -349,6 +349,7 @@ void MakeConfigPage (GripInfo *ginfo) {
 	gtk_box_pack_start (GTK_BOX (hbox), menu, TRUE, TRUE, 0);
 	/* *** Encoders menu END *** */
 
+
 	gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
 	gtk_widget_show (hbox);
 
@@ -356,40 +357,50 @@ void MakeConfigPage (GripInfo *ginfo) {
 	                         _("Calculate gain adjustment"));
 	gtk_box_pack_start (GTK_BOX (vbox), check, FALSE, FALSE, 0);
 	gtk_widget_show (check);
-//	g_settings_bind (ginfo -> settings_cdparanoia, "disable-extra-paranoia", check, "active", G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind (ginfo -> settings_encoder, "calc-gain", check, "active", G_SETTINGS_BIND_DEFAULT);
 
 	check = MakeCheckButton (NULL, &ginfo -> add_m3u, _("Create .m3u files"));
 	gtk_box_pack_start (GTK_BOX (vbox), check, FALSE, FALSE, 0);
 	gtk_widget_show (check);
+	g_settings_bind (ginfo -> settings_encoder, "add-m3u", check, "active", G_SETTINGS_BIND_DEFAULT);
 
 	check = MakeCheckButton (NULL, &ginfo -> rel_m3u,
 	                         _("Use relative paths in .m3u files"));
 	gtk_box_pack_start (GTK_BOX (vbox), check, FALSE, FALSE, 0);
 	gtk_widget_show (check);
+	g_settings_bind (ginfo -> settings_encoder, "rel-m3u", check, "active", G_SETTINGS_BIND_DEFAULT);
 
-	entry = MakeStrEntry (NULL, ginfo -> m3ufileformat, _("M3U file format"), 255,
+	hbox = MakeStrEntry (&entry, ginfo -> m3ufileformat, _("M3U file name format"), 255,
 	                      TRUE);
-	gtk_box_pack_start (GTK_BOX (vbox), entry, FALSE, FALSE, 0);
-	gtk_widget_show (entry);
+	gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
+	gtk_widget_show (hbox);
+	g_settings_bind (ginfo -> settings_encoder, "m3u-filename-format", entry, "text", G_SETTINGS_BIND_DEFAULT);
 
+    /* This is now a per-encoder setting
 	entry = MakeNumEntry (NULL, &ginfo -> kbits_per_sec,
 	                      _("Encoding bitrate (kbits/sec)"), 3);
 	gtk_box_pack_start (GTK_BOX (vbox), entry, FALSE, FALSE, 0);
 	gtk_widget_show (entry);
+	*/
 
+	/* This does not really make sense anymore
 	entry = MakeNumEntry (NULL, &ginfo -> edit_num_cpu, _("Number of CPUs to use"),
 	                      3);
 	gtk_box_pack_start (GTK_BOX (vbox), entry, FALSE, FALSE, 0);
 	gtk_widget_show (entry);
+	*/
 
+	/* glib threads no longer support priority
 	entry = MakeNumEntry (NULL, &ginfo -> mp3nice, _("Encode 'nice' value"), 3);
 	gtk_box_pack_start (GTK_BOX (vbox), entry, FALSE, FALSE, 0);
 	gtk_widget_show (entry);
+	*/
 
-	entry = MakeStrEntry (NULL, ginfo -> mp3_filter_cmd, _("Encode filter command"),
+	hbox = MakeStrEntry (&entry, ginfo -> mp3_filter_cmd, _("Encode filter command"),
 	                      255, TRUE);
-	gtk_box_pack_start (GTK_BOX (vbox), entry, FALSE, FALSE, 0);
-	gtk_widget_show (entry);
+	gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
+	gtk_widget_show (hbox);
+	g_settings_bind (ginfo -> settings_encoder, "encode-filter-cmd", entry, "text", G_SETTINGS_BIND_DEFAULT);
 
 	label = gtk_label_new (_("Encode"));
 	gtk_notebook_append_page (GTK_NOTEBOOK (config_notebook), vbox, label);
@@ -583,7 +594,7 @@ void MakeConfigPage (GripInfo *ginfo) {
 }
 
 
-static void EncoderSelected (GtkComboBox *widget, gpointer data) {
+static void on_encoder_selected (GtkComboBox *widget, gpointer data) {
 	GripInfo *ginfo;
 //	GripGUI *uinfo;
 
@@ -605,7 +616,7 @@ static void EncoderSelected (GtkComboBox *widget, gpointer data) {
         g_debug ("Selected format: %s", format_name);
 
         // Save selection
-        g_settings_set (ginfo -> settings, "selected-encoder", "s", ginfo -> encoder -> name);
-        g_settings_set (ginfo -> settings, "selected-format", "s", format_name);
+        g_settings_set (ginfo -> settings_encoder, "selected-encoder", "s", ginfo -> encoder -> name);
+        g_settings_set (ginfo -> settings_encoder, "selected-format", "s", format_name);
     }
 }

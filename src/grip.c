@@ -134,7 +134,7 @@ void DoSaveConfig (GripInfo *ginfo);
 	{"calc_gain",CFG_ENTRY_BOOL,0,&ginfo -> calc_gain},
 
 
-gboolean AppWindowStateCB (GtkWidget *widget, GdkEventWindowState *event,
+static gboolean AppWindowStateCB (GtkWidget *widget, GdkEventWindowState *event,
                            gpointer data) {
 	GripInfo *ginfo = (GripInfo *)data;
 	GripGUI *uinfo = & (ginfo -> gui_info);
@@ -177,7 +177,6 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 	GtkWidget *app;
 	GripInfo *ginfo;
 	GripGUI *uinfo;
-	int major, minor, point;
 	char buf[256];
 
 	GError *err = NULL;
@@ -207,6 +206,7 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
     ginfo -> settings_cdparanoia = g_settings_get_child (ginfo -> settings, "cdparanoia");
     ginfo -> settings_cddb = g_settings_get_child (ginfo -> settings, "cddb");
     ginfo -> settings_rip = g_settings_get_child (ginfo -> settings, "rip");
+    ginfo -> settings_encoder = g_settings_get_child (ginfo -> settings, "encoder");
     // FIXME: Check for errors
 
 	uinfo = &(ginfo -> gui_info);
@@ -258,14 +258,14 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 	                  G_CALLBACK (gripDieOnWinCloseCB), ginfo);
 
 	if (uinfo -> minimized) {
-		gtk_widget_set_size_request (GTK_WIDGET (app), uinfo->win_width_min,
-		                             uinfo->win_height_min);
+		gtk_widget_set_size_request (GTK_WIDGET (app), uinfo -> win_width_min,
+		                             uinfo -> win_height_min);
 
 		gtk_window_resize (GTK_WINDOW (app), uinfo -> win_width_min,
 		                   uinfo -> win_height_min);
 	} else {
-//		gtk_widget_set_size_request (GTK_WIDGET (app), uinfo -> win_width,
-//		                             uinfo -> win_height);
+		gtk_widget_set_size_request (GTK_WIDGET (app), uinfo -> win_width,
+		                             uinfo -> win_height);
 
 		if (uinfo -> track_edit_visible) {
 			gtk_window_resize (GTK_WINDOW (app), uinfo -> win_width,
@@ -284,7 +284,7 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 		gtk_container_border_width (GTK_CONTAINER (uinfo -> winbox), 3);
 	}
 
-	uinfo -> notebook = gtk_notebook_new();
+	uinfo -> notebook = gtk_notebook_new ();
 
 	LoadImages (uinfo);
 	MakeStyles (uinfo);
@@ -338,10 +338,8 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 	if (strcmp (VERSION, ginfo -> version) != 0) {
 		strcpy (ginfo -> version, VERSION);
 
-		sscanf (VERSION, "%d.%d.%d", &major, &minor, &point);
-
 		/* Check if we have a dev release */
-		if (minor % 2) {
+		if (strlen (VERSION) >= 3 && strcmp (VERSION + strlen (VERSION) - 3, "svn") == 0) {
 			show_warning (ginfo -> gui_info.app,
 			              _("This is a development version of Regrip. If you encounter problems, you are encouraged to revert to the latest stable version."));
 		}
@@ -828,11 +826,11 @@ void UnBusy (GripGUI *uinfo) {
 
 static void DoLoadConfig (GripInfo *ginfo) {
 	GripGUI *uinfo = & (ginfo -> gui_info);
-	gchar *filename;
-	char renamefile[256];
+//	gchar *filename;
+//	char renamefile[256];
 	char *proxy_env, *tok;
 //	char outputdir[256];
-	int confret;
+//	int confret;
 //	CFGEntry cfg_entries[] = {
 //		CFG_ENTRIES
 //		{"outputdir", CFG_ENTRY_STRING, 256, outputdir},
@@ -899,12 +897,6 @@ static void DoLoadConfig (GripInfo *ginfo) {
 	ginfo -> dbserver.use_proxy = 0;
 	ginfo -> dbserver.proxy = & (ginfo -> proxy_server);
 
-	strcpy (ginfo -> dbserver2.name, "");
-	strcpy (ginfo -> dbserver2.cgi_prog, "~cddb/cddb.cgi");
-	ginfo -> dbserver2.port = 80;
-	ginfo -> dbserver2.use_proxy = 0;
-	ginfo -> dbserver2.proxy = & (ginfo -> proxy_server);
-
 	strcpy (ginfo -> discdb_submit_email, "freedb-submit@freedb.org");
 	ginfo -> db_use_freedb = TRUE;
 	*ginfo -> user_email = '\0';
@@ -969,14 +961,14 @@ static void DoLoadConfig (GripInfo *ginfo) {
 //  FindExeInPath("lame", ginfo -> mp3exename, sizeof(ginfo -> mp3exename));
 //  strcpy(ginfo -> mp3fileformat,"~/mp3/%A/%d/%n.%x");
 //  strcpy(ginfo -> mp3extension,"mp3");
-	ginfo -> mp3nice = 0;
-	*ginfo -> mp3_filter_cmd = '\0';
-	ginfo -> delete_wavs = TRUE;
-	ginfo -> add_m3u = TRUE;
-	ginfo -> rel_m3u = TRUE;
-	strcpy (ginfo -> m3ufileformat, "~/Music/%A-%d.m3u");
-	ginfo -> kbits_per_sec = 128;
-	ginfo -> edit_num_cpu = 1;
+//	ginfo -> mp3nice = 0;
+//	*ginfo -> mp3_filter_cmd = '\0';
+//	ginfo -> delete_wavs = TRUE;
+//	ginfo -> add_m3u = TRUE;
+//	ginfo -> rel_m3u = TRUE;
+//	strcpy (ginfo -> m3ufileformat, "~/Music/%A-%d.m3u");
+//	ginfo -> kbits_per_sec = 128;
+//	ginfo -> edit_num_cpu = 1;
 	ginfo -> doid3 = TRUE;
 	ginfo -> doid3 = FALSE;
 	ginfo -> tag_mp3_only = TRUE;
@@ -1034,11 +1026,6 @@ static void DoLoadConfig (GripInfo *ginfo) {
 
 	g_free (filename);
 #endif
-
-	ginfo -> dbserver2.use_proxy = ginfo -> dbserver.use_proxy = ginfo -> use_proxy;
-	ginfo -> dbserver2.proxy = ginfo -> dbserver.proxy;
-
-	ginfo -> num_cpu = ginfo -> edit_num_cpu;
 
 	if (!*ginfo -> user_email) {
 		char *host;

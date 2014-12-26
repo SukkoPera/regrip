@@ -83,7 +83,6 @@ int Cmain (int argc, char *argv[]) {
 	grip_app = GripNew (geometry, device, scsi_device, config_filename,
 	                    force_small, local_mode,
 	                    no_redirect);
-
 	gtk_widget_show (grip_app);
 
 	gtk_timeout_add (1000, TimeOut, 0);

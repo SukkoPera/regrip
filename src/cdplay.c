@@ -153,13 +153,9 @@ static void DoLookup(void *data)
 
   ginfo=(GripInfo *)data;
 
+  // FIXME: Not sure this works correctly
   if(!DiscDBLookupDisc(ginfo,&(ginfo->dbserver))) {
-    if(*(ginfo->dbserver2.name)) {
-      if(DiscDBLookupDisc(ginfo,&(ginfo->dbserver2))) {
-//        discdb_found=TRUE;
         ginfo->ask_submit=TRUE;
-      }
-    }
   }
 //  else {
 //    discdb_found=TRUE;

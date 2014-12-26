@@ -33,7 +33,7 @@
 #include "eggtrayicon.h"
 #include "encoder.h"
 
-#define MIN_WINHEIGHT 80
+//#define MIN_WINHEIGHT 80
 
 #define MAX_NUM_CPU 16
 
@@ -189,7 +189,6 @@ typedef struct _grip_info {
 	gboolean use_proxy_env;
 	ProxyServer proxy_server;
 	DiscDBServer dbserver;
-	DiscDBServer dbserver2;
 	char config_filename[MAX_STRING];
 	char cd_device[MAX_STRING];
 	char force_scsi[MAX_STRING];
@@ -248,7 +247,7 @@ typedef struct _grip_info {
 	gboolean ripping_a_disc;
 	time_t rip_finished;
 	int rippid;
-	int num_wavs;
+//	int num_wavs;
 	int rip_track;
 	time_t rip_started;
 	int ripsize;
@@ -265,8 +264,8 @@ typedef struct _grip_info {
 	double track_gain_adjustment;
 	double disc_gain_adjustment;
 	struct _encode_track *encoded_track[MAX_NUM_CPU];
-	GList *encode_list;
-	GList *pending_list;
+//	GList *encode_list;
+//	GList *pending_list;
 //  gboolean delayed_encoding;
 	gboolean in_rip_thread;
 	gboolean do_redirect;
@@ -283,7 +282,7 @@ typedef struct _grip_info {
 	gfloat rip_percent_done;
 
 	char ripfileformat[MAX_STRING];
-	int max_wavs;
+//	int max_wavs;
 	gboolean auto_rip;
 	gboolean beep_after_rip;
 	gboolean eject_after_rip;
@@ -293,16 +292,16 @@ typedef struct _grip_info {
 	gboolean stop_between_tracks;
 	char wav_filter_cmd[MAX_STRING];
 	char disc_filter_cmd[MAX_STRING];
-	int selected_encoder;
+//	int selected_encoder;
 	supported_encoder *encoder;
 	supported_format *format;
-	gboolean delete_wavs;
+//	gboolean delete_wavs;
 	gboolean add_m3u;
 	gboolean rel_m3u;
 	char m3ufileformat[MAX_STRING];
-	int kbits_per_sec;
-	int edit_num_cpu;
-	int mp3nice;
+//	int kbits_per_sec;
+//	int edit_num_cpu;
+//	int mp3nice;
 	char mp3_filter_cmd[MAX_STRING];
 	gboolean doid3;
 	gboolean doid3v2;
@@ -339,6 +338,7 @@ typedef struct _grip_info {
 	GSettings *settings_cdparanoia;
 	GSettings *settings_cddb;
 	GSettings *settings_rip;
+	GSettings *settings_encoder;
 } GripInfo;
 
 GtkWidget *GripNew (const gchar* geometry, char *device, char *scsi_device,

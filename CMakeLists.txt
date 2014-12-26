@@ -1,9 +1,12 @@
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 2.8.11)
 
 project (regrip)
-set (VERSION_MAJOR 4)
-set (VERSION_MINOR 0)
-set (VERSION_REVISION 1)
+#set (VERSION_MAJOR 4)
+#set (VERSION_MINOR 0)
+#set (VERSION_REVISION 1)
+string(TIMESTAMP VERSION_MAJOR "%Y")
+string(TIMESTAMP VERSION_MINOR "%m")
+string(TIMESTAMP VERSION_REVISION "%d-svn")
 
 include (GNUInstallDirs)
 #include (FindThreads)

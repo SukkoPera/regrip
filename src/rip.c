@@ -597,8 +597,6 @@ void KillRip (GtkWidget *widget, gpointer data) {
 void KillEncode (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 	int mycpu;
-	GList *elist;
-	EncodeTrack *enc_track;
 
 	ginfo = (GripInfo *)data;
 
@@ -607,7 +605,6 @@ void KillEncode (GtkWidget *widget, gpointer data) {
 	}
 
 	ginfo -> stop_encode = TRUE;
-	ginfo -> num_wavs = 0;
 	ginfo -> all_encsize = 0;
 	ginfo -> all_encdone = 0;
 
@@ -617,17 +614,6 @@ void KillEncode (GtkWidget *widget, gpointer data) {
 		}
 
 		ginfo -> all_enclast[mycpu] = 0;
-	}
-
-	elist = ginfo -> encode_list;
-
-	/* Remove all entries in the encode list */
-	while (elist) {
-		enc_track = (EncodeTrack *)elist -> data;
-		elist = elist -> next;
-
-		ginfo -> encode_list = g_list_remove (elist, enc_track);
-		g_free (enc_track);
 	}
 }
 
@@ -710,8 +696,6 @@ void UpdateRipProgress (GripInfo *ginfo) {
 	gfloat elapsed = 0;
 	gfloat speed;
 	gboolean result = FALSE;
-	char *conv_str;
-	gsize rb, wb;
 
 	uinfo = &(ginfo -> gui_info);
 
@@ -827,15 +811,13 @@ void UpdateRipProgress (GripInfo *ginfo) {
 //					MP3Encode (ginfo);
 //				}
 
-				g_debug (_("Rip partial %d  num wavs %d"), ginfo -> rip_partial,
-				         ginfo -> num_wavs);
+				g_debug (_("Rip partial %d"), ginfo -> rip_partial);
 
 				g_debug (_("Next track is %d, total is %d"),
 				         NextTrackToRip (ginfo), ginfo -> disc.num_tracks);
 
 				if (!ginfo -> rip_partial &&
-				        (ginfo -> num_wavs < ginfo -> max_wavs ||
-				         NextTrackToRip (ginfo) == ginfo -> disc.num_tracks)) {
+				         (NextTrackToRip (ginfo) == ginfo -> disc.num_tracks)) {
 					g_debug (_("Check if we need to rip another track"));
 
 					if (!RipNextTrack (ginfo)) {
@@ -877,11 +859,12 @@ void UpdateRipProgress (GripInfo *ginfo) {
 			now = time (NULL);
 			elapsed = (gfloat)now - (gfloat)ginfo -> mp3_started[mycpu];
 
-			if (elapsed < 0.1f) { /* 1/10 sec. */
+            // FIXME
+//			if (elapsed < 0.1f) { /* 1/10 sec. */
 				speed = 0.0f;
-			} else
-				speed = (gfloat)mystat.st_size /
-				        ((gfloat)ginfo -> kbits_per_sec * 128.0f * elapsed);
+//			} else
+//				speed = (gfloat)mystat.st_size /
+//				        ((gfloat)ginfo -> kbits_per_sec * 128.0f * elapsed);
 
 			sprintf (buf, _("Enc: Trk %d (%3.1fx)"),
 			         ginfo -> mp3_enc_track[mycpu] + 1, speed);
@@ -923,22 +906,6 @@ void UpdateRipProgress (GripInfo *ginfo) {
 				            GTK_PIXMAP (uinfo -> mp3_indicator[mycpu]));
 
 				if (!ginfo -> stop_encode) {
-					if (ginfo -> delete_wavs) {
-						conv_str = g_filename_to_utf8 (ginfo -> rip_delete_file[mycpu],
-						                               strlen (ginfo -> rip_delete_file[mycpu]),
-						                               &rb, &wb, NULL);
-
-						if (!conv_str) {
-							conv_str = g_strdup (ginfo -> rip_delete_file[mycpu]);
-						}
-
-						LogStatus (ginfo, _("Deleting [%s]\n"), conv_str, &rb, &wb, NULL);
-
-						g_free (conv_str);
-
-						unlink (ginfo -> rip_delete_file[mycpu]);
-					}
-
 					if (ginfo -> doid3 || ginfo -> doid3v2)
 						ID3Add (ginfo, ginfo -> mp3file[mycpu],
 						        ginfo -> encoded_track[mycpu]);
@@ -950,7 +917,7 @@ void UpdateRipProgress (GripInfo *ginfo) {
 
 
 					if (ginfo -> ripping_a_disc && !ginfo -> rip_partial &&
-					        !ginfo -> ripping && ginfo -> num_wavs < ginfo -> max_wavs) {
+					        !ginfo -> ripping) {
 						if (RipNextTrack (ginfo)) {
 							ginfo -> doencode = TRUE;
 						} else {
@@ -983,8 +950,7 @@ void UpdateRipProgress (GripInfo *ginfo) {
 		}
 	}
 
-	if ((!result || ginfo -> stop_encode) &&
-	        !ginfo -> encode_list && !ginfo -> ripping) {
+	if ((!result || ginfo -> stop_encode) && !ginfo -> ripping) {
 		gtk_label_set (GTK_LABEL (uinfo -> all_enc_label), _("Enc: Idle"));
 		gtk_progress_bar_update (GTK_PROGRESS_BAR (uinfo -> all_encprogbar), 0.0);
 	}
@@ -1057,10 +1023,10 @@ char *TranslateSwitch (char switch_char, void *data, gboolean *munge) {
 	enc_track = (EncodeTrack *)data;
 
 	switch (switch_char) {
-		case 'b':
-			g_snprintf (res, PATH_MAX, "%d", enc_track -> ginfo -> kbits_per_sec);
-			*munge = FALSE;
-			break;
+//		case 'b':
+//			g_snprintf (res, PATH_MAX, "%d", enc_track -> ginfo -> kbits_per_sec);
+//			*munge = FALSE;
+//			break;
 
 		case 'c':
 			g_snprintf (res, PATH_MAX, "%s", enc_track -> ginfo -> cd_device);
@@ -1541,10 +1507,6 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
 		ginfo -> ripping = TRUE;
 		ginfo -> ripping_a_disc = TRUE;
 
-		if (ginfo -> doencode) {
-			ginfo -> num_wavs++;
-		}
-
 		return TRUE;
 	} else {
 		return FALSE;
@@ -1801,8 +1763,7 @@ static size_t CalculateEncSize (GripInfo *ginfo, int track) {
 	double tmp_encsize = 0.0;
 	/* It's not the best way, but i couldn't find anything better */
 	tmp_encsize = (double) ((ginfo -> disc.track[track].length.mins * 60 +
-	                         ginfo -> disc.track[track].length.secs - 2) *
-	                        ginfo -> kbits_per_sec * 1024 / 8);
+	                         ginfo -> disc.track[track].length.secs - 2));
 	tmp_encsize -= tmp_encsize * 0.0154;
 
 	if (ginfo -> add_m3u) {

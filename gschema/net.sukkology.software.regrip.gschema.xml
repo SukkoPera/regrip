@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist>
   <schema id="net.sukkology.software.regrip" path="/net/sukkology/software/regrip/">
-    <key type="s" name="xxx">
-      <default>''</default>
-      <summary>xxx</summary>
-      <description>xxx</description>
-    </key>
 
     <key type="u" name="win-width">
       <default>400</default>
@@ -33,25 +28,12 @@
       <summary>Show tray icon</summary>
       <description>Shows an icon for Regrip in the tray</description>
     </key>
-    <key type="s" name="selected-encoder">
-      <default>''</default>
-      <summary>Selected encoder</summary>
-      <description>The encoder to use for encoding the ripped tracks</description>
-    </key>
-    <key type="s" name="selected-format">
-      <default>''</default>
-      <summary>Selected output format</summary>
-      <description>The format to use for encoding the ripped tracks</description>
-    </key>
-    <key type="b" name="calc-gain">
-      <default>true</default>
-      <summary>Enable ReplayGain calculation</summary>
-    </key>
 
     <child name="cddb" schema="net.sukkology.software.regrip.cddb" />
     <child name="cdplay" schema="net.sukkology.software.regrip.cdplay" />
     <child name="cdparanoia" schema="net.sukkology.software.regrip.cdparanoia" />
     <child name="rip" schema="net.sukkology.software.regrip.rip" />
+    <child name="encoder" schema="net.sukkology.software.regrip.encoder" />
   </schema>
 
   <schema id="net.sukkology.software.regrip.cdplay" path="/net/sukkology/software/regrip/cdplay/">
@@ -181,6 +163,41 @@
       <description></description>
     </key>
   </schema>
+
+  <schema id="net.sukkology.software.regrip.encoder" path="/net/sukkology/software/regrip/encoder/">
+    <key type="s" name="selected-encoder">
+      <default>''</default>
+      <summary>Selected encoder</summary>
+      <description>The encoder to use for encoding the ripped tracks</description>
+    </key>
+    <key type="s" name="selected-format">
+      <default>''</default>
+      <summary>Selected output format</summary>
+      <description>The format to use for encoding the ripped tracks</description>
+    </key>
+    <key type="b" name="calc-gain">
+      <default>true</default>
+      <summary>Enable ReplayGain calculation</summary>
+    </key>
+    <key type="b" name="add-m3u">
+      <default>true</default>
+      <summary>Create .m3u files</summary>
+    </key>
+    <key type="b" name="rel-m3u">
+      <default>true</default>
+      <summary>Use relative paths in .m3u files</summary>
+    </key>
+    <key type="s" name="m3u-filename-format">
+      <default>'~/Music/%A-%d.m3u'</default>
+      <summary>M3U file name format</summary>
+      <description></description>
+    </key>
+    <key type="s" name="encode-filter-cmd">
+      <default>''</default>
+      <summary>Encode filter command</summary>
+      <description></description>
+    </key>
+    </schema>
 </schemalist>
 
 <!--
@@ -210,11 +227,6 @@
 {"kbits-per-sec",CFG-ENTRY-INT,0,&ginfo->kbits-per-sec},\
 {"play-mode",CFG-ENTRY-INT,0,&ginfo->play-mode},\
 {"playloop",CFG-ENTRY-BOOL,0,&ginfo->playloop},\
-{"win-width",CFG-ENTRY-INT,0,&uinfo->win-width},\
-{"win-height",CFG-ENTRY-INT,0,&uinfo->win-height},\
-{"win-height-edit",CFG-ENTRY-INT,0,&uinfo->win-height-edit},\
-{"win-width-min",CFG-ENTRY-INT,0,&uinfo->win-width-min},\
-{"win-height-min",CFG-ENTRY-INT,0,&uinfo->win-height-min},\
 {"vol-vis",CFG-ENTRY-BOOL,0,&uinfo->volvis},\
 {"track-edit-vis",CFG-ENTRY-BOOL,0,&uinfo->track-edit-visible},\
 {"track-prog-vis",CFG-ENTRY-BOOL,0,&uinfo->track-prog-visible},\
