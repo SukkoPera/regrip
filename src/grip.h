@@ -242,12 +242,12 @@ typedef struct _grip_info {
 	int curr_pipe_fd;
 
 	gboolean ripping;
-	gboolean encoding;
+//	gboolean encoding;
 	gboolean stop_rip;
-	gboolean stop_encode;
+//	gboolean stop_encode;
 	gboolean ripping_a_disc;
 	time_t rip_finished;
-	int rippid;
+//	int rippid;
 //	int num_wavs;
 	int rip_track;
 	time_t rip_started;
@@ -314,10 +314,10 @@ typedef struct _grip_info {
 
 	/* some vars for use in TrayIconUpdate */
 	gfloat rip_percent;
-	gfloat enc_percent;
+//	gfloat enc_percent;
 
 	gfloat rip_tot_percent;
-	gfloat enc_tot_percent;
+//	gfloat enc_tot_percent;
 
 	gboolean app_visible;
 
@@ -329,9 +329,9 @@ typedef struct _grip_info {
 	size_t all_ripsize;
 	size_t all_ripdone;
 	size_t all_riplast;
-	size_t all_encsize;
-	size_t all_encdone;
-	size_t all_enclast;
+	size_t all_encsize;     // Estimated size of ripped and compressed tracks (Really necessary?)
+//	size_t all_encdone;
+//	size_t all_enclast;
 
 	// App settings
 	GSettings *settings;

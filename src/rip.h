@@ -56,10 +56,8 @@ gboolean CanWrite(char *path);
 void MakeDirs(char *path);
 char *MakePath(char *str);
 void KillRip(GtkWidget *widget,gpointer data);
-void KillEncode(GtkWidget *widget,gpointer data);
 void UpdateRipProgress(GripInfo *ginfo);
 char *TranslateSwitch(char switch_char,void *data,gboolean *munge);
-void DoRipEncode(GtkWidget *widget,gpointer data);
 void DoRip(GtkWidget *widget,gpointer data);
 void FillInTrackInfo(GripInfo *ginfo,int track,EncodeTrack *new_track);
 

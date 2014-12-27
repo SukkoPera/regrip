@@ -95,14 +95,6 @@ void MakeRipPage (GripInfo *ginfo) {
 
 	vbox2 = gtk_vbox_new (FALSE, 0);
 
-//	button = gtk_button_new_with_label (_("Rip+Encode"));
-//	gtk_tooltips_set_tip (MakeToolTip(), button,
-//	                      _("Rip and encode selected tracks"), NULL);
-//	gtk_signal_connect (GTK_OBJECT (button), "clicked",
-//	                    GTK_SIGNAL_FUNC (DoRipEncode), (gpointer)ginfo);
-//	gtk_box_pack_start (GTK_BOX (vbox2), button, FALSE, FALSE, 0);
-//	gtk_widget_show (button);
-
 	button = gtk_button_new_with_label (_("Rip!"));
 	gtk_tooltips_set_tip (MakeToolTip(), button,
 	                      _("Rip selected tracks"), NULL);
@@ -583,21 +575,6 @@ void KillRip (GtkWidget *widget, gpointer data) {
 	}
 }
 
-void KillEncode (GtkWidget *widget, gpointer data) {
-	GripInfo *ginfo;
-
-	ginfo = (GripInfo *)data;
-
-	if (!ginfo -> encoding) {
-		return;
-	}
-
-	ginfo -> stop_encode = TRUE;
-	ginfo -> all_encsize = 0;
-	ginfo -> all_encdone = 0;
-    ginfo -> all_enclast = 0;
-}
-
 static void ID3Add (GripInfo *ginfo, char *file, EncodeTrack *enc_track) {
 	char year[5];
 	GString *comment;
@@ -677,7 +654,6 @@ void UpdateRipProgress (GripInfo *ginfo) {
 	time_t now;
 	gfloat elapsed = 0;
 	gfloat speed;
-	gboolean result = FALSE;
 
 	uinfo = &(ginfo -> gui_info);
 
@@ -924,13 +900,7 @@ void UpdateRipProgress (GripInfo *ginfo) {
     }
 #endif
 
-    /* Check if we have any encoding process (now or in future) */
-    if (ginfo -> encoding) {
-        result = TRUE;
-//        break;
-    }
-
-	if ((!result || ginfo -> stop_encode) && !ginfo -> ripping) {
+	if (!ginfo -> ripping) {
 		gtk_label_set (GTK_LABEL (uinfo -> all_enc_label), _("Enc: Idle"));
 		gtk_progress_bar_update (GTK_PROGRESS_BAR (uinfo -> all_encprogbar), 0.0);
 	}
@@ -1135,7 +1105,7 @@ static void CheckDupNames (GripInfo *ginfo) {
 	int track, track2;
 	int numdups[MAX_TRACKS];
 	int count;
-	char buf[256];
+	char buf[MAX_STRING];
 
 	for (track = 0; track < ginfo -> disc.num_tracks; track++) {
 		numdups[track] = 0;
@@ -1156,7 +1126,8 @@ static void CheckDupNames (GripInfo *ginfo) {
 
 	for (track = 0; track < ginfo -> disc.num_tracks; track++) {
 		if (numdups[track]) {
-			g_snprintf (buf, 260, "%s (%d)", ginfo -> ddata.data_track[track].track_name,
+            // FIXME: This is not working if track_name is already 256 chars long
+			g_snprintf (buf, MAX_STRING, "%s (%d)", ginfo -> ddata.data_track[track].track_name,
 			            numdups[track] + 1);
 
 			strcpy (ginfo -> ddata.data_track[track].track_name, buf);
@@ -1164,19 +1135,15 @@ static void CheckDupNames (GripInfo *ginfo) {
 	}
 }
 
-void DoRipEncode (GtkWidget *widget, gpointer data) {
-	GripInfo *ginfo;
-
-	ginfo = (GripInfo *)data;
-
-	DoRip (NULL, (gpointer)ginfo);
-}
-
 void DoRip (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
-//	gboolean result;
 
-	ginfo = (GripInfo *)data;
+	ginfo = (GripInfo *) data;
+
+    /* Already ripping? */
+	if (ginfo -> ripping) {
+		return;
+	}
 
 	if (!ginfo -> have_disc) {
 		show_warning (ginfo -> gui_info.app,
@@ -1184,30 +1151,11 @@ void DoRip (GtkWidget *widget, gpointer data) {
 		return;
 	}
 
-//	if (widget) {
-//		ginfo -> doencode = FALSE;
-//	} else {
-//		ginfo -> doencode = TRUE;
-//	}
-
-//	if (ginfo -> doencode && !FileExists (ginfo -> mp3exename)) {
-//		show_warning (ginfo -> gui_info.app,
-//		              _("Invalid encoder executable.\nCheck your encoder config, and ensure it specifies the full path to the encoder executable."));
-//
-//		ginfo -> doencode = FALSE;
-//		return;
-//	}
-
 	CDStop (&(ginfo -> disc));
 	ginfo -> stopped = TRUE;
 
 	/* Close the device so as not to conflict with ripping */
 	CDCloseDevice (&(ginfo -> disc));
-
-	if (ginfo -> ripping) {
-//		ginfo -> doencode = FALSE;
-		return;
-	}
 
 	/* Initialize gain calculation */
 	if (ginfo -> calc_gain) {
@@ -1262,7 +1210,7 @@ static void RipWholeCD (GtkDialog *dialog, gint reply, gpointer data) {
 
 	g_debug (_("Ripping whole CD"));
 
-	ginfo = (GripInfo *)data;
+	ginfo = (GripInfo *) data;
 
 	for (track = 0; track < ginfo -> disc.num_tracks; ++track) {
 		SetChecked (&(ginfo -> gui_info), track, TRUE);
@@ -1696,13 +1644,13 @@ void CalculateAll (GripInfo *ginfo) {
 	ginfo -> all_ripdone = 0;
 	ginfo -> all_riplast = 0;
 
-	if (!ginfo -> encoding) {
-		g_debug (_("We aren't ripping now, so let's zero encoding values"));
-		ginfo -> all_encsize = 0;
-		ginfo -> all_encdone = 0;
-
-        ginfo -> all_enclast = 0;
-	}
+//	if (!ginfo -> encoding) {
+//		g_debug (_("We aren't ripping now, so let's zero encoding values"));
+//		ginfo -> all_encsize = 0;
+//		ginfo -> all_encdone = 0;
+//
+//        ginfo -> all_enclast = 0;
+//	}
 
 	if (ginfo -> rip_partial) {
 		return;
@@ -1746,5 +1694,5 @@ static size_t CalculateEncSize (GripInfo *ginfo, int track) {
 		tmp_encsize += 128;
 	}
 
-	return (size_t)tmp_encsize;
+	return (size_t) tmp_encsize;
 }

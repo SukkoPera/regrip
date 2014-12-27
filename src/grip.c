@@ -292,7 +292,7 @@ void GripDie (GtkWidget *widget, gpointer data) {
 
 #ifndef GRIPCD
 
-	if (ginfo -> ripping_a_disc || ginfo -> encoding) {
+	if (ginfo -> ripping_a_disc) {
 		GtkWidget *dialog = gtk_message_dialog_new (GTK_WINDOW (ginfo -> gui_info.app),
 		                    GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
 		                    GTK_MESSAGE_WARNING, GTK_BUTTONS_YES_NO,
@@ -328,17 +328,13 @@ static void ReallyDie (GtkDialog *dialog, gint reply, gpointer data) {
 		KillRip (NULL, ginfo);
 	}
 
-	if (ginfo -> encoding) {
-		KillEncode (NULL, ginfo);
-	}
-
 #endif
 
 	if (!ginfo -> no_interrupt) {
 		CDStop (& (ginfo -> disc));
 	}
 
-	gtk_main_quit();
+	gtk_main_quit ();
 }
 
 GtkWidget *MakeNewPage (GtkWidget *notebook, char *name) {
@@ -718,7 +714,7 @@ void GripUpdate (GtkWidget *app) {
 		ginfo -> poll_interval = 1;
 	}
 
-	if (ginfo -> ripping | ginfo -> encoding) {
+	if (ginfo -> ripping) {
 		UpdateRipProgress (ginfo);
 	}
 
@@ -845,10 +841,10 @@ static void set_initial_config (GripInfo *ginfo) {
 
 	ginfo -> ripping = FALSE;
 	ginfo -> ripping_a_disc = FALSE;
-	ginfo -> encoding = FALSE;
+//	ginfo -> encoding = FALSE;
 	ginfo -> rip_partial = FALSE;
 	ginfo -> stop_rip = FALSE;
-	ginfo -> stop_encode = FALSE;
+//	ginfo -> stop_encode = FALSE;
 	ginfo -> rip_finished = 0;
 //	ginfo -> num_wavs = 0;
 //	ginfo -> doencode = FALSE;

@@ -68,7 +68,7 @@ static gboolean CheckTracks (DiscInfo *disc);
 static void ShutDownCB (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 
-	ginfo = (GripInfo *)data;
+	ginfo = (GripInfo *) data;
 
 	GripDie (ginfo -> gui_info.app, ginfo);
 }
@@ -76,7 +76,7 @@ static void ShutDownCB (GtkWidget *widget, gpointer data) {
 static void DiscDBToggle (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 
-	ginfo = (GripInfo *)data;
+	ginfo = (GripInfo *) data;
 
 	if (ginfo -> looking_up) {
 		return;
@@ -100,8 +100,8 @@ void LookupDisc (GripInfo *ginfo, gboolean manual) {
 	DiscInfo *disc;
 	DiscData *ddata;
 
-	disc = & (ginfo -> disc);
-	ddata = & (ginfo -> ddata);
+	disc = &(ginfo -> disc);
+	ddata = &(ginfo -> ddata);
 
 	ddata -> data_multi_artist = FALSE;
 	ddata -> data_year = 0;
@@ -136,10 +136,10 @@ void LookupDisc (GripInfo *ginfo, gboolean manual) {
 			ginfo -> update_required = TRUE;
 		}
 
-		if (!ginfo -> local_mode && (manual ? TRUE : ginfo -> automatic_discdb)) {
+		if (!ginfo -> local_mode &&(manual ? TRUE : ginfo -> automatic_discdb)) {
 			ginfo -> looking_up = TRUE;
 
-			pthread_create (& (ginfo -> discdb_thread), NULL, (void *)&DoLookup,
+			pthread_create (&(ginfo -> discdb_thread), NULL, (void *)&DoLookup,
 			                (void *)ginfo);
 			pthread_detach (ginfo -> discdb_thread);
 		}
@@ -148,18 +148,12 @@ void LookupDisc (GripInfo *ginfo, gboolean manual) {
 
 static void DoLookup (void *data) {
 	GripInfo *ginfo;
-	//gboolean discdb_found=FALSE;
 
-	ginfo = (GripInfo *)data;
+	ginfo = (GripInfo *) data;
 
-	// FIXME: Not sure this works correctly
-	if (!DiscDBLookupDisc (ginfo, & (ginfo -> dbserver))) {
+	if (!DiscDBLookupDisc (ginfo, &(ginfo -> dbserver))) {
 		ginfo -> ask_submit = TRUE;
 	}
-
-//  else {
-//    discdb_found=TRUE;
-//  }
 
 	if (ginfo -> ddata.data_id3genre == -1) {
 		ginfo -> ddata.data_id3genre = DiscDB2ID3 (ginfo -> ddata.data_genre);
@@ -177,8 +171,8 @@ gboolean DiscDBLookupDisc (GripInfo *ginfo, DiscDBServer *server) {
 	DiscInfo *disc;
 	DiscData *ddata;
 
-	disc = & (ginfo -> disc);
-	ddata = & (ginfo -> ddata);
+	disc = &(ginfo -> disc);
+	ddata = &(ginfo -> ddata);
 
 	if (server -> use_proxy)
 		LogStatus (ginfo, _("Querying %s (through %s) for disc %02x.\n"),
@@ -192,7 +186,7 @@ gboolean DiscDBLookupDisc (GripInfo *ginfo, DiscDBServer *server) {
 	strncpy (hello.hello_program, "Grip", 256);
 	strncpy (hello.hello_version, VERSION, 256);
 
-//  if(ginfo -> db_use_freedb && !strcasecmp(ginfo -> discdb_encoding,"UTF-8"))
+//  if(ginfo -> db_use_freedb &&!strcasecmp(ginfo -> discdb_encoding,"UTF-8"))
 //    hello.proto_version=6;
 //  else
 	hello.proto_version = 5;
@@ -271,7 +265,6 @@ void ResizeTrackList (GripInfo *ginfo) {
 	int tot_width = 0;
 
 	track_list = ginfo -> gui_info.track_list;
-
 	if (track_list) {
 		tot_width = GetLengthRipWidth (ginfo);
 
@@ -292,7 +285,7 @@ void MakeTrackPage (GripInfo *ginfo) {
 	GtkCellRenderer *renderer;
 	GtkTreeSelection *select;
 
-	uinfo = & (ginfo -> gui_info);
+	uinfo = &(ginfo -> gui_info);
 
 	trackpage = MakeNewPage (uinfo -> notebook, _("Tracks"));
 
@@ -418,8 +411,7 @@ static void SetCurrentTrack (GripInfo *ginfo, int track) {
 	int tracklen;
 
 	GripGUI *uinfo;
-
-	uinfo = & (ginfo -> gui_info);
+	uinfo = &(ginfo -> gui_info);
 
 	if (track < 0) {
 		gtk_label_set (GTK_LABEL (uinfo -> current_track_label), "--");
@@ -514,11 +506,11 @@ static void ClickColumn (GtkTreeViewColumn *column, gpointer data) {
 	gboolean check;
 	GripInfo *ginfo;
 
-	ginfo = (GripInfo *)data;
+	ginfo = (GripInfo *) data;
 
 	if (ginfo -> have_disc) {
 		for (track = 0; track < ginfo -> disc.num_tracks; track++)
-			if (TrackIsChecked (& (ginfo -> gui_info), track)) {
+			if (TrackIsChecked (&(ginfo -> gui_info), track)) {
 				numsel++;
 			}
 
@@ -529,7 +521,7 @@ static void ClickColumn (GtkTreeViewColumn *column, gpointer data) {
 		}
 
 		for (track = 0; track < ginfo -> disc.num_tracks; track++) {
-			SetChecked (& (ginfo -> gui_info), track, check);
+			SetChecked (&(ginfo -> gui_info), track, check);
 		}
 	}
 }
@@ -545,8 +537,8 @@ static gboolean TracklistButtonPressed (GtkWidget *widget,
 	GList *cols;
 	int row, col;
 
-	ginfo = (GripInfo *)data;
-	uinfo = & (ginfo -> gui_info);
+	ginfo = (GripInfo *) data;
+	uinfo = &(ginfo -> gui_info);
 
 	if (gtk_tree_view_get_path_at_pos (GTK_TREE_VIEW (uinfo -> track_list),
 	                                   event -> x, event -> y,
@@ -613,14 +605,14 @@ static void PlaylistChanged (GtkWindow *window, GtkWidget *widget,
                              gpointer data) {
 	GripInfo *ginfo;
 
-	ginfo = (GripInfo *)data;
+	ginfo = (GripInfo *) data;
 
 	strcpy (ginfo -> ddata.data_playlist,
 	        gtk_entry_get_text (GTK_ENTRY (ginfo -> gui_info.playlist_entry)));
 
 	InitProgram (ginfo);
 
-	if (DiscDBWriteDiscData (& (ginfo -> disc), & (ginfo -> ddata), NULL, TRUE, FALSE,
+	if (DiscDBWriteDiscData (&(ginfo -> disc), &(ginfo -> ddata), NULL, TRUE, FALSE,
 	                         "utf-8") < 0) {
 		show_warning (ginfo -> gui_info.app,
 		              _("Error saving disc data."));
@@ -630,12 +622,12 @@ static void PlaylistChanged (GtkWindow *window, GtkWidget *widget,
 static void ToggleLoop (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 
-	ginfo = (GripInfo *)data;
+	ginfo = (GripInfo *) data;
 
 	ginfo -> playloop = !ginfo -> playloop;
 
 	if (ginfo -> playloop)
-		CopyPixmap (GTK_PIXMAP (ginfo -> gui_info.loop_image), \
+		CopyPixmap (GTK_PIXMAP (ginfo -> gui_info.loop_image),
 		            GTK_PIXMAP (ginfo -> gui_info.loop_indicator));
 	else
 		CopyPixmap (GTK_PIXMAP (ginfo -> gui_info.noloop_image),
@@ -646,7 +638,7 @@ static void ToggleLoop (GtkWidget *widget, gpointer data) {
 static void ChangePlayMode (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 
-	ginfo = (GripInfo *)data;
+	ginfo = (GripInfo *) data;
 
 	ginfo -> play_mode = (ginfo -> play_mode + 1) % PM_LASTMODE;
 
@@ -665,9 +657,9 @@ GtkWidget *MakePlayOpts (GripInfo *ginfo) {
 	GtkWidget *hbox;
 	GtkWidget *button;
 
-	uinfo = & (ginfo -> gui_info);
+	uinfo = &(ginfo -> gui_info);
 
-	ebox = gtk_event_box_new();
+	ebox = gtk_event_box_new ();
 	gtk_widget_set_style (ebox, uinfo -> style_wb);
 
 	hbox = gtk_hbox_new (FALSE, 2);
@@ -684,13 +676,13 @@ GtkWidget *MakePlayOpts (GripInfo *ginfo) {
 	CopyPixmap (GTK_PIXMAP (uinfo -> play_pix[ginfo -> play_mode]),
 	            GTK_PIXMAP (uinfo -> play_indicator));
 
-	button = gtk_button_new();
+	button = gtk_button_new ();
 	gtk_container_add (GTK_CONTAINER (button), uinfo -> play_indicator);
 	gtk_widget_show (uinfo -> play_indicator);
 	gtk_widget_set_style (button, uinfo -> style_dark_grey);
 	gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
 	g_signal_connect (G_OBJECT (button), "clicked",
-	                  G_CALLBACK (ChangePlayMode), (gpointer)ginfo);
+	                  G_CALLBACK (ChangePlayMode), (gpointer) ginfo);
 	gtk_tooltips_set_tip (MakeToolTip(), button,
 	                      _("Rotate play mode"), NULL);
 	gtk_widget_show (button);
@@ -704,13 +696,13 @@ GtkWidget *MakePlayOpts (GripInfo *ginfo) {
 		CopyPixmap (GTK_PIXMAP (uinfo -> noloop_image),
 		            GTK_PIXMAP (uinfo -> loop_indicator));
 
-	button = gtk_button_new();
+	button = gtk_button_new ();
 	gtk_container_add (GTK_CONTAINER (button), uinfo -> loop_indicator);
 	gtk_widget_show (uinfo -> loop_indicator);
 	gtk_widget_set_style (button, uinfo -> style_dark_grey);
 	gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
 	g_signal_connect (G_OBJECT (button), "clicked",
-	                  G_CALLBACK (ToggleLoop), (gpointer)ginfo);
+	                  G_CALLBACK (ToggleLoop), (gpointer) ginfo);
 	gtk_tooltips_set_tip (MakeToolTip(), button,
 	                      _("Toggle loop play"), NULL);
 	gtk_widget_show (button);
@@ -729,9 +721,9 @@ GtkWidget *MakeControls (GripInfo *ginfo) {
 	GtkWidget *ebox, *lcdbox;
 	GtkObject *adj;
 
-	uinfo = & (ginfo -> gui_info);
+	uinfo = &(ginfo -> gui_info);
 
-	ebox = gtk_event_box_new();
+	ebox = gtk_event_box_new ();
 	gtk_widget_set_style (ebox, uinfo -> style_wb);
 
 	vbox = gtk_vbox_new (FALSE, 0);
@@ -740,9 +732,9 @@ GtkWidget *MakeControls (GripInfo *ginfo) {
 	vbox3 = gtk_vbox_new (FALSE, 2);
 	gtk_container_border_width (GTK_CONTAINER (vbox3), 2);
 
-	lcdbox = gtk_event_box_new();
+	lcdbox = gtk_event_box_new ();
 	g_signal_connect (G_OBJECT (lcdbox), "button_press_event",
-	                  G_CALLBACK (ToggleControlButtons), (gpointer)ginfo);
+	                  G_CALLBACK (ToggleControlButtons), (gpointer) ginfo);
 	gtk_widget_set_style (lcdbox, uinfo -> style_LCD);
 
 	hbox2 = gtk_hbox_new (FALSE, 0);
@@ -766,7 +758,7 @@ GtkWidget *MakeControls (GripInfo *ginfo) {
 	                    0);
 	gtk_widget_show (uinfo -> current_track_label);
 
-	button = gtk_button_new();
+	button = gtk_button_new ();
 	gtk_widget_set_style (button, uinfo -> style_LCD);
 
 	gtk_button_set_relief (GTK_BUTTON (button), GTK_RELIEF_NONE);
@@ -831,9 +823,9 @@ GtkWidget *MakeControls (GripInfo *ginfo) {
 	gtk_box_pack_start (GTK_BOX (vbox), vbox3, FALSE, FALSE, 0);
 	gtk_widget_show (vbox3);
 
-	adj = gtk_adjustment_new ((gfloat)ginfo -> volume, 0.0, 255.0, 1.0, 1.0, 0.0);
+	adj = gtk_adjustment_new ((gfloat) ginfo -> volume, 0.0, 255.0, 1.0, 1.0, 0.0);
 	g_signal_connect (adj, "value_changed",
-	                  G_CALLBACK (SetVolume), (gpointer)ginfo);
+	                  G_CALLBACK (SetVolume), (gpointer) ginfo);
 	uinfo -> volume_control = gtk_hscale_new (GTK_ADJUSTMENT (adj));
 
 	gtk_scale_set_draw_value (GTK_SCALE (uinfo -> volume_control), FALSE);
@@ -855,7 +847,7 @@ GtkWidget *MakeControls (GripInfo *ginfo) {
 	button = ImageButton (GTK_WIDGET (uinfo -> app), uinfo -> playpaus_image);
 	gtk_widget_set_style (button, uinfo -> style_dark_grey);
 	g_signal_connect (G_OBJECT (button), "clicked",
-	                  G_CALLBACK (PlayTrackCB), (gpointer)ginfo);
+	                  G_CALLBACK (PlayTrackCB), (gpointer) ginfo);
 	gtk_tooltips_set_tip (MakeToolTip(), button,
 	                      _("Play track / Pause play"), NULL);
 	gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
@@ -864,9 +856,9 @@ GtkWidget *MakeControls (GripInfo *ginfo) {
 	button = ImageButton (GTK_WIDGET (uinfo -> app), uinfo -> rew_image);
 	gtk_widget_set_style (button, uinfo -> style_dark_grey);
 	g_signal_connect (G_OBJECT (button), "pressed",
-	                  G_CALLBACK (RewindCB), (gpointer)ginfo);
+	                  G_CALLBACK (RewindCB), (gpointer) ginfo);
 	g_signal_connect (G_OBJECT (button), "released",
-	                  G_CALLBACK (RewindCB), (gpointer)ginfo);
+	                  G_CALLBACK (RewindCB), (gpointer) ginfo);
 	gtk_tooltips_set_tip (MakeToolTip(), button,
 	                      _("Rewind"), NULL);
 	gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
@@ -875,10 +867,10 @@ GtkWidget *MakeControls (GripInfo *ginfo) {
 	button = ImageButton (GTK_WIDGET (uinfo -> app), uinfo -> ff_image);
 	gtk_widget_set_style (button, uinfo -> style_dark_grey);
 	g_signal_connect (G_OBJECT (button), "pressed",
-	                  G_CALLBACK (FastFwdCB), (gpointer)ginfo);
+	                  G_CALLBACK (FastFwdCB), (gpointer) ginfo);
 	g_signal_connect (G_OBJECT (button), "released",
-	                  G_CALLBACK (FastFwdCB), (gpointer)ginfo);
-	gtk_tooltips_set_tip (MakeToolTip(), button,
+	                  G_CALLBACK (FastFwdCB), (gpointer) ginfo);
+	gtk_tooltips_set_tip (MakeToolTip (), button,
 	                      _("FastForward"), NULL);
 	gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
 	gtk_widget_show (button);
@@ -887,8 +879,8 @@ GtkWidget *MakeControls (GripInfo *ginfo) {
 	gtk_widget_set_style (button, uinfo -> style_dark_grey);
 	gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
 	g_signal_connect (G_OBJECT (button), "clicked",
-	                  G_CALLBACK (PrevTrackCB), (gpointer)ginfo);
-	gtk_tooltips_set_tip (MakeToolTip(), button,
+	                  G_CALLBACK (PrevTrackCB), (gpointer) ginfo);
+	gtk_tooltips_set_tip (MakeToolTip (), button,
 	                      _("Go to previous track"), NULL);
 	gtk_widget_show (button);
 
@@ -896,8 +888,8 @@ GtkWidget *MakeControls (GripInfo *ginfo) {
 	gtk_widget_set_style (button, uinfo -> style_dark_grey);
 	gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
 	g_signal_connect (G_OBJECT (button), "clicked",
-	                  G_CALLBACK (NextTrackCB), (gpointer)ginfo);
-	gtk_tooltips_set_tip (MakeToolTip(), button,
+	                  G_CALLBACK (NextTrackCB), (gpointer) ginfo);
+	gtk_tooltips_set_tip (MakeToolTip (), button,
 	                      _("Go to next track"), NULL);
 	gtk_widget_show (button);
 
@@ -905,8 +897,8 @@ GtkWidget *MakeControls (GripInfo *ginfo) {
 	gtk_widget_set_style (button, uinfo -> style_dark_grey);
 	gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
 	g_signal_connect (G_OBJECT (button), "clicked",
-	                  G_CALLBACK (ToggleProg), (gpointer)ginfo);
-	gtk_tooltips_set_tip (MakeToolTip(), button,
+	                  G_CALLBACK (ToggleProg), (gpointer) ginfo);
+	gtk_tooltips_set_tip (MakeToolTip (), button,
 	                      _("Toggle play mode options"), NULL);
 	gtk_widget_show (button);
 
@@ -915,8 +907,8 @@ GtkWidget *MakeControls (GripInfo *ginfo) {
 		gtk_widget_set_style (button, uinfo -> style_dark_grey);
 		gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
 		g_signal_connect (G_OBJECT (button), "clicked",
-		                  G_CALLBACK (NextDisc), (gpointer)ginfo);
-		gtk_tooltips_set_tip (MakeToolTip(), button,
+		                  G_CALLBACK (NextDisc), (gpointer) ginfo);
+		gtk_tooltips_set_tip (MakeToolTip (), button,
 		                      _("Next Disc"), NULL);
 		gtk_widget_show (button);
 	}
@@ -929,8 +921,8 @@ GtkWidget *MakeControls (GripInfo *ginfo) {
 	button = ImageButton (GTK_WIDGET (uinfo -> app), uinfo -> stop_image);
 	gtk_widget_set_style (button, uinfo -> style_dark_grey);
 	g_signal_connect (G_OBJECT (button), "clicked",
-	                  G_CALLBACK (StopPlayCB), (gpointer)ginfo);
-	gtk_tooltips_set_tip (MakeToolTip(), button,
+	                  G_CALLBACK (StopPlayCB), (gpointer) ginfo);
+	gtk_tooltips_set_tip (MakeToolTip (), button,
 	                      _("Stop play"), NULL);
 	gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
 	gtk_widget_show (button);
@@ -939,8 +931,8 @@ GtkWidget *MakeControls (GripInfo *ginfo) {
 	gtk_widget_set_style (button, uinfo -> style_dark_grey);
 	gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
 	g_signal_connect (G_OBJECT (button), "clicked",
-	                  G_CALLBACK (EjectDisc), (gpointer)ginfo);
-	gtk_tooltips_set_tip (MakeToolTip(), button,
+	                  G_CALLBACK (EjectDisc), (gpointer) ginfo);
+	gtk_tooltips_set_tip (MakeToolTip (), button,
 	                      _("Eject disc"), NULL);
 	gtk_widget_show (button);
 
@@ -949,15 +941,15 @@ GtkWidget *MakeControls (GripInfo *ginfo) {
 	gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
 	g_signal_connect (G_OBJECT (button), "clicked",
 	                  G_CALLBACK (ScanDisc), (gpointer)ginfo);
-	gtk_tooltips_set_tip (MakeToolTip(), button,
+	gtk_tooltips_set_tip (MakeToolTip (), button,
 	                      _("Scan Disc Contents"), NULL);
 	gtk_widget_show (button);
 
 	button = ImageButton (GTK_WIDGET (uinfo -> app), uinfo -> vol_image);
 	gtk_widget_set_style (button, uinfo -> style_dark_grey);
 	g_signal_connect (G_OBJECT (button), "clicked",
-	                  G_CALLBACK (ToggleVol), (gpointer)ginfo);
-	gtk_tooltips_set_tip (MakeToolTip(), button,
+	                  G_CALLBACK (ToggleVol), (gpointer) ginfo);
+	gtk_tooltips_set_tip (MakeToolTip (), button,
 	                      _("Toggle Volume Control"), NULL);
 	gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
 	gtk_widget_show (button);
@@ -965,8 +957,8 @@ GtkWidget *MakeControls (GripInfo *ginfo) {
 	button = ImageButton (GTK_WIDGET (uinfo -> app), uinfo -> edit_image);
 	gtk_widget_set_style (button, uinfo -> style_dark_grey);
 	g_signal_connect (G_OBJECT (button), "clicked",
-	                  G_CALLBACK (ToggleTrackEdit), (gpointer)ginfo);
-	gtk_tooltips_set_tip (MakeToolTip(), button,
+	                  G_CALLBACK (ToggleTrackEdit), (gpointer) ginfo);
+	gtk_tooltips_set_tip (MakeToolTip (), button,
 	                      _("Toggle disc editor"), NULL);
 	gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
 	gtk_widget_show (button);
@@ -975,8 +967,8 @@ GtkWidget *MakeControls (GripInfo *ginfo) {
 		button = ImageButton (GTK_WIDGET (uinfo -> app), uinfo -> discdbwht_image);
 		gtk_widget_set_style (button, uinfo -> style_dark_grey);
 		g_signal_connect (G_OBJECT (button), "clicked",
-		                  G_CALLBACK (DiscDBToggle), (gpointer)ginfo);
-		gtk_tooltips_set_tip (MakeToolTip(), button,
+		                  G_CALLBACK (DiscDBToggle), (gpointer) ginfo);
+		gtk_tooltips_set_tip (MakeToolTip (), button,
 		                      _("Initiate/abort DiscDB lookup"), NULL);
 		gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
 		gtk_widget_show (button);
@@ -985,20 +977,20 @@ GtkWidget *MakeControls (GripInfo *ginfo) {
 	button = ImageButton (GTK_WIDGET (uinfo -> app), uinfo -> minmax_image);
 	gtk_widget_set_style (button, uinfo -> style_dark_grey);
 	g_signal_connect (G_OBJECT (button), "clicked",
-	                  G_CALLBACK (MinMax), (gpointer)ginfo);
-	gtk_tooltips_set_tip (MakeToolTip(), button,
+	                  G_CALLBACK (MinMax), (gpointer) ginfo);
+	gtk_tooltips_set_tip (MakeToolTip (), button,
 	                      _("Toggle track display"), NULL);
 	gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
 	gtk_widget_show (button);
 
 	button = ImageButton (GTK_WIDGET (uinfo -> app), uinfo -> quit_image);
 	gtk_widget_set_style (button, uinfo -> style_dark_grey);
-	gtk_tooltips_set_tip (MakeToolTip(), button,
+	gtk_tooltips_set_tip (MakeToolTip (), button,
 	                      _("Exit Grip"), NULL);
 
 	gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
 	g_signal_connect (G_OBJECT (button), "clicked",
-	                  G_CALLBACK (ShutDownCB), (gpointer)ginfo);
+	                  G_CALLBACK (ShutDownCB), (gpointer) ginfo);
 	gtk_widget_show (button);
 
 	gtk_box_pack_start (GTK_BOX (uinfo -> control_button_box), hbox, TRUE, TRUE, 0);
@@ -1017,7 +1009,7 @@ GtkWidget *MakeControls (GripInfo *ginfo) {
 static void ChangeTimeMode (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 
-	ginfo = (GripInfo *)data;
+	ginfo = (GripInfo *) data;
 
 	ginfo -> gui_info.time_display_mode = (ginfo -> gui_info.time_display_mode + 1) % 4;
 	UpdateDisplay (ginfo);
@@ -1027,8 +1019,8 @@ void MinMax (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 	GripGUI *uinfo;
 
-	ginfo = (GripInfo *)data;
-	uinfo = & (ginfo -> gui_info);
+	ginfo = (GripInfo *) data;
+	uinfo = &(ginfo -> gui_info);
 
 	if (uinfo -> minimized) {
 		gtk_container_border_width (GTK_CONTAINER (uinfo -> winbox), 3);
@@ -1066,7 +1058,7 @@ void MinMax (GtkWidget *widget, gpointer data) {
 		}
 
 		if (uinfo -> track_prog_visible) {
-			ToggleProg (NULL, (gpointer)ginfo);
+			ToggleProg (NULL, (gpointer) ginfo);
 		}
 
 //    gtk_widget_set_size_request(GTK_WIDGET(uinfo -> app),
@@ -1086,8 +1078,8 @@ static void ToggleProg (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 	GripGUI *uinfo;
 
-	ginfo = (GripInfo *)data;
-	uinfo = & (ginfo -> gui_info);
+	ginfo = (GripInfo *) data;
+	uinfo = &(ginfo -> gui_info);
 
 	if (uinfo -> track_prog_visible) {
 		gtk_widget_hide (uinfo -> playopts);
@@ -1106,7 +1098,7 @@ static void ToggleControlButtons (GtkWidget *widget, GdkEventButton *event,
                                   gpointer data) {
 	GripGUI *uinfo;
 
-	uinfo = & ((GripInfo *)data) -> gui_info;
+	uinfo = &((GripInfo *) data) -> gui_info;
 
 	if (uinfo -> control_buttons_visible) {
 		gtk_widget_hide (uinfo -> control_button_box);
@@ -1123,8 +1115,8 @@ static void ToggleVol (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 	GripGUI *uinfo;
 
-	ginfo = (GripInfo *)data;
-	uinfo = & (ginfo -> gui_info);
+	ginfo = (GripInfo *) data;
+	uinfo = &(ginfo -> gui_info);
 
 	if (uinfo -> volvis) {
 		gtk_widget_hide (uinfo -> volume_control);
@@ -1143,18 +1135,18 @@ static void SetVolume (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 	DiscVolume vol;
 
-	ginfo = (GripInfo *)data;
+	ginfo = (GripInfo *) data;
 
 	ginfo -> volume = vol.vol_front.left = vol.vol_front.right =
 	        vol.vol_back.left = vol.vol_back.right = GTK_ADJUSTMENT (widget) -> value;
 
-	CDSetVolume (& (ginfo -> disc), &vol);
+	CDSetVolume (&(ginfo -> disc), &vol);
 }
 
 static void FastFwdCB (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 
-	ginfo = (GripInfo *)data;
+	ginfo = (GripInfo *) data;
 
 	if (ginfo -> ripping_a_disc) {
 		show_warning (ginfo -> gui_info.app,
@@ -1178,14 +1170,14 @@ void FastFwd (GripInfo *ginfo) {
 
 	if ((ginfo -> disc.disc_mode == CDAUDIO_PLAYING) ||
 	        (ginfo -> disc.disc_mode == CDAUDIO_PAUSED)) {
-		CDAdvance (& (ginfo -> disc), &tv);
+		CDAdvance (&(ginfo -> disc), &tv);
 	}
 }
 
 static void RewindCB (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 
-	ginfo = (GripInfo *)data;
+	ginfo = (GripInfo *) data;
 
 	if (ginfo -> ripping_a_disc) {
 		show_warning (ginfo -> gui_info.app,
@@ -1209,14 +1201,14 @@ void Rewind (GripInfo *ginfo) {
 
 	if ((ginfo -> disc.disc_mode == CDAUDIO_PLAYING) ||
 	        (ginfo -> disc.disc_mode == CDAUDIO_PAUSED)) {
-		CDAdvance (& (ginfo -> disc), &tv);
+		CDAdvance (&(ginfo -> disc), &tv);
 	}
 }
 
 static void NextDisc (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 
-	ginfo = (GripInfo *)data;
+	ginfo = (GripInfo *) data;
 
 	if (ginfo -> ripping_a_disc) {
 		show_warning (ginfo -> gui_info.app,
@@ -1227,7 +1219,7 @@ static void NextDisc (GtkWidget *widget, gpointer data) {
 
 	if (ginfo -> changer_slots > 1) {
 		ginfo -> current_disc = (ginfo -> current_disc + 1) % ginfo -> changer_slots;
-		CDChangerSelectDisc (& (ginfo -> disc), ginfo -> current_disc);
+		CDChangerSelectDisc (&(ginfo -> disc), ginfo -> current_disc);
 		ginfo -> have_disc = FALSE;
 	}
 }
@@ -1235,7 +1227,7 @@ static void NextDisc (GtkWidget *widget, gpointer data) {
 void EjectDisc (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 
-	ginfo = (GripInfo *)data;
+	ginfo = (GripInfo *) data;
 
 	LogStatus (ginfo, _("Eject disc\n"));
 
@@ -1250,13 +1242,13 @@ void EjectDisc (GtkWidget *widget, gpointer data) {
 		return;
 	}
 
-	Busy (& (ginfo -> gui_info));
+	Busy (&(ginfo -> gui_info));
 
 	if (ginfo -> have_disc) {
 		g_debug (_("Have disc -- ejecting"));
 
-		CDStop (& (ginfo -> disc));
-		CDEject (& (ginfo -> disc));
+		CDStop (&(ginfo -> disc));
+		CDEject (&(ginfo -> disc));
 		ginfo -> playing = FALSE;
 		ginfo -> have_disc = FALSE;
 		ginfo -> update_required = TRUE;
@@ -1265,15 +1257,15 @@ void EjectDisc (GtkWidget *widget, gpointer data) {
 	} else {
 		if (ginfo -> faulty_eject) {
 			if (ginfo -> tray_open) {
-				CDClose (& (ginfo -> disc));
+				CDClose (&(ginfo -> disc));
 			} else {
-				CDEject (& (ginfo -> disc));
+				CDEject (&(ginfo -> disc));
 			}
 		} else {
-			if (TrayOpen (& (ginfo -> disc)) != 0) {
-				CDClose (& (ginfo -> disc));
+			if (TrayOpen (&(ginfo -> disc)) != 0) {
+				CDClose (&(ginfo -> disc));
 			} else {
-				CDEject (& (ginfo -> disc));
+				CDEject (&(ginfo -> disc));
 			}
 		}
 
@@ -1284,20 +1276,20 @@ void EjectDisc (GtkWidget *widget, gpointer data) {
 		}
 	}
 
-	UnBusy (& (ginfo -> gui_info));
+	UnBusy (&(ginfo -> gui_info));
 }
 
 void StopPlayCB (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 
-	ginfo = (GripInfo *)data;
+	ginfo = (GripInfo *) data;
 
 	if (ginfo -> ripping_a_disc) {
 		return;
 	}
 
-	CDStop (& (ginfo -> disc));
-	CDStat (& (ginfo -> disc), FALSE);
+	CDStop (&(ginfo -> disc));
+	CDStat (&(ginfo -> disc), FALSE);
 	ginfo -> stopped = TRUE;
 
 	if (ginfo -> stop_first) {
@@ -1308,7 +1300,7 @@ void StopPlayCB (GtkWidget *widget, gpointer data) {
 }
 
 void PlaySegment (GripInfo *ginfo, int track) {
-	CDPlayFrames (& (ginfo -> disc),
+	CDPlayFrames (&(ginfo -> disc),
 	              ginfo -> disc.track[track].start_frame + ginfo -> start_sector,
 	              ginfo -> disc.track[track].start_frame + ginfo -> end_sector);
 }
@@ -1320,8 +1312,8 @@ void PlayTrackCB (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 	DiscInfo *disc;
 
-	ginfo = (GripInfo *)data;
-	disc = & (ginfo -> disc);
+	ginfo = (GripInfo *) data;
+	disc = &(ginfo -> disc);
 
 	if (ginfo -> ripping_a_disc) {
 		show_warning (ginfo -> gui_info.app,
@@ -1332,9 +1324,9 @@ void PlayTrackCB (GtkWidget *widget, gpointer data) {
 
 	CDStat (disc, FALSE);
 
-	if (ginfo -> play_mode != PM_NORMAL && ! ((disc -> disc_mode == CDAUDIO_PLAYING) ||
+	if (ginfo -> play_mode != PM_NORMAL &&! ((disc -> disc_mode == CDAUDIO_PLAYING) ||
 	                                        disc -> disc_mode == CDAUDIO_PAUSED)) {
-		if (ginfo -> play_mode == PM_SHUFFLE && ginfo -> automatic_reshuffle) {
+		if (ginfo -> play_mode == PM_SHUFFLE &&ginfo -> automatic_reshuffle) {
 			ShuffleTracks (ginfo);
 		}
 
@@ -1371,15 +1363,15 @@ void PlayTrackCB (GtkWidget *widget, gpointer data) {
 }
 
 static void PlayTrack (GripInfo *ginfo, int track) {
-	Busy (& (ginfo -> gui_info));
+	Busy (&(ginfo -> gui_info));
 
 	if (ginfo -> play_mode == PM_NORMAL) {
-		CDPlayTrack (& (ginfo -> disc), track + 1, ginfo -> disc.num_tracks);
+		CDPlayTrack (&(ginfo -> disc), track + 1, ginfo -> disc.num_tracks);
 	} else {
-		CDPlayTrack (& (ginfo -> disc), track + 1, track + 1);
+		CDPlayTrack (&(ginfo -> disc), track + 1, track + 1);
 	}
 
-	UnBusy (& (ginfo -> gui_info));
+	UnBusy (&(ginfo -> gui_info));
 
 	ginfo -> playing = TRUE;
 }
@@ -1387,7 +1379,7 @@ static void PlayTrack (GripInfo *ginfo, int track) {
 void NextTrackCB (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 
-	ginfo = (GripInfo *)data;
+	ginfo = (GripInfo *) data;
 
 	NextTrack (ginfo);
 }
@@ -1399,7 +1391,7 @@ void NextTrack (GripInfo *ginfo) {
 		return;
 	}
 
-	CDStat (& (ginfo -> disc), FALSE);
+	CDStat (&(ginfo -> disc), FALSE);
 
 	if (ginfo -> current_track_index < (ginfo -> prog_totaltracks - 1)) {
 		SelectRow (ginfo, NEXT_TRACK);
@@ -1415,7 +1407,7 @@ void NextTrack (GripInfo *ginfo) {
 void PrevTrackCB (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 
-	ginfo = (GripInfo *)data;
+	ginfo = (GripInfo *) data;
 
 	PrevTrack (ginfo);
 }
@@ -1427,7 +1419,7 @@ static void PrevTrack (GripInfo *ginfo) {
 		return;
 	}
 
-	CDStat (& (ginfo -> disc), FALSE);
+	CDStat (&(ginfo -> disc), FALSE);
 
 	if ((ginfo -> disc.disc_mode == CDAUDIO_PLAYING) &&
 	        ((ginfo -> disc.curr_frame -
@@ -1507,7 +1499,7 @@ void CheckNewDisc (GripInfo *ginfo, gboolean force) {
 	int new_id;
 	DiscInfo *disc;
 
-	disc = & (ginfo -> disc);
+	disc = &(ginfo -> disc);
 
 	if (!ginfo -> looking_up) {
 		g_debug (_("Checking for a new disc"));
@@ -1601,8 +1593,8 @@ void UpdateDisplay (GripInfo *ginfo) {
 	GripGUI *uinfo;
 	DiscInfo *disc;
 
-	uinfo = & (ginfo -> gui_info);
-	disc = & (ginfo -> disc);
+	uinfo = &(ginfo -> gui_info);
+	disc = &(ginfo -> disc);
 
 	if (!uinfo -> minimized) {
 		if (uinfo -> track_edit_visible) {
@@ -1796,9 +1788,9 @@ void UpdateTracks (GripInfo *ginfo) {
 	EncodeTrack enc_track;
 	GtkTreeIter iter;
 
-	uinfo = & (ginfo -> gui_info);
-	disc = & (ginfo -> disc);
-	ddata = & (ginfo -> ddata);
+	uinfo = &(ginfo -> gui_info);
+	disc = &(ginfo -> disc);
+	ddata = &(ginfo -> ddata);
 
 	if (ginfo -> have_disc) {
 		/* Reset to make sure we don't eject twice */
@@ -1819,11 +1811,11 @@ void UpdateTracks (GripInfo *ginfo) {
 		ddata -> data_multi_artist = multi_artist_backup;
 		UpdateMultiArtist (NULL, (gpointer)ginfo);
 
-		if (* (ginfo -> cdupdate)) {
+		if (*(ginfo -> cdupdate)) {
 			FillInTrackInfo (ginfo, 0, &enc_track);
 
 			TranslateAndLaunch (ginfo -> cdupdate, TranslateSwitch, &enc_track,
-			                    FALSE, & (ginfo -> sprefs), CloseStuff, (void *)ginfo);
+			                    FALSE, &(ginfo -> sprefs), CloseStuff, (void *)ginfo);
 		}
 	} else {
 		SetTitle (ginfo, _("No Disc"));
@@ -1842,7 +1834,6 @@ void UpdateTracks (GripInfo *ginfo) {
 	SetCurrentTrackIndex (ginfo, disc -> curr_track - 1);
 
 	if (ginfo -> have_disc) {
-
 		col_strings[0] = (char *) malloc (260);
 		col_strings[1] = (char *) malloc (6);
 		col_strings[2] = NULL;
@@ -1882,7 +1873,7 @@ void UpdateTracks (GripInfo *ginfo) {
 		                    GTK_MESSAGE_WARNING, GTK_BUTTONS_YES_NO,
 		                    _("This disc has not been found on your DiscDB server.\n\n"
 		                       "Do you wish to submit this disc information?"));
-//	gtk_window_set_title (GTK_WINDOW (dialog), "Warning");
+        gtk_window_set_title (GTK_WINDOW (dialog), "Disc not found in DB");
 		g_signal_connect (dialog,
 		                  "response",
 		                  G_CALLBACK (SubmitEntry),
