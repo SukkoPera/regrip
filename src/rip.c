@@ -319,16 +319,6 @@ static GtkWidget *MakeRangeSelects (GripInfo *ginfo) {
 	return vbox;
 }
 
-gboolean IsDir (char *path) {
-	struct stat mystat;
-
-	if (stat (path, &mystat) != 0) {
-		return FALSE;
-	}
-
-	return S_ISDIR (mystat.st_mode);
-}
-
 unsigned long long BytesLeftInFS (char *path) {
 	unsigned long long bytesleft;
 	int pos;
@@ -338,7 +328,7 @@ unsigned long long BytesLeftInFS (char *path) {
 	struct statfs stat;
 #endif
 
-	if (!IsDir (path)) {
+	if (!g_file_test (path, G_FILE_TEST_IS_DIR)) {
 		for (pos = strlen (path); pos &&(path[pos] != '/'); pos--);
 
 		if (path[pos] != '/') {

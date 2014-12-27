@@ -553,20 +553,18 @@ void MakeConfigPage (GripInfo *ginfo) {
 	vbox = gtk_vbox_new (FALSE, 2);
 	gtk_container_border_width (GTK_CONTAINER (vbox), 3);
 
-	check = MakeCheckButton (&button, &ginfo -> use_proxy, _("Use proxy server"));
+	check = MakeCheckButton (&(uinfo -> proxy_use), &ginfo -> use_proxy, _("Use proxy server"));
 	gtk_box_pack_start (GTK_BOX (vbox), check, FALSE, FALSE, 0);
 	gtk_widget_show (check);
 	g_settings_bind (ginfo -> settings_proxy, "use-proxy", check, "active", G_SETTINGS_BIND_DEFAULT);
-	uinfo -> proxy_use = check;
     g_signal_connect (GTK_OBJECT (check), "toggled",
                       G_CALLBACK (on_proxy_use_toggled), (gpointer) ginfo);
 
-	check = MakeCheckButton (NULL, &ginfo -> use_proxy_env,
+	check = MakeCheckButton (&(uinfo -> proxy_use_env), &ginfo -> use_proxy_env,
 	                         _("Get server from 'http_proxy' environment variable"));
 	gtk_box_pack_start (GTK_BOX (vbox), check, FALSE, FALSE, 0);
 	gtk_widget_show (check);
 	g_settings_bind (ginfo -> settings_proxy, "use-proxy-env", check, "active", G_SETTINGS_BIND_DEFAULT);
-	uinfo -> proxy_use_env = check;
     g_signal_connect (GTK_OBJECT (check), "toggled",
                       G_CALLBACK (on_proxy_use_env_toggled), (gpointer) ginfo);
 
