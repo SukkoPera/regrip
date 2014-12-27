@@ -130,7 +130,6 @@ void MakeConfigPage (GripInfo *ginfo) {
 	GtkWidget *check;
 	GtkWidget *config_notebook;
 	GtkWidget *configpage;
-	GtkWidget *button;
 #ifndef GRIPCD
 	GtkWidget *hbox;
 	GtkWidget *menu;
