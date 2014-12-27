@@ -28,7 +28,6 @@
 #include "grip.h"
 #include "gripcfg.h"
 #include "dialog.h"
-#include "parsecfg.h"
 #include "common.h"
 #include "encoder.h"
 

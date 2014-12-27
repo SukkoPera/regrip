@@ -29,8 +29,8 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/param.h>
-#include <gdk/gdkx.h>
-#include <X11/Xlib.h>
+//#include <gdk/gdkx.h>
+//#include <X11/Xlib.h>
 #include <time.h>
 #include "grip.h"
 #include <glib.h>
@@ -43,7 +43,6 @@
 #include "dialog.h"
 #include "gripcfg.h"
 #include "xpm.h"
-#include "parsecfg.h"
 #include "tray.h"
 
 static gboolean gripDieOnWinCloseCB (GtkWidget *widget, GdkEvent *event,

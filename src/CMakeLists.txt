@@ -31,8 +31,6 @@ set (
     launch.c
     launch.h
     main.c
-    parsecfg.c
-    parsecfg.h
     rip.c
     rip.h
     status_window.c
