@@ -47,6 +47,8 @@ FIND_LIBRARY(CDDAINTF_LIBRARY NAMES cdda_interface PATHS
   "$ENV{LIB_DIR}/lib"
   /usr/local/lib
   /usr/lib
+  /lib/x86_64-linux-gnu
+  /usr/lib/x86_64-linux-gnu
   c:/msys/local/lib
   NO_DEFAULT_PATH
   )
@@ -60,6 +62,8 @@ FIND_LIBRARY(CDDAPARA_LIBRARY NAMES cdda_paranoia PATHS
   "$ENV{LIB_DIR}/lib"
   /usr/local/lib
   /usr/lib
+  /lib/x86_64-linux-gnu
+  /usr/lib/x86_64-linux-gnu
   c:/msys/local/lib
   NO_DEFAULT_PATH
   )

@@ -133,6 +133,7 @@ typedef struct _grip_gui {
 	GtkWidget *proxy_user;
 	GtkWidget *proxy_pswd;
 	GtkWidget *proxy_use_env;
+	GtkWidget *proxy_use;
 
 	/* Images */
 	GtkWidget *check_image;

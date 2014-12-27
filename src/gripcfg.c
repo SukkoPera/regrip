@@ -124,7 +124,7 @@ static void on_encoder_selected (GtkComboBox *widget, gpointer data) {
 
 void MakeConfigPage (GripInfo *ginfo) {
 	GripGUI *uinfo;
-	GtkWidget *vbox, *vbox2;
+	GtkWidget *vbox;
 	GtkWidget *entry;
 	GtkWidget *label;
 	GtkWidget *check;
@@ -138,9 +138,6 @@ void MakeConfigPage (GripInfo *ginfo) {
 
 	uinfo = &(ginfo -> gui_info);
 
-	configpage = MakeNewPage (uinfo -> notebook, _("Config"));
-
-	vbox2 = gtk_vbox_new (FALSE, 0);
 	config_notebook = gtk_notebook_new ();
 
     /*************************************************************************/
@@ -560,9 +557,9 @@ void MakeConfigPage (GripInfo *ginfo) {
 	gtk_box_pack_start (GTK_BOX (vbox), check, FALSE, FALSE, 0);
 	gtk_widget_show (check);
 	g_settings_bind (ginfo -> settings_proxy, "use-proxy", check, "active", G_SETTINGS_BIND_DEFAULT);
+	uinfo -> proxy_use = check;
     g_signal_connect (GTK_OBJECT (check), "toggled",
                       G_CALLBACK (on_proxy_use_toggled), (gpointer) ginfo);
-
 
 	check = MakeCheckButton (NULL, &ginfo -> use_proxy_env,
 	                         _("Get server from 'http_proxy' environment variable"));
@@ -572,7 +569,6 @@ void MakeConfigPage (GripInfo *ginfo) {
 	uinfo -> proxy_use_env = check;
     g_signal_connect (GTK_OBJECT (check), "toggled",
                       G_CALLBACK (on_proxy_use_env_toggled), (gpointer) ginfo);
-
 
 	hbox = MakeStrEntry (&entry, ginfo -> proxy_server.name, _("Proxy server"), 255,
 	                      TRUE);
@@ -601,6 +597,10 @@ void MakeConfigPage (GripInfo *ginfo) {
 	gtk_widget_show (hbox);
 	g_settings_bind (ginfo -> settings_proxy, "proxy-pswd", entry, "text", G_SETTINGS_BIND_DEFAULT);
 	uinfo -> proxy_pswd = hbox;
+
+
+	// Call handler manually to init sensitivity of widgets
+	on_proxy_use_toggled (GTK_TOGGLE_BUTTON (uinfo -> proxy_use), ginfo);
 
 
 	label = gtk_label_new (_("Proxy"));
@@ -654,15 +654,14 @@ void MakeConfigPage (GripInfo *ginfo) {
 	gtk_box_pack_start (GTK_BOX (vbox), check, FALSE, FALSE, 0);
 	gtk_widget_show (check);
 
+
 	label = gtk_label_new (_("Misc"));
 	gtk_notebook_append_page (GTK_NOTEBOOK (config_notebook), vbox, label);
 	gtk_widget_show (vbox);
 
 
-
-	gtk_box_pack_start (GTK_BOX (vbox2), config_notebook, FALSE, FALSE, 0);
+    // All done!
+    configpage = MakeNewPage (uinfo -> notebook, _("Config"));
+	gtk_container_add (GTK_CONTAINER (configpage), config_notebook);
 	gtk_widget_show (config_notebook);
-
-	gtk_container_add (GTK_CONTAINER (configpage), vbox2);
-	gtk_widget_show (vbox2);
 }

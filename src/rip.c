@@ -507,9 +507,9 @@ static gboolean AddM3U (GripInfo *ginfo) {
 	g_snprintf (m3unam, PATH_MAX, "%s", conv_str);
 
 	gchar *dir = g_path_get_dirname (conv_str);
-	if (dir == NULL || g_mkdir_with_parents (conv_str, 0755) < 0) {
+	if (dir == NULL || g_mkdir_with_parents (dir, 0755) < 0) {
 		show_error (ginfo -> gui_info.app,
-                    _("Error: can't create diretories for m3u file."));
+                    _("Error: can't create directories for m3u file."));
         g_free (dir);
         g_free (conv_str);
 		return FALSE;

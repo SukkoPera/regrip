@@ -48,7 +48,12 @@ find_path(FAAC_INCLUDE_DIR faac.h
 set(FAAC_NAMES faac)
 find_library(FAAC_LIBRARY
   NAMES ${FAAC_NAMES}
-  PATHS /usr/lib /usr/local/lib /opt/local/lib
+  PATHS
+  /usr/lib
+  /usr/local/lib
+  /opt/local/lib
+  /lib/x86_64-linux-gnu
+  /usr/lib/x86_64-linux-gnu
 )
 
 if (FAAC_INCLUDE_DIR AND FAAC_LIBRARY)
