@@ -50,6 +50,7 @@ set (
 
     ${PROJECT_BINARY_DIR}     # For config.h
     ${GTK2_INCLUDE_DIRS}
+    ${GTHREAD_INCLUDE_DIRS}
     ${VTE_INCLUDE_DIRS}
     ${CDPARANOIA_INCLUDE_DIRS}
     ${CURL_INCLUDE_DIRS}
@@ -59,11 +60,11 @@ set (
     libraries
 
     ${GTK2_LIBRARIES}
+    ${GTHREAD_LIBRARIES}
+    ${GTHREAD_LDFLAGS_OTHER}
     ${VTE_LIBRARIES}
     ${CURL_LIBRARIES}
     ${CDPARANOIA_LIBRARIES}
-    -lpthread
-    -lm
 )
 
 if (SNDFILE_FOUND)

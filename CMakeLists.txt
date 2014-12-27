@@ -17,8 +17,11 @@ set (HELPDIR "${CMAKE_INSTALL_DATADIR}/help/grip/C")
 
 
 find_package (PkgConfig)
+pkg_check_modules (GTHREAD REQUIRED gthread)
+message ("x = ${GTHREAD_LIBRARIES}")
+message ("x = ${GTHREAD_LDFLAGS_OTHER}")
+pkg_check_modules (GTHREAD2 REQUIRED gthread-2.0)
 pkg_check_modules (GTK2 REQUIRED gtk+-2.0)
-pkg_check_modules (GTHREAD REQUIRED gthread-2.0)
 pkg_check_modules (VTE REQUIRED vte)
 #pkg_check_modules (CDDB REQUIRED libcddb)
 pkg_check_modules (SNDFILE sndfile)
