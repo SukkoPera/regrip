@@ -120,16 +120,19 @@ typedef struct _grip_gui {
 	GtkWidget *start_sector_entry;
 	GtkWidget *end_sector_entry;
 
-//  GtkWidget *mp3exename_entry;
-//  GtkWidget *mp3cmdline_entry;
-//  GtkWidget *mp3extension_entry;
-
 	/* Overall prgress */
 	GtkWidget *all_label;
 	GtkWidget *all_rip_label;
 	GtkWidget *all_enc_label;
 	GtkWidget *all_ripprogbar;
 	GtkWidget *all_encprogbar;
+
+	/* Proxy */
+	GtkWidget *proxy_name;
+	GtkWidget *proxy_port;
+	GtkWidget *proxy_user;
+	GtkWidget *proxy_pswd;
+	GtkWidget *proxy_use_env;
 
 	/* Images */
 	GtkWidget *check_image;
@@ -337,6 +340,7 @@ typedef struct _grip_info {
 	GSettings *settings_encoder;
 	GSettings *settings_tag;
 	GSettings *settings_discdb;
+	GSettings *settings_proxy;
 } GripInfo;
 
 GtkWidget *GripNew (const gchar* geometry, char *device, char *scsi_device,

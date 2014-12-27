@@ -1843,8 +1843,8 @@ void UpdateTracks (GripInfo *ginfo) {
 
 	if (ginfo -> have_disc) {
 
-		col_strings[0] = (char *)malloc (260);
-		col_strings[1] = (char *)malloc (6);
+		col_strings[0] = (char *) malloc (260);
+		col_strings[1] = (char *) malloc (6);
 		col_strings[2] = NULL;
 
 		for (track = 0; track < disc -> num_tracks; track++) {
@@ -1907,7 +1907,7 @@ void SubmitEntry (GtkDialog *dialog, gint reply, gpointer data) {
 		return;
 	}
 
-	ginfo = (GripInfo *)data;
+	ginfo = (GripInfo *) data;
 
 	sprintf (filename, "/tmp/grip.XXXXXX");
 	fd = mkstemp (filename);
@@ -1936,7 +1936,7 @@ void SubmitEntry (GtkDialog *dialog, gint reply, gpointer data) {
 //	      "MIME-Version: 1.0\nContent-type: text/plain; charset=UTF-8\n\n");
 //    }
 
-		if (DiscDBWriteDiscData (& (ginfo -> disc), & (ginfo -> ddata), efp, FALSE,
+		if (DiscDBWriteDiscData (&(ginfo -> disc), &(ginfo -> ddata), efp, FALSE,
 		                         TRUE /*ginfo -> db_use_freedb*/,/*ginfo -> db_use_freedb?*/
 		                         "UTF-8"/*:ginfo -> discdb_encoding*/) < 0) {
 			show_warning (ginfo -> gui_info.app,

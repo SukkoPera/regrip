@@ -35,6 +35,7 @@
     <child name="encoder" schema="net.sukkology.software.regrip.encoder" />
     <child name="tag" schema="net.sukkology.software.regrip.tag" />
     <child name="discdb" schema="net.sukkology.software.regrip.discdb" />
+    <child name="proxy" schema="net.sukkology.software.regrip.proxy" />
   </schema>
 
   <schema id="net.sukkology.software.regrip.cdplay" path="/net/sukkology/software/regrip/cdplay/">
@@ -198,17 +199,8 @@
   <schema id="net.sukkology.software.regrip.discdb" path="/net/sukkology/software/regrip/discdb/">
     <key type="b" name="automatic-discdb">
       <default>true</default>
-      <summary>QPerform disc lookups automatically</summary>
+      <summary>Perform disc lookups automatically</summary>
     </key>
-	<!--
-	{"use-proxy",CFG-ENTRY-BOOL,0,&ginfo->use-proxy},\
-	{"proxy-name",CFG-ENTRY-STRING,256,ginfo->proxy-server.name},\
-	{"proxy-port",CFG-ENTRY-INT,0,&(ginfo->proxy-server.port)},\
-	{"proxy-user",CFG-ENTRY-STRING,80,ginfo->proxy-server.username},\
-	{"proxy-pswd",CFG-ENTRY-STRING,80,ginfo->proxy-server.pswd},\
-	{"cdupdate",CFG-ENTRY-STRING,256,ginfo->cdupdate},\
-	{"user-email",CFG-ENTRY-STRING,256,ginfo->user-email},\
-	-->
     <key type="s" name="server-url">
       <default>'http://freedb.freedb.org/~cddb/cddb.cgi'</default>
       <summary>DiscDB server URL</summary>
@@ -218,12 +210,39 @@
       <summary>DB Submit email</summary>
     </key>
   </schema>
+
+  <schema id="net.sukkology.software.regrip.proxy" path="/net/sukkology/software/regrip/proxy/">
+    <key type="b" name="use-proxy">
+      <default>false</default>
+      <summary>Use proxy server</summary>
+    </key>
+    <key type="b" name="use-proxy-env">
+      <default>true</default>
+      <summary>Use proxy server</summary>
+    </key>
+    <key type="s" name="proxy-name">
+      <default>''</default>
+      <summary>Proxy server</summary>
+    </key>
+    <key type="u" name="proxy-port">
+      <default>3128</default>
+      <summary>Proxy port</summary>
+    </key>
+    <key type="s" name="proxy-user">
+      <default>''</default>
+      <summary>Proxy username</summary>
+    </key>
+    <key type="s" name="proxy-pswd">
+      <default>''</default>
+      <summary>Proxy password</summary>
+    </key>
+  </schema>
 </schemalist>
 
 <!--
-{"dbserver",CFG-ENTRY-STRING,256,ginfo->dbserver.name},\
+{"cdupdate",CFG-ENTRY-STRING,256,ginfo->cdupdate},\
+{"user-email",CFG-ENTRY-STRING,256,ginfo->user-email},\
 ?{"ripfileformat",CFG-ENTRY-STRING,256,ginfo->ripfileformat},\
-**{"use-proxy-env",CFG-ENTRY-BOOL,0,&ginfo->use-proxy-env},\
 {"no-lower-case",CFG-ENTRY-BOOL,0,&ginfo->sprefs.no-lower-case},\
 {"no-underscore",CFG-ENTRY-BOOL,0,&ginfo->sprefs.no-underscore},\
 {"allow-high-bits",CFG-ENTRY-BOOL,0,&ginfo->sprefs.allow-high-bits},\

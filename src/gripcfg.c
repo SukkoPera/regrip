@@ -32,9 +32,6 @@
 #include "encoder.h"
 
 
-static void UseProxyChanged (GtkWidget *widget, gpointer data);
-static void on_encoder_selected (GtkComboBox *widget, gpointer data);
-
 // From settings (uint) to object property (text)
 static gboolean gsettings_map_int_to_string (GValue *value, GVariant *variant, gpointer user_data) {
     guint32 i;
@@ -65,20 +62,70 @@ static GVariant *gsettings_map_string_to_int (const GValue *value, const GVarian
     return variant;
 }
 
-
-static void UseProxyChanged (GtkWidget *widget, gpointer data) {
+static void on_proxy_use_env_toggled (GtkToggleButton *togglebutton, gpointer user_data) {
 	GripInfo *ginfo;
+	GripGUI *uinfo;
 
-	ginfo = (GripInfo *)data;
+	ginfo = (GripInfo *) user_data;
+	uinfo = &(ginfo -> gui_info);
+
+	gboolean enabled = gtk_toggle_button_get_active (togglebutton);
+	gtk_widget_set_sensitive (uinfo -> proxy_name, !enabled);
+	gtk_widget_set_sensitive (uinfo -> proxy_port, !enabled);
+	gtk_widget_set_sensitive (uinfo -> proxy_user, !enabled);
+	gtk_widget_set_sensitive (uinfo -> proxy_pswd, !enabled);
+}
+
+static void on_proxy_use_toggled (GtkToggleButton *togglebutton, gpointer user_data) {
+	GripInfo *ginfo;
+	GripGUI *uinfo;
+
+	ginfo = (GripInfo *) user_data;
+	uinfo = &(ginfo -> gui_info);
+
+	gboolean enabled = gtk_toggle_button_get_active (togglebutton);
+	gtk_widget_set_sensitive (uinfo -> proxy_use_env, enabled);
+
+	gboolean enabled2 = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (uinfo -> proxy_use_env));
+	gtk_widget_set_sensitive (uinfo -> proxy_name, enabled && !enabled2);
+	gtk_widget_set_sensitive (uinfo -> proxy_port, enabled && !enabled2);
+	gtk_widget_set_sensitive (uinfo -> proxy_user, enabled && !enabled2);
+	gtk_widget_set_sensitive (uinfo -> proxy_pswd, enabled && !enabled2);
 
 	ginfo -> dbserver.use_proxy = ginfo -> use_proxy;
 }
 
+static void on_encoder_selected (GtkComboBox *widget, gpointer data) {
+	GripInfo *ginfo;
+//	GripGUI *uinfo;
+
+	ginfo = (GripInfo *) data;
+//	uinfo = &(ginfo -> gui_info);
+
+	GtkTreeIter iter;
+    GtkTreeModel *model;
+
+    /* Obtain currently selected item form combo box.
+     * If nothing is selected, do nothing. */
+    if (gtk_combo_box_get_active_iter (widget, &iter)) {
+        /* Obtain data model from combo box. */
+        model = gtk_combo_box_get_model (widget);
+
+        /* Obtain encoder from model. */
+        gchar *format_name;
+        gtk_tree_model_get (model, &iter, 0, &format_name, 1, &(ginfo -> format), 2, &(ginfo -> encoder), -1);
+        g_debug ("Selected format: %s", format_name);
+
+        // Save selection
+        g_settings_set (ginfo -> settings_encoder, "selected-encoder", "s", ginfo -> encoder -> name);
+        g_settings_set (ginfo -> settings_encoder, "selected-format", "s", format_name);
+    }
+}
+
 void MakeConfigPage (GripInfo *ginfo) {
 	GripGUI *uinfo;
-	GtkWidget *vbox, *vbox2, *dbvbox;
+	GtkWidget *vbox, *vbox2;
 	GtkWidget *entry;
-	GtkWidget *realentry;
 	GtkWidget *label;
 	GtkWidget *check;
 	GtkWidget *config_notebook;
@@ -89,7 +136,7 @@ void MakeConfigPage (GripInfo *ginfo) {
 	GtkWidget *menu;
 #endif
 
-	uinfo = & (ginfo -> gui_info);
+	uinfo = &(ginfo -> gui_info);
 
 	configpage = MakeNewPage (uinfo -> notebook, _("Config"));
 
@@ -464,42 +511,42 @@ void MakeConfigPage (GripInfo *ginfo) {
 	/* DISCDB PAGE                                                           */
 	/*************************************************************************/
 
-	dbvbox = gtk_vbox_new (FALSE, 4);
-	gtk_container_border_width (GTK_CONTAINER (dbvbox), 3);
+	vbox = gtk_vbox_new (FALSE, 4);
+	gtk_container_border_width (GTK_CONTAINER (vbox), 3);
 
     check = MakeCheckButton (NULL, &ginfo -> automatic_discdb,
 	                         _("Perform disc lookups automatically"));
-	gtk_box_pack_start (GTK_BOX (dbvbox), check, FALSE, FALSE, 0);
+	gtk_box_pack_start (GTK_BOX (vbox), check, FALSE, FALSE, 0);
 	gtk_widget_show (check);
 	g_settings_bind (ginfo -> settings_discdb, "automatic-discdb", check, "active", G_SETTINGS_BIND_DEFAULT);
 
 	hbox = MakeStrEntry (&entry, ginfo -> dbserver.name, _("DiscDB server URL"), 255, TRUE);
-	gtk_box_pack_start (GTK_BOX (dbvbox), hbox, FALSE, FALSE, 0);
+	gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
 	gtk_widget_show (hbox);
 	g_settings_bind (ginfo -> settings_discdb, "server-url", entry, "text", G_SETTINGS_BIND_DEFAULT);
 
 	hbox = MakeStrEntry (&entry, ginfo -> discdb_submit_email,
 	                      _("DB Submit email"), 255, TRUE);
-	gtk_box_pack_start (GTK_BOX (dbvbox), hbox, FALSE, FALSE, 0);
+	gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
 	gtk_widget_show (hbox);
 	g_settings_bind (ginfo -> settings_discdb, "discdb-submit-email", entry, "text", G_SETTINGS_BIND_DEFAULT);
 
 	/* We'll see later if we need this
 	entry = MakeStrEntry (NULL, ginfo -> discdb_encoding,
 	                      _("DB Character set encoding"), 16, TRUE);
-	gtk_box_pack_start (GTK_BOX (dbvbox), entry, FALSE, FALSE, 0);
+	gtk_box_pack_start (GTK_BOX (vbox), entry, FALSE, FALSE, 0);
 	gtk_widget_show (entry);
 
 	check = MakeCheckButton (NULL, &ginfo -> db_use_freedb,
 	                         _("Use freedb extensions"));
-	gtk_box_pack_start (GTK_BOX (dbvbox), check, FALSE, FALSE, 0);
+	gtk_box_pack_start (GTK_BOX (vbox), check, FALSE, FALSE, 0);
 	gtk_widget_show (check);
 	*/
 
 
 	label = gtk_label_new (_("DiscDB"));
-	gtk_notebook_append_page (GTK_NOTEBOOK (config_notebook), dbvbox, label);
-	gtk_widget_show (dbvbox);
+	gtk_notebook_append_page (GTK_NOTEBOOK (config_notebook), vbox, label);
+	gtk_widget_show (vbox);
 
 
     /*************************************************************************/
@@ -510,35 +557,51 @@ void MakeConfigPage (GripInfo *ginfo) {
 	gtk_container_border_width (GTK_CONTAINER (vbox), 3);
 
 	check = MakeCheckButton (&button, &ginfo -> use_proxy, _("Use proxy server"));
-	gtk_signal_connect (GTK_OBJECT (button), "clicked",
-	                    GTK_SIGNAL_FUNC (UseProxyChanged), (gpointer)ginfo);
 	gtk_box_pack_start (GTK_BOX (vbox), check, FALSE, FALSE, 0);
 	gtk_widget_show (check);
+	g_settings_bind (ginfo -> settings_proxy, "use-proxy", check, "active", G_SETTINGS_BIND_DEFAULT);
+    g_signal_connect (GTK_OBJECT (check), "toggled",
+                      G_CALLBACK (on_proxy_use_toggled), (gpointer) ginfo);
+
 
 	check = MakeCheckButton (NULL, &ginfo -> use_proxy_env,
-	                         _("Get server from 'http_proxy' env. var"));
+	                         _("Get server from 'http_proxy' environment variable"));
 	gtk_box_pack_start (GTK_BOX (vbox), check, FALSE, FALSE, 0);
 	gtk_widget_show (check);
+	g_settings_bind (ginfo -> settings_proxy, "use-proxy-env", check, "active", G_SETTINGS_BIND_DEFAULT);
+	uinfo -> proxy_use_env = check;
+    g_signal_connect (GTK_OBJECT (check), "toggled",
+                      G_CALLBACK (on_proxy_use_env_toggled), (gpointer) ginfo);
 
-	entry = MakeStrEntry (NULL, ginfo -> proxy_server.name, _("Proxy server"), 255,
+
+	hbox = MakeStrEntry (&entry, ginfo -> proxy_server.name, _("Proxy server"), 255,
 	                      TRUE);
-	gtk_box_pack_start (GTK_BOX (vbox), entry, FALSE, FALSE, 0);
-	gtk_widget_show (entry);
+	gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
+	gtk_widget_show (hbox);
+	g_settings_bind (ginfo -> settings_proxy, "proxy-name", entry, "text", G_SETTINGS_BIND_DEFAULT);
+	uinfo -> proxy_name = hbox;
 
-	entry = MakeNumEntry (NULL, & (ginfo -> proxy_server.port), _("Proxy port"), 5);
-	gtk_box_pack_start (GTK_BOX (vbox), entry, FALSE, FALSE, 0);
-	gtk_widget_show (entry);
+	hbox = MakeNumEntry (&entry, &(ginfo -> proxy_server.port), _("Proxy port"), 5);
+	gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
+	gtk_widget_show (hbox);
+	g_settings_bind_with_mapping (ginfo -> settings_proxy, "proxy-port", entry, "text", G_SETTINGS_BIND_DEFAULT, gsettings_map_int_to_string, gsettings_map_string_to_int, NULL, NULL);
+	uinfo -> proxy_port = hbox;
 
-	entry = MakeStrEntry (NULL, ginfo -> proxy_server.username, _("Proxy username"),
+	hbox = MakeStrEntry (&entry, ginfo -> proxy_server.username, _("Proxy username"),
 	                      80, TRUE);
-	gtk_box_pack_start (GTK_BOX (vbox), entry, FALSE, FALSE, 0);
-	gtk_widget_show (entry);
+	gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
+	gtk_widget_show (hbox);
+	g_settings_bind (ginfo -> settings_proxy, "proxy-user", entry, "text", G_SETTINGS_BIND_DEFAULT);
+	uinfo -> proxy_user = hbox;
 
-	entry = MakeStrEntry (&realentry, ginfo -> proxy_server.pswd,
+	hbox = MakeStrEntry (&entry, ginfo -> proxy_server.pswd,
 	                      _("Proxy password"), 80, TRUE);
-	gtk_entry_set_visibility (GTK_ENTRY (realentry), FALSE);
-	gtk_box_pack_start (GTK_BOX (vbox), entry, FALSE, FALSE, 0);
-	gtk_widget_show (entry);
+	gtk_entry_set_visibility (GTK_ENTRY (entry), FALSE);
+	gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
+	gtk_widget_show (hbox);
+	g_settings_bind (ginfo -> settings_proxy, "proxy-pswd", entry, "text", G_SETTINGS_BIND_DEFAULT);
+	uinfo -> proxy_pswd = hbox;
+
 
 	label = gtk_label_new (_("Proxy"));
 	gtk_notebook_append_page (GTK_NOTEBOOK (config_notebook), vbox, label);
@@ -552,7 +615,7 @@ void MakeConfigPage (GripInfo *ginfo) {
 	vbox = gtk_vbox_new (FALSE, 2);
 	gtk_container_border_width (GTK_CONTAINER (vbox), 3);
 
-	entry = MakeStrEntry (NULL, ginfo -> user_email, _("Email address"), 255, TRUE);
+	entry = MakeStrEntry (NULL, ginfo -> user_email, _("E-Mail address"), 255, TRUE);
 	gtk_box_pack_start (GTK_BOX (vbox), entry, FALSE, FALSE, 0);
 	gtk_widget_show (entry);
 
@@ -602,32 +665,4 @@ void MakeConfigPage (GripInfo *ginfo) {
 
 	gtk_container_add (GTK_CONTAINER (configpage), vbox2);
 	gtk_widget_show (vbox2);
-}
-
-
-static void on_encoder_selected (GtkComboBox *widget, gpointer data) {
-	GripInfo *ginfo;
-//	GripGUI *uinfo;
-
-	ginfo = (GripInfo *) data;
-//	uinfo = &(ginfo -> gui_info);
-
-	GtkTreeIter iter;
-    GtkTreeModel *model;
-
-    /* Obtain currently selected item form combo box.
-     * If nothing is selected, do nothing. */
-    if (gtk_combo_box_get_active_iter(widget, &iter)) {
-        /* Obtain data model from combo box. */
-        model = gtk_combo_box_get_model (widget);
-
-        /* Obtain encoder from model. */
-        gchar *format_name;
-        gtk_tree_model_get (model, &iter, 0, &format_name, 1, &(ginfo -> format), 2, &(ginfo -> encoder), -1);
-        g_debug ("Selected format: %s", format_name);
-
-        // Save selection
-        g_settings_set (ginfo -> settings_encoder, "selected-encoder", "s", ginfo -> encoder -> name);
-        g_settings_set (ginfo -> settings_encoder, "selected-format", "s", format_name);
-    }
 }

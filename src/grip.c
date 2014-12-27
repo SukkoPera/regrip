@@ -55,82 +55,7 @@ static void MakeAboutPage (GripGUI *uinfo);
 static void MakeStyles (GripGUI *uinfo);
 static void Homepage (void);
 static void LoadImages (GripGUI *uinfo);
-static void DoLoadConfig (GripInfo *ginfo);
-void DoSaveConfig (GripInfo *ginfo);
-
-#define CFG_ENTRIES \
-	{"grip_version",CFG_ENTRY_STRING,256,ginfo -> version},\
-	{"cd_device",CFG_ENTRY_STRING,256,ginfo -> cd_device},\
-	{"force_scsi",CFG_ENTRY_STRING,256,ginfo -> force_scsi},\
-	{"wav_filter_cmd",CFG_ENTRY_STRING,256,ginfo -> wav_filter_cmd},\
-	{"disc_filter_cmd",CFG_ENTRY_STRING,256,ginfo -> disc_filter_cmd},\
-	{"dbserver",CFG_ENTRY_STRING,256,ginfo -> dbserver.name},\
-	{"delete_wavs",CFG_ENTRY_BOOL,0,&ginfo -> delete_wavs},\
-	{"add_m3u",CFG_ENTRY_BOOL,0,&ginfo -> add_m3u},\
-	{"rel_m3u",CFG_ENTRY_BOOL,0,&ginfo -> rel_m3u},\
-	{"use_proxy",CFG_ENTRY_BOOL,0,&ginfo -> use_proxy},\
-	{"proxy_name",CFG_ENTRY_STRING,256,ginfo -> proxy_server.name},\
-	{"proxy_port",CFG_ENTRY_INT,0,&(ginfo -> proxy_server.port)},\
-	{"proxy_user",CFG_ENTRY_STRING,80,ginfo -> proxy_server.username},\
-	{"proxy_pswd",CFG_ENTRY_STRING,80,ginfo -> proxy_server.pswd},\
-	{"cdupdate",CFG_ENTRY_STRING,256,ginfo -> cdupdate},\
-	{"user_email",CFG_ENTRY_STRING,256,ginfo -> user_email},\
-	{"mp3nice",CFG_ENTRY_INT,0,&ginfo -> mp3nice},\
-	{"mp3_filter_cmd",CFG_ENTRY_STRING,256,ginfo -> mp3_filter_cmd},\
-	{"doid3",CFG_ENTRY_BOOL,0,&ginfo -> doid3},\
-	{"doid3v2",CFG_ENTRY_BOOL,0,&ginfo -> doid3v2},\
-	{"tag_mp3_only",CFG_ENTRY_BOOL,0,&ginfo -> tag_mp3_only},\
-	{"id3_comment",CFG_ENTRY_STRING,30,ginfo -> id3_comment},\
-	{"max_wavs",CFG_ENTRY_INT,0,&ginfo -> max_wavs},\
-	{"auto_rip",CFG_ENTRY_BOOL,0,&ginfo -> auto_rip},\
-	{"eject_after_rip",CFG_ENTRY_BOOL,0,&ginfo -> eject_after_rip},\
-	{"eject_delay",CFG_ENTRY_INT,0,&ginfo -> eject_delay},\
-	{"delay_before_rip",CFG_ENTRY_BOOL,0,&ginfo -> delay_before_rip},\
-	{"stop_between_tracks",CFG_ENTRY_BOOL,0,&ginfo -> stop_between_tracks},\
-	{"beep_after_rip",CFG_ENTRY_BOOL,0,&ginfo -> beep_after_rip},\
-	{"faulty_eject",CFG_ENTRY_BOOL,0,&ginfo -> faulty_eject},\
-	{"poll_drive",CFG_ENTRY_BOOL,0,&ginfo -> poll_drive},\
-	{"poll_interval",CFG_ENTRY_INT,0,&ginfo -> poll_interval},\
-	{"use_proxy_env",CFG_ENTRY_BOOL,0,&ginfo -> use_proxy_env},\
-	{"db_cgi",CFG_ENTRY_STRING,256,ginfo -> dbserver.cgi_prog},\
-	{"cddb_submit_email",CFG_ENTRY_STRING,256,ginfo -> discdb_submit_email},\
-	{"discdb_encoding",CFG_ENTRY_STRING,16,ginfo -> discdb_encoding},\
-	{"id3_encoding",CFG_ENTRY_STRING,16,ginfo -> id3_encoding},\
-	{"id3v2_encoding",CFG_ENTRY_STRING,16,ginfo -> id3v2_encoding},\
-	{"db_use_freedb",CFG_ENTRY_BOOL,0,&ginfo -> db_use_freedb},\
-	{"dbserver2",CFG_ENTRY_STRING,256,ginfo -> dbserver2.name},\
-	{"db2_cgi",CFG_ENTRY_STRING,256,ginfo -> dbserver2.cgi_prog},\
-	{"no_interrupt",CFG_ENTRY_BOOL,0,&ginfo -> no_interrupt},\
-	{"stop_first",CFG_ENTRY_BOOL,0,&ginfo -> stop_first},\
-	{"play_first",CFG_ENTRY_BOOL,0,&ginfo -> play_first},\
-	{"play_on_insert",CFG_ENTRY_BOOL,0,&ginfo -> play_on_insert},\
-	{"automatic_cddb",CFG_ENTRY_BOOL,0,&ginfo -> automatic_discdb},\
-	{"automatic_reshuffle",CFG_ENTRY_BOOL,0,&ginfo -> automatic_reshuffle},\
-	{"no_lower_case",CFG_ENTRY_BOOL,0,&ginfo -> sprefs.no_lower_case},\
-	{"no_underscore",CFG_ENTRY_BOOL,0,&ginfo -> sprefs.no_underscore},\
-	{"allow_high_bits",CFG_ENTRY_BOOL,0,&ginfo -> sprefs.allow_high_bits},\
-	{"escape",CFG_ENTRY_BOOL,0,&ginfo -> sprefs.escape},\
-	{"allow_these_chars",CFG_ENTRY_STRING,256,ginfo -> sprefs.allow_these_chars},\
-	{"show_tray_icon",CFG_ENTRY_BOOL,0,&ginfo -> show_tray_icon},\
-	{"num_cpu",CFG_ENTRY_INT,0,&ginfo -> edit_num_cpu},\
-	{"kbits_per_sec",CFG_ENTRY_INT,0,&ginfo -> kbits_per_sec},\
-	{"selected_encoder",CFG_ENTRY_INT,0,&ginfo -> selected_encoder},\
-	{"play_mode",CFG_ENTRY_INT,0,&ginfo -> play_mode},\
-	{"playloop",CFG_ENTRY_BOOL,0,&ginfo -> playloop},\
-	{"win_width",CFG_ENTRY_INT,0,&uinfo -> win_width},\
-	{"win_height",CFG_ENTRY_INT,0,&uinfo -> win_height},\
-	{"win_height_edit",CFG_ENTRY_INT,0,&uinfo -> win_height_edit},\
-	{"win_width_min",CFG_ENTRY_INT,0,&uinfo -> win_width_min},\
-	{"win_height_min",CFG_ENTRY_INT,0,&uinfo -> win_height_min},\
-	{"vol_vis",CFG_ENTRY_BOOL,0,&uinfo -> volvis},\
-	{"track_edit_vis",CFG_ENTRY_BOOL,0,&uinfo -> track_edit_visible},\
-	{"track_prog_vis",CFG_ENTRY_BOOL,0,&uinfo -> track_prog_visible},\
-	{"volume",CFG_ENTRY_INT,0,&ginfo -> volume}, \
-	{"disable_paranoia",CFG_ENTRY_BOOL,0,&ginfo -> disable_paranoia},\
-	{"disable_extra_paranoia",CFG_ENTRY_BOOL,0,&ginfo -> disable_extra_paranoia},\
-	{"disable_scratch_detect",CFG_ENTRY_BOOL,0,&ginfo -> disable_scratch_detect},\
-	{"disable_scratch_repair",CFG_ENTRY_BOOL,0,&ginfo -> disable_scratch_repair},\
-	{"calc_gain",CFG_ENTRY_BOOL,0,&ginfo -> calc_gain},
+static void set_initial_config (GripInfo *ginfo);
 
 
 static gboolean AppWindowStateCB (GtkWidget *widget, GdkEventWindowState *event,
@@ -207,7 +132,7 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
     ginfo -> settings_encoder = g_settings_get_child (ginfo -> settings, "encoder");
     ginfo -> settings_tag = g_settings_get_child (ginfo -> settings, "tag");
     ginfo -> settings_discdb = g_settings_get_child (ginfo -> settings, "discdb");
-    // FIXME: Check for errors
+    ginfo -> settings_proxy = g_settings_get_child (ginfo -> settings, "proxy");
 
 	uinfo = &(ginfo -> gui_info);
 	uinfo -> app = app;
@@ -230,7 +155,7 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 
 //	g_debug ("Using config file [%s]", ginfo -> config_filename);
 
-	DoLoadConfig (ginfo);
+	set_initial_config (ginfo);
 
 	if (device) {
 		g_snprintf (ginfo -> cd_device, 256, "%s", device);
@@ -412,8 +337,6 @@ static void ReallyDie (GtkDialog *dialog, gint reply, gpointer data) {
 	if (!ginfo -> no_interrupt) {
 		CDStop (& (ginfo -> disc));
 	}
-
-	DoSaveConfig (ginfo);
 
 	gtk_main_quit();
 }
@@ -824,7 +747,7 @@ void UnBusy (GripGUI *uinfo) {
 	UpdateGTK();
 }
 
-static void DoLoadConfig (GripInfo *ginfo) {
+static void set_initial_config (GripInfo *ginfo) {
 	GripGUI *uinfo = & (ginfo -> gui_info);
 //	gchar *filename;
 //	char renamefile[256];
@@ -1072,31 +995,6 @@ static void DoLoadConfig (GripInfo *ginfo) {
 			         ginfo -> proxy_server.port);
 		}
 	}
-}
-
-void DoSaveConfig (GripInfo *ginfo) {
-#if 0
-	gchar *filename;
-	GripGUI *uinfo = & (ginfo -> gui_info);
-	CFGEntry cfg_entries[] = {
-		CFG_ENTRIES
-		{"", CFG_ENTRY_LAST, 0, NULL}
-	};
-
-	if (ginfo -> edit_num_cpu > MAX_NUM_CPU) {
-		ginfo -> edit_num_cpu = MAX_NUM_CPU;
-	}
-
-	filename = g_build_filename (g_get_home_dir(), ginfo -> config_filename, NULL);
-
-	if (!SaveConfig (filename, "GRIP", 2, cfg_entries))
-		show_warning (ginfo -> gui_info.app,
-		              _("Error: Unable to save config file."));
-
-	SaveEncoderConfig (ginfo, ginfo -> selected_encoder);
-
-	g_free (filename);
-#endif
 }
 
 /* Shut down stuff (generally before an exec) */
