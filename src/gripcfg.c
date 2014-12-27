@@ -216,7 +216,7 @@ void MakeConfigPage (GripInfo *ginfo) {
 	g_settings_bind (ginfo -> settings_rip, "stop-between-tracks", check, "active", G_SETTINGS_BIND_DEFAULT);
 
 
-		hbox = gtk_hbox_new (FALSE, 2);
+    hbox = gtk_hbox_new (FALSE, 2);
 
 	check = MakeCheckButton (NULL, &ginfo -> disable_paranoia,
 	                         _("Disable paranoia"));
