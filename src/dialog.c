@@ -30,7 +30,7 @@
 void show_warning (GtkWidget *parentWin, char *text) {
 	GtkWidget *dialog = gtk_message_dialog_new (GTK_WINDOW (parentWin),
 	                    GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
-	                    GTK_MESSAGE_WARNING, GTK_BUTTONS_OK,
+	                    GTK_MESSAGE_WARNING, GTK_BUTTONS_OK, "%s",
 	                    text);
 	gtk_window_set_title (GTK_WINDOW (dialog), _ ("Warning"));
 	gtk_dialog_run (GTK_DIALOG (dialog));
@@ -40,7 +40,7 @@ void show_warning (GtkWidget *parentWin, char *text) {
 void show_error (GtkWidget *parentWin, char *text) {
 	GtkWidget *dialog = gtk_message_dialog_new (GTK_WINDOW (parentWin),
 	                    GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
-	                    GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE,
+	                    GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "%s",
 	                    text);
 	gtk_window_set_title (GTK_WINDOW (dialog), _ ("Error"));
 	gtk_dialog_run (GTK_DIALOG (dialog));
