@@ -37,7 +37,7 @@ CHECK_INCLUDE_FILES (sys/vfs.h HAVE_SYS_VFS_H)
 #check_library_exists ("cddb" "cddb_disc_new" "" HAVE_CDDB_LIB)
 
 list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-find_package (CURL)
+find_package (CURL REQUIRED)
 find_package (CDParanoia REQUIRED)
 find_package (FAAC)
 

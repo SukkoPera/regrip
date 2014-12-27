@@ -81,7 +81,6 @@ void MakeRipPage (GripInfo *ginfo) {
 	GtkWidget *hsep;
 	GtkWidget *check;
 	GtkWidget *partial_rip_frame;
-	int mycpu;
 	int label_width;
 	PangoLayout *layout;
 
@@ -221,27 +220,27 @@ void MakeRipPage (GripInfo *ginfo) {
 	gtk_box_pack_start (GTK_BOX (vbox2), hbox, FALSE, FALSE, 0);
 	gtk_widget_show (hbox);
 
-	for (mycpu = 0; mycpu < ginfo -> num_cpu; mycpu++) {
-		hbox = gtk_hbox_new (FALSE, 3);
 
-		uinfo -> mp3_prog_label[mycpu] = gtk_label_new (_("Enc: Idle"));
-		gtk_widget_set_usize (uinfo -> mp3_prog_label[mycpu], label_width, 0);
+    hbox = gtk_hbox_new (FALSE, 3);
 
-		gtk_box_pack_start (GTK_BOX (hbox), uinfo -> mp3_prog_label[mycpu],
-		                    FALSE, FALSE, 0);
-		gtk_widget_show (uinfo -> mp3_prog_label[mycpu]);
+    uinfo -> mp3_prog_label = gtk_label_new (_("Enc: Idle"));
+    gtk_widget_set_usize (uinfo -> mp3_prog_label, label_width, 0);
 
-		uinfo -> mp3progbar[mycpu] = gtk_progress_bar_new();
+    gtk_box_pack_start (GTK_BOX (hbox), uinfo -> mp3_prog_label,
+                        FALSE, FALSE, 0);
+    gtk_widget_show (uinfo -> mp3_prog_label);
 
-		gtk_box_pack_start (GTK_BOX (hbox), uinfo -> mp3progbar[mycpu], FALSE, FALSE, 0);
-		gtk_widget_show (uinfo -> mp3progbar[mycpu]);
+    uinfo -> mp3progbar = gtk_progress_bar_new();
 
-		gtk_box_pack_start (GTK_BOX (vbox2), hbox, FALSE, FALSE, 0);
-		gtk_widget_show (hbox);
-	}
+    gtk_box_pack_start (GTK_BOX (hbox), uinfo -> mp3progbar, FALSE, FALSE, 0);
+    gtk_widget_show (uinfo -> mp3progbar);
+
+    gtk_box_pack_start (GTK_BOX (vbox2), hbox, FALSE, FALSE, 0);
+    gtk_widget_show (hbox);
 
 	gtk_box_pack_start (GTK_BOX (vbox), vbox2, TRUE, TRUE, 0);
 	gtk_widget_show (vbox2);
+
 
 	hsep = gtk_hseparator_new();
 	gtk_box_pack_start (GTK_BOX (vbox), hsep, TRUE, TRUE, 0);
@@ -596,7 +595,6 @@ void KillRip (GtkWidget *widget, gpointer data) {
 
 void KillEncode (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
-	int mycpu;
 
 	ginfo = (GripInfo *)data;
 
@@ -607,14 +605,7 @@ void KillEncode (GtkWidget *widget, gpointer data) {
 	ginfo -> stop_encode = TRUE;
 	ginfo -> all_encsize = 0;
 	ginfo -> all_encdone = 0;
-
-	for (mycpu = 0; mycpu < ginfo -> num_cpu; mycpu++) {
-		if (ginfo -> encoding &(1 << mycpu)) {
-			kill (ginfo -> mp3pid[mycpu], SIGKILL);
-		}
-
-		ginfo -> all_enclast[mycpu] = 0;
-	}
+    ginfo -> all_enclast = 0;
 }
 
 static void ID3Add (GripInfo *ginfo, char *file, EncodeTrack *enc_track) {
@@ -692,7 +683,6 @@ void UpdateRipProgress (GripInfo *ginfo) {
 	struct stat mystat;
 	int quarter;
 	gfloat percent = 0;
-	int mycpu;
 	char buf[PATH_MAX];
 	time_t now;
 	gfloat elapsed = 0;
@@ -841,116 +831,114 @@ void UpdateRipProgress (GripInfo *ginfo) {
 	}
 
 	/* Check if an encode finished */
-	for (mycpu = 0; mycpu < ginfo -> num_cpu; mycpu++) {
-		if (ginfo -> encoding &(1 << mycpu)) {
-			if (stat (ginfo -> mp3file[mycpu], &mystat) >= 0) {
-				percent = (gfloat)mystat.st_size / (gfloat)ginfo -> mp3size[mycpu];
+#if 0
+    if (ginfo -> encoding &(1 << mycpu)) {
+//        if (stat (ginfo -> mp3file, &mystat) >= 0) {
+//            percent = (gfloat)mystat.st_size / (gfloat)ginfo -> mp3size[mycpu];
+//
+//            if (percent > 1.0) {
+//                percent = 1.0;
+//            }
+//        } else {
+//            percent = 0;
+//        }
+//
+//        ginfo -> enc_percent = percent;
+//
+//        gtk_progress_bar_update (GTK_PROGRESS_BAR (uinfo -> mp3progbar[mycpu]),
+//                                 percent);
 
-				if (percent > 1.0) {
-					percent = 1.0;
-				}
-			} else {
-				percent = 0;
-			}
+        now = time (NULL);
+        elapsed = (gfloat)now - (gfloat)ginfo -> mp3_started;
 
-			ginfo -> enc_percent = percent;
-
-			gtk_progress_bar_update (GTK_PROGRESS_BAR (uinfo -> mp3progbar[mycpu]),
-			                         percent);
-
-			now = time (NULL);
-			elapsed = (gfloat)now - (gfloat)ginfo -> mp3_started[mycpu];
-
-            // FIXME
+        // FIXME
 //			if (elapsed < 0.1f) { /* 1/10 sec. */
-				speed = 0.0f;
+            speed = 0.0f;
 //			} else
 //				speed = (gfloat)mystat.st_size /
 //				        ((gfloat)ginfo -> kbits_per_sec * 128.0f * elapsed);
 
-			sprintf (buf, _("Enc: Trk %d (%3.1fx)"),
-			         ginfo -> mp3_enc_track[mycpu] + 1, speed);
+        sprintf (buf, _("Enc: Trk %d (%3.1fx)"),
+                 ginfo -> mp3_enc_track + 1, speed);
 
-			gtk_label_set (GTK_LABEL (uinfo -> mp3_prog_label[mycpu]), buf);
+        gtk_label_set (GTK_LABEL (uinfo -> mp3_prog_label), buf);
 
-			quarter = (int) (percent * 4.0);
+        quarter = (int) (percent * 4.0);
 
-			if (quarter < 4)
-				CopyPixmap (GTK_PIXMAP (uinfo -> mp3_pix[quarter]),
-				            GTK_PIXMAP (uinfo -> mp3_indicator[mycpu]));
+        if (quarter < 4)
+            CopyPixmap (GTK_PIXMAP (uinfo -> mp3_pix[quarter]),
+                        GTK_PIXMAP (uinfo -> mp3_indicator));
 
-			if (!ginfo -> rip_partial && !ginfo -> stop_encode &&
-			        now != ginfo -> mp3_started[mycpu]) {
-				ginfo -> all_encdone += mystat.st_size - ginfo -> all_enclast[mycpu];
-				ginfo -> all_enclast[mycpu] = mystat.st_size;
-				percent = (gfloat) (ginfo -> all_encdone) / (gfloat) (ginfo -> all_encsize);
+        if (!ginfo -> rip_partial && !ginfo -> stop_encode &&
+                now != ginfo -> mp3_started) {
+            ginfo -> all_encdone += mystat.st_size - ginfo -> all_enclast;
+            ginfo -> all_enclast[mycpu] = mystat.st_size;
+            percent = (gfloat) (ginfo -> all_encdone) / (gfloat) (ginfo -> all_encsize);
 
-				if (percent > 1.0) {
-					percent = 1.0;
-				}
+            if (percent > 1.0) {
+                percent = 1.0;
+            }
 
-				ginfo -> enc_tot_percent = percent;
-				sprintf (buf, _("Enc: %6.2f%%"), percent * 100.0);
-				gtk_label_set (GTK_LABEL (uinfo -> all_enc_label), buf);
-				gtk_progress_bar_update (GTK_PROGRESS_BAR (uinfo -> all_encprogbar),
-				                         percent);
-			}
+            ginfo -> enc_tot_percent = percent;
+            sprintf (buf, _("Enc: %6.2f%%"), percent * 100.0);
+            gtk_label_set (GTK_LABEL (uinfo -> all_enc_label), buf);
+            gtk_progress_bar_update (GTK_PROGRESS_BAR (uinfo -> all_encprogbar),
+                                     percent);
+        }
 
-			if (waitpid (ginfo -> mp3pid[mycpu], NULL, WNOHANG)) {
-				waitpid (ginfo -> mp3pid[mycpu], NULL, 0);
-				ginfo -> encoding &= ~ (1 << mycpu);
+        if (waitpid (ginfo -> mp3pid[mycpu], NULL, WNOHANG)) {
+            waitpid (ginfo -> mp3pid[mycpu], NULL, 0);
+            ginfo -> encoding &= ~ (1 << mycpu);
 
-				LogStatus (ginfo, _("Finished encoding on cpu %d\n"), mycpu);
-				ginfo -> all_enclast[mycpu] = 0;
-				gtk_progress_bar_update (GTK_PROGRESS_BAR (uinfo -> mp3progbar[mycpu]),
-				                         0.0);
-				CopyPixmap (GTK_PIXMAP (uinfo -> empty_image),
-				            GTK_PIXMAP (uinfo -> mp3_indicator[mycpu]));
+            LogStatus (ginfo, _("Finished encoding on cpu %d\n"), mycpu);
+            ginfo -> all_enclast[mycpu] = 0;
+            gtk_progress_bar_update (GTK_PROGRESS_BAR (uinfo -> mp3progbar[mycpu]),
+                                     0.0);
+            CopyPixmap (GTK_PIXMAP (uinfo -> empty_image),
+                        GTK_PIXMAP (uinfo -> mp3_indicator[mycpu]));
 
-				if (!ginfo -> stop_encode) {
-					if (ginfo -> doid3)
-						ID3Add (ginfo, ginfo -> mp3file[mycpu],
-						        ginfo -> encoded_track[mycpu]);
+            if (!ginfo -> stop_encode) {
+                if (ginfo -> doid3)
+                    ID3Add (ginfo, ginfo -> mp3file[mycpu],
+                            ginfo -> encoded_track[mycpu]);
 
-					if (*ginfo -> mp3_filter_cmd)
-						TranslateAndLaunch (ginfo -> mp3_filter_cmd, TranslateSwitch,
-						                    ginfo -> encoded_track[mycpu], FALSE,
-						                    &(ginfo -> sprefs), CloseStuff, (void *)ginfo);
+                if (*ginfo -> mp3_filter_cmd)
+                    TranslateAndLaunch (ginfo -> mp3_filter_cmd, TranslateSwitch,
+                                        ginfo -> encoded_track[mycpu], FALSE,
+                                        &(ginfo -> sprefs), CloseStuff, (void *)ginfo);
 
 
-					if (ginfo -> ripping_a_disc && !ginfo -> rip_partial &&
-					        !ginfo -> ripping) {
-						if (RipNextTrack (ginfo)) {
+                if (ginfo -> ripping_a_disc && !ginfo -> rip_partial &&
+                        !ginfo -> ripping) {
+                    if (RipNextTrack (ginfo)) {
 //							ginfo -> doencode = TRUE;
-						} else {
-							RipIsFinished (ginfo, FALSE);
-						}
-					}
+                    } else {
+                        RipIsFinished (ginfo, FALSE);
+                    }
+                }
 
-					g_free (ginfo -> encoded_track[mycpu]);
+                g_free (ginfo -> encoded_track[mycpu]);
 
 //					if (!ginfo -> rip_partial && ginfo -> encode_list) {
 //						MP3Encode (ginfo);
 //					}
-				} else {
-					ginfo -> stop_encode = FALSE;
-				}
+            } else {
+                ginfo -> stop_encode = FALSE;
+            }
 
-				if (! (ginfo -> encoding &(1 << mycpu))) {
-					gtk_label_set (GTK_LABEL (uinfo -> mp3_prog_label[mycpu]),
-					               _("Enc: Idle"));
-				}
-			}
-		}
-	}
+            if (! (ginfo -> encoding &(1 << mycpu))) {
+                gtk_label_set (GTK_LABEL (uinfo -> mp3_prog_label[mycpu]),
+                               _("Enc: Idle"));
+            }
+        }
+    }
+#endif
 
-	/* Check if we have any encoding process (now or in future) */
-	for (mycpu = 0; mycpu < ginfo -> num_cpu; ++mycpu) {
-		if (ginfo -> encoding &(1 << mycpu)) {
-			result = TRUE;
-			break;
-		}
-	}
+    /* Check if we have any encoding process (now or in future) */
+    if (ginfo -> encoding) {
+        result = TRUE;
+//        break;
+    }
 
 	if ((!result || ginfo -> stop_encode) && !ginfo -> ripping) {
 		gtk_label_set (GTK_LABEL (uinfo -> all_enc_label), _("Enc: Idle"));
@@ -1707,7 +1695,6 @@ static gboolean MP3Encode (GripInfo *ginfo) {
 #endif
 
 void CalculateAll (GripInfo *ginfo) {
-	int cpu;
 	int track;
 	GripGUI *uinfo;
 
@@ -1724,9 +1711,7 @@ void CalculateAll (GripInfo *ginfo) {
 		ginfo -> all_encsize = 0;
 		ginfo -> all_encdone = 0;
 
-		for (cpu = 0; cpu < ginfo -> num_cpu; ++cpu) {
-			ginfo -> all_enclast[cpu] = 0;
-		}
+        ginfo -> all_enclast = 0;
 	}
 
 	if (ginfo -> rip_partial) {

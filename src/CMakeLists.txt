@@ -66,7 +66,7 @@ set (
     -lm
 )
 
-if (${SNDFILE_FOUND})
+if (SNDFILE_FOUND)
     set (
         regrip_src
         ${regrip_src}
@@ -86,9 +86,9 @@ if (${SNDFILE_FOUND})
         ${libraries}
         ${SNDFILE_LIBRARIES}
     )
-endif (${SNDFILE_FOUND})
+endif (SNDFILE_FOUND)
 
-if (${FAAC_FOUND})
+if (FAAC_FOUND)
     set (
         encoder_faac_src
         encoder_faac.c
@@ -134,9 +134,9 @@ if (${FAAC_FOUND})
         faactest
         PUBLIC -DTESTENC=faac
     )
-endif (${FAAC_FOUND})
+endif (FAAC_FOUND)
 
-if (${OPUS_FOUND} AND ${OGG_FOUND} AND ${SAMPLERATE_FOUND})
+if (OPUS_FOUND AND OGG_FOUND AND SAMPLERATE_FOUND)
     set (
         encoder_opus_src
 
@@ -191,7 +191,7 @@ if (${OPUS_FOUND} AND ${OGG_FOUND} AND ${SAMPLERATE_FOUND})
         opustest
         PUBLIC -DTESTENC=opus
     )
-endif (${OPUS_FOUND} AND ${OGG_FOUND} AND ${SAMPLERATE_FOUND})
+endif (OPUS_FOUND AND OGG_FOUND AND SAMPLERATE_FOUND)
 
 #if (${CDDB_FOUND})
 #    set (includes ${includes} ${CDDB_INCLUDES})

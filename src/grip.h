@@ -35,8 +35,6 @@
 
 //#define MIN_WINHEIGHT 80
 
-#define MAX_NUM_CPU 16
-
 #define RRand(range) (random()%(range))
 
 #if defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__osf__)  /* __osf__ ?? */
@@ -78,7 +76,7 @@ typedef struct _grip_gui {
 	GtkWidget *play_time_label;
 	GtkWidget *rip_indicator;
 	GtkWidget *lcd_smile_indicator;
-	GtkWidget *mp3_indicator[MAX_NUM_CPU];
+	GtkWidget *mp3_indicator;
 	GtkWidget *discdb_indicator;
 	GtkWidget *control_button_box;
 	GtkWidget *controls;
@@ -116,8 +114,8 @@ typedef struct _grip_gui {
 	GtkWidget *rip_prog_label;
 	GtkWidget *ripprogbar;
 	GtkWidget *smile_indicator;
-	GtkWidget *mp3_prog_label[MAX_NUM_CPU];
-	GtkWidget *mp3progbar[MAX_NUM_CPU];
+	GtkWidget *mp3_prog_label;
+	GtkWidget *mp3progbar;
 
 	GtkWidget *start_sector_entry;
 	GtkWidget *end_sector_entry;
@@ -239,7 +237,6 @@ typedef struct _grip_info {
 
 	int curr_pipe_fd;
 
-	int num_cpu;
 	gboolean ripping;
 	gboolean encoding;
 	gboolean stop_rip;
@@ -255,15 +252,15 @@ typedef struct _grip_info {
 	int start_sector;
 	int end_sector;
 //	gboolean doencode;
-	int mp3pid[MAX_NUM_CPU];
-	char mp3file[MAX_NUM_CPU][PATH_MAX];
+/*
+	char mp3file[PATH_MAX];
 	int mp3size[MAX_NUM_CPU];
-	int mp3_started[MAX_NUM_CPU];
+	int mp3_started;
 	int mp3_enc_track[MAX_NUM_CPU];
-	char rip_delete_file[MAX_NUM_CPU][PATH_MAX];
+	char rip_delete_file[MAX_NUM_CPU][PATH_MAX];*/
 	double track_gain_adjustment;
 	double disc_gain_adjustment;
-	struct _encode_track *encoded_track[MAX_NUM_CPU];
+	struct _encode_track *encoded_track;
 //	GList *encode_list;
 //	GList *pending_list;
 //  gboolean delayed_encoding;
@@ -330,7 +327,7 @@ typedef struct _grip_info {
 	size_t all_riplast;
 	size_t all_encsize;
 	size_t all_encdone;
-	size_t all_enclast[MAX_NUM_CPU];
+	size_t all_enclast;
 
 	// App settings
 	GSettings *settings;

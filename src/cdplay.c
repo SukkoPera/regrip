@@ -737,7 +737,6 @@ GtkWidget *MakeControls(GripInfo *ginfo)
   GtkWidget *button;
   GtkWidget *ebox,*lcdbox;
   GtkObject *adj;
-  int mycpu;
 
   uinfo=&(ginfo->gui_info);
 
@@ -803,12 +802,10 @@ GtkWidget *MakeControls(GripInfo *ginfo)
 		     TRUE,TRUE,0);
   gtk_widget_show(uinfo->lcd_smile_indicator);
 
-  for(mycpu=0;mycpu<ginfo->num_cpu;mycpu++){
-    uinfo->mp3_indicator[mycpu]=NewBlankPixmap(GTK_WIDGET(uinfo->app));
-    gtk_box_pack_start(GTK_BOX(indicator_box),
-		       uinfo->mp3_indicator[mycpu],TRUE,TRUE,0);
-    gtk_widget_show(uinfo->mp3_indicator[mycpu]);
-  }
+  uinfo->mp3_indicator=NewBlankPixmap(GTK_WIDGET(uinfo->app));
+  gtk_box_pack_start(GTK_BOX(indicator_box),
+       uinfo->mp3_indicator,TRUE,TRUE,0);
+  gtk_widget_show(uinfo->mp3_indicator);
 
   uinfo->discdb_indicator=NewBlankPixmap(GTK_WIDGET(uinfo->app));
   gtk_box_pack_start(GTK_BOX(indicator_box),uinfo->discdb_indicator,

@@ -921,7 +921,6 @@ static void DoLoadConfig (GripInfo *ginfo) {
 
 	ginfo -> curr_pipe_fd = -1;
 
-	ginfo -> num_cpu = 1;
 	ginfo -> ripping = FALSE;
 	ginfo -> ripping_a_disc = FALSE;
 	ginfo -> encoding = FALSE;
