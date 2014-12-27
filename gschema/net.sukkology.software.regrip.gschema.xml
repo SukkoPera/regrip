@@ -29,11 +29,12 @@
       <description>Shows an icon for Regrip in the tray</description>
     </key>
 
-    <child name="cddb" schema="net.sukkology.software.regrip.cddb" />
     <child name="cdplay" schema="net.sukkology.software.regrip.cdplay" />
     <child name="cdparanoia" schema="net.sukkology.software.regrip.cdparanoia" />
     <child name="rip" schema="net.sukkology.software.regrip.rip" />
     <child name="encoder" schema="net.sukkology.software.regrip.encoder" />
+    <child name="tag" schema="net.sukkology.software.regrip.tag" />
+    <child name="discdb" schema="net.sukkology.software.regrip.discdb" />
   </schema>
 
   <schema id="net.sukkology.software.regrip.cdplay" path="/net/sukkology/software/regrip/cdplay/">
@@ -78,22 +79,6 @@
       <summary>Poll interval (seconds)</summary>
       <description></description>
     </key>
-  </schema>
-
-  <schema id="net.sukkology.software.regrip.cddb" path="/net/sukkology/software/regrip/cddb/">
-	<key type="b" name="automatic-discdb">
-      <default>true</default>
-      <summary>Query CDDB automatically</summary>
-    </key>
-	<!--
-	{"use-proxy",CFG-ENTRY-BOOL,0,&ginfo->use-proxy},\
-	{"proxy-name",CFG-ENTRY-STRING,256,ginfo->proxy-server.name},\
-	{"proxy-port",CFG-ENTRY-INT,0,&(ginfo->proxy-server.port)},\
-	{"proxy-user",CFG-ENTRY-STRING,80,ginfo->proxy-server.username},\
-	{"proxy-pswd",CFG-ENTRY-STRING,80,ginfo->proxy-server.pswd},\
-	{"cdupdate",CFG-ENTRY-STRING,256,ginfo->cdupdate},\
-	{"user-email",CFG-ENTRY-STRING,256,ginfo->user-email},\
-	-->
   </schema>
 
   <schema id="net.sukkology.software.regrip.cdparanoia" path="/net/sukkology/software/regrip/cdparanoia/">
@@ -197,34 +182,53 @@
       <summary>Encode filter command</summary>
       <description></description>
     </key>
-    </schema>
+  </schema>
+
+  <schema id="net.sukkology.software.regrip.tag" path="/net/sukkology/software/regrip/tag/">
+    <key type="b" name="add-tags">
+      <default>true</default>
+      <summary>Add tags to encoded files</summary>
+    </key>
+    <key type="s" name="comment-field">
+      <default>'Ripped with Regrip'</default>
+      <summary>Comment field</summary>
+    </key>
+  </schema>
+
+  <schema id="net.sukkology.software.regrip.discdb" path="/net/sukkology/software/regrip/discdb/">
+    <key type="b" name="automatic-discdb">
+      <default>true</default>
+      <summary>QPerform disc lookups automatically</summary>
+    </key>
+	<!--
+	{"use-proxy",CFG-ENTRY-BOOL,0,&ginfo->use-proxy},\
+	{"proxy-name",CFG-ENTRY-STRING,256,ginfo->proxy-server.name},\
+	{"proxy-port",CFG-ENTRY-INT,0,&(ginfo->proxy-server.port)},\
+	{"proxy-user",CFG-ENTRY-STRING,80,ginfo->proxy-server.username},\
+	{"proxy-pswd",CFG-ENTRY-STRING,80,ginfo->proxy-server.pswd},\
+	{"cdupdate",CFG-ENTRY-STRING,256,ginfo->cdupdate},\
+	{"user-email",CFG-ENTRY-STRING,256,ginfo->user-email},\
+	-->
+    <key type="s" name="server-url">
+      <default>'http://freedb.freedb.org/~cddb/cddb.cgi'</default>
+      <summary>DiscDB server URL</summary>
+    </key>
+    <key type="s" name="discdb-submit-email">
+      <default>'freedb-submit@freedb.org'</default>
+      <summary>DB Submit email</summary>
+    </key>
+  </schema>
 </schemalist>
 
 <!--
 {"dbserver",CFG-ENTRY-STRING,256,ginfo->dbserver.name},\
 ?{"ripfileformat",CFG-ENTRY-STRING,256,ginfo->ripfileformat},\
-{"m3ufileformat",CFG-ENTRY-STRING,256,ginfo->m3ufileformat},\
-{"add-m3u",CFG-ENTRY-BOOL,0,&ginfo->add-m3u},\
-{"rel-m3u",CFG-ENTRY-BOOL,0,&ginfo->rel-m3u},\
-{"ripnice",CFG-ENTRY-INT,0,&ginfo->ripnice},\
-*{"mp3-filter-cmd",CFG-ENTRY-STRING,256,ginfo->mp3-filter-cmd},\
-{"doid3",CFG-ENTRY-BOOL,0,&ginfo->doid3},\
-{"doid3v2",CFG-ENTRY-BOOL,0,&ginfo->doid3v2},\
-*{"tag-mp3-only",CFG-ENTRY-BOOL,0,&ginfo->tag-mp3-only},\
-{"id3-comment",CFG-ENTRY-STRING,30,ginfo->id3-comment},\
 **{"use-proxy-env",CFG-ENTRY-BOOL,0,&ginfo->use-proxy-env},\
-*{"db-cgi",CFG-ENTRY-STRING,256,ginfo->dbserver.cgi-prog},\
-{"cddb-submit-email",CFG-ENTRY-STRING,256,ginfo->discdb-submit-email},\
-*{"discdb-encoding",CFG-ENTRY-STRING,16,ginfo->discdb-encoding},\
-{"id3-encoding",CFG-ENTRY-STRING,16,ginfo->id3-encoding},\
-{"id3v2-encoding",CFG-ENTRY-STRING,16,ginfo->id3v2-encoding},\
-{"db-use-freedb",CFG-ENTRY-BOOL,0,&ginfo->db-use-freedb},\
 {"no-lower-case",CFG-ENTRY-BOOL,0,&ginfo->sprefs.no-lower-case},\
 {"no-underscore",CFG-ENTRY-BOOL,0,&ginfo->sprefs.no-underscore},\
 {"allow-high-bits",CFG-ENTRY-BOOL,0,&ginfo->sprefs.allow-high-bits},\
 {"escape",CFG-ENTRY-BOOL,0,&ginfo->sprefs.escape},\
 {"allow-these-chars",CFG-ENTRY-STRING,256,ginfo->sprefs.allow-these-chars},\
-{"kbits-per-sec",CFG-ENTRY-INT,0,&ginfo->kbits-per-sec},\
 {"play-mode",CFG-ENTRY-INT,0,&ginfo->play-mode},\
 {"playloop",CFG-ENTRY-BOOL,0,&ginfo->playloop},\
 {"vol-vis",CFG-ENTRY-BOOL,0,&uinfo->volvis},\

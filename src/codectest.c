@@ -44,7 +44,7 @@ int main () {
 	g_message ("channels = %d", info.channels);
 //	g_message ("num_items=%d", num_items);
 
-    supported_encoder *encoder = &ENCODER_STRUCT(TESTENC);
+    supported_encoder *encoder = &ENCODER_STRUCT (TESTENC);
 //    supported_encoder *encoder = &faac_encoder;
     supported_format *fmt = &(encoder -> supported_formats[0]);
 

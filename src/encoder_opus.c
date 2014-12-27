@@ -146,7 +146,6 @@ void comment_add (char **comments, int *length, char *tag, char *val) {
 	int len = (*length) + 4 + tag_len + val_len;
 
 	p = (char *) realloc (p, len);
-
 	if (p == NULL) {
 		fprintf (stderr, "realloc failed in comment_add()\n");
 		exit (1);
@@ -363,7 +362,7 @@ static gpointer encoder_opus_init (gpointer *fmt, gchar *filename,
 	encoder_opus_data *eod = g_new0 (encoder_opus_data, 1);
 
 	eod -> settings =
-	    g_settings_new ("net.sukkology.software.regrip.encoders.opus");
+	    g_settings_new ("net.sukkology.software.regrip.encoder.opus");
 
 	// Init SRC
 	eod -> src = src_new (SRC_SINC_MEDIUM_QUALITY, channels, &ierror);

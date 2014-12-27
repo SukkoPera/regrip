@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist>
-  <enum id="net.sukkology.software.regrip.encoders.opus.encmode">
+  <enum id="net.sukkology.software.regrip.encoder.opus.encmode">
     <value nick="Variable Bitrate" value="1"/>
     <value nick="Constant Bitrate" value="2"/>
     <value nick="Constrained Bitrate" value="3"/>
   </enum>
-  <enum id="net.sukkology.software.regrip.encoders.opus.sampling-frequency">
+  <enum id="net.sukkology.software.regrip.encoder.opus.sampling-frequency">
     <value nick="48000" value="48000"/>
     <value nick="24000" value="24000"/>
     <value nick="16000" value="16000"/>
     <value nick="12000" value="12000"/>
     <value nick="8000" value="8000"/>
   </enum>
-  <enum id="net.sukkology.software.regrip.encoders.opus.framesize">
+  <enum id="net.sukkology.software.regrip.encoder.opus.framesize">
     <value nick="2.5 ms" value="25"/>
     <value nick="5 ms" value="50"/>
     <value nick="10 ms" value="100"/>
@@ -21,8 +21,8 @@
     <value nick="60 ms" value="600"/>
   </enum>
 
-  <schema id="net.sukkology.software.regrip.encoders.opus" path="/net/sukkology/software/regrip/encoders/opus/">
-    <key enum="net.sukkology.software.regrip.encoders.opus.sampling-frequency" name="sampling-frequency">
+  <schema id="net.sukkology.software.regrip.encoder.opus" path="/net/sukkology/software/regrip/encoder/opus/">
+    <key enum="net.sukkology.software.regrip.encoder.opus.sampling-frequency" name="sampling-frequency">
       <default>'24000'</default>
       <description>Target sampling frequency in Hz</description>
     </key>
@@ -35,7 +35,7 @@
       <default>128</default>
       <description>Target bitrate per channel in kbit/sec (ignored if auto-bitrate is set to true)</description>
     </key>
-	<key enum="net.sukkology.software.regrip.encoders.opus.encmode" name="encoding-mode">
+	<key enum="net.sukkology.software.regrip.encoder.opus.encmode" name="encoding-mode">
 	  <default>'Variable Bitrate'</default>
 	</key>
     <!--
@@ -57,7 +57,7 @@
       <default>10</default>
       <description>Encoding complexity (10 is slowest)</description>
     </key>
-    <key enum="net.sukkology.software.regrip.encoders.opus.framesize" name="framesize">
+    <key enum="net.sukkology.software.regrip.encoder.opus.framesize" name="framesize">
       <default>'20 ms'</default>
       <description>Maximum frame size in milliseconds</description>
     </key>

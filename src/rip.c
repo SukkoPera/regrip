@@ -620,9 +620,10 @@ void KillEncode (GtkWidget *widget, gpointer data) {
 static void ID3Add (GripInfo *ginfo, char *file, EncodeTrack *enc_track) {
 	char year[5];
 	GString *comment;
-	int len;
+//	int len;
 
 	/* If we only want to tag mp3 files, look for the correct extension */
+#if 0
 	if (ginfo -> tag_mp3_only) {
 		len = strlen (file);
 
@@ -630,6 +631,7 @@ static void ID3Add (GripInfo *ginfo, char *file, EncodeTrack *enc_track) {
 			return;
 		}
 	}
+#endif
 
 	comment = g_string_new (NULL);
 	TranslateString (ginfo -> id3_comment, comment, TranslateSwitch, enc_track,
@@ -906,7 +908,7 @@ void UpdateRipProgress (GripInfo *ginfo) {
 				            GTK_PIXMAP (uinfo -> mp3_indicator[mycpu]));
 
 				if (!ginfo -> stop_encode) {
-					if (ginfo -> doid3 || ginfo -> doid3v2)
+					if (ginfo -> doid3)
 						ID3Add (ginfo, ginfo -> mp3file[mycpu],
 						        ginfo -> encoded_track[mycpu]);
 
@@ -919,7 +921,7 @@ void UpdateRipProgress (GripInfo *ginfo) {
 					if (ginfo -> ripping_a_disc && !ginfo -> rip_partial &&
 					        !ginfo -> ripping) {
 						if (RipNextTrack (ginfo)) {
-							ginfo -> doencode = TRUE;
+//							ginfo -> doencode = TRUE;
 						} else {
 							RipIsFinished (ginfo, FALSE);
 						}
@@ -1194,20 +1196,20 @@ void DoRipEncode (GtkWidget *widget, gpointer data) {
 
 void DoRip (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
-	gboolean result;
+//	gboolean result;
 
 	ginfo = (GripInfo *)data;
 
 	if (!ginfo -> have_disc) {
 		show_warning (ginfo -> gui_info.app,
-		              _("No disc was detected in the drive. If you have a disc in your drive, please check your CDRom device setting under Config -> CD."));
+		              _("No disc was detected in the drive. If you have a disc in your drive, please check your CD-Rom device setting under Config -> CD."));
 		return;
 	}
 
 //	if (widget) {
 //		ginfo -> doencode = FALSE;
 //	} else {
-		ginfo -> doencode = TRUE;
+//		ginfo -> doencode = TRUE;
 //	}
 
 //	if (ginfo -> doencode && !FileExists (ginfo -> mp3exename)) {
@@ -1225,7 +1227,7 @@ void DoRip (GtkWidget *widget, gpointer data) {
 	CDCloseDevice (&(ginfo -> disc));
 
 	if (ginfo -> ripping) {
-		ginfo -> doencode = FALSE;
+//		ginfo -> doencode = FALSE;
 		return;
 	}
 
@@ -1266,11 +1268,10 @@ void DoRip (GtkWidget *widget, gpointer data) {
 
 	CalculateAll (ginfo);
 
-	result = RipNextTrack (ginfo);
-
-	if (!result) {
-		ginfo -> doencode = FALSE;
-	}
+	/*result = */RipNextTrack (ginfo);
+//	if (!result) {
+//		ginfo -> doencode = FALSE;
+//	}
 }
 
 static void RipWholeCD (GtkDialog *dialog, gint reply, gpointer data) {
@@ -1289,11 +1290,11 @@ static void RipWholeCD (GtkDialog *dialog, gint reply, gpointer data) {
 		SetChecked (&(ginfo -> gui_info), track, TRUE);
 	}
 
-	if (ginfo -> doencode) {
+//	if (ginfo -> doencode) {
 		DoRip (NULL, (gpointer)ginfo);
-	} else {
-		DoRip ((GtkWidget *)1, (gpointer)ginfo);
-	}
+//	} else {
+//		DoRip ((GtkWidget *)1, (gpointer)ginfo);
+//	}
 }
 
 static int NextTrackToRip (GripInfo *ginfo) {

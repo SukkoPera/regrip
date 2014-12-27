@@ -415,27 +415,33 @@ void MakeConfigPage (GripInfo *ginfo) {
 	gtk_container_border_width (GTK_CONTAINER (vbox), 3);
 
 	check = MakeCheckButton (NULL, &ginfo -> doid3,
-	                         _("Add ID3 tags to encoded files"));
+	                         _("Add tags to encoded files"));
 	gtk_box_pack_start (GTK_BOX (vbox), check, FALSE, FALSE, 0);
 	gtk_widget_show (check);
+	g_settings_bind (ginfo -> settings_tag, "add-tags", check, "active", G_SETTINGS_BIND_DEFAULT);
 
-#ifdef HAVE_ID3V2
+//#ifdef HAVE_ID3V2
+#if 0
 	check = MakeCheckButton (NULL, &ginfo -> doid3v2,
 	                         _("Add ID3v2 tags to encoded files"));
 	gtk_box_pack_start (GTK_BOX (vbox), check, FALSE, FALSE, 0);
 	gtk_widget_show (check);
 #endif
 
+    /* We'll tag all files, thanks to TagLib
 	check = MakeCheckButton (NULL, &ginfo -> tag_mp3_only,
 	                         _("Only tag files ending in '.mp3'"));
 	gtk_box_pack_start (GTK_BOX (vbox), check, FALSE, FALSE, 0);
 	gtk_widget_show (check);
+	*/
 
-	entry = MakeStrEntry (NULL, ginfo -> id3_comment, _("ID3 comment field"), 29,
+	hbox = MakeStrEntry (&entry, ginfo -> id3_comment, _("Comment field"), 29,
 	                      TRUE);
-	gtk_box_pack_start (GTK_BOX (vbox), entry, FALSE, FALSE, 0);
-	gtk_widget_show (entry);
+	gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
+	gtk_widget_show (hbox);
+	g_settings_bind (ginfo -> settings_tag, "comment-field", entry, "text", G_SETTINGS_BIND_DEFAULT);
 
+	/* We'll see later if we need this
 	entry = MakeStrEntry (NULL, ginfo -> id3_encoding,
 	                      _("ID3v1 Character set encoding"), 16, TRUE);
 	gtk_box_pack_start (GTK_BOX (vbox), entry, FALSE, FALSE, 0);
@@ -447,8 +453,9 @@ void MakeConfigPage (GripInfo *ginfo) {
 	gtk_box_pack_start (GTK_BOX (vbox), entry, FALSE, FALSE, 0);
 	gtk_widget_show (entry);
 #endif
+    */
 
-	label = gtk_label_new (_("ID3"));
+	label = gtk_label_new (_("Tag"));
 	gtk_notebook_append_page (GTK_NOTEBOOK (config_notebook), vbox, label);
 	gtk_widget_show (vbox);
 #endif
@@ -461,15 +468,24 @@ void MakeConfigPage (GripInfo *ginfo) {
 	dbvbox = gtk_vbox_new (FALSE, 4);
 	gtk_container_border_width (GTK_CONTAINER (dbvbox), 3);
 
-	entry = MakeStrEntry (NULL, ginfo -> dbserver.name, _("DB server"), 255, TRUE);
-	gtk_box_pack_start (GTK_BOX (dbvbox), entry, FALSE, FALSE, 0);
-	gtk_widget_show (entry);
+    check = MakeCheckButton (NULL, &ginfo -> automatic_discdb,
+	                         _("Perform disc lookups automatically"));
+	gtk_box_pack_start (GTK_BOX (dbvbox), check, FALSE, FALSE, 0);
+	gtk_widget_show (check);
+	g_settings_bind (ginfo -> settings_discdb, "automatic-discdb", check, "active", G_SETTINGS_BIND_DEFAULT);
 
-	entry = MakeStrEntry (NULL, ginfo -> discdb_submit_email,
+	hbox = MakeStrEntry (&entry, ginfo -> dbserver.name, _("DiscDB server URL"), 255, TRUE);
+	gtk_box_pack_start (GTK_BOX (dbvbox), hbox, FALSE, FALSE, 0);
+	gtk_widget_show (hbox);
+	g_settings_bind (ginfo -> settings_discdb, "server-url", entry, "text", G_SETTINGS_BIND_DEFAULT);
+
+	hbox = MakeStrEntry (&entry, ginfo -> discdb_submit_email,
 	                      _("DB Submit email"), 255, TRUE);
-	gtk_box_pack_start (GTK_BOX (dbvbox), entry, FALSE, FALSE, 0);
-	gtk_widget_show (entry);
+	gtk_box_pack_start (GTK_BOX (dbvbox), hbox, FALSE, FALSE, 0);
+	gtk_widget_show (hbox);
+	g_settings_bind (ginfo -> settings_discdb, "discdb-submit-email", entry, "text", G_SETTINGS_BIND_DEFAULT);
 
+	/* We'll see later if we need this
 	entry = MakeStrEntry (NULL, ginfo -> discdb_encoding,
 	                      _("DB Character set encoding"), 16, TRUE);
 	gtk_box_pack_start (GTK_BOX (dbvbox), entry, FALSE, FALSE, 0);
@@ -479,12 +495,8 @@ void MakeConfigPage (GripInfo *ginfo) {
 	                         _("Use freedb extensions"));
 	gtk_box_pack_start (GTK_BOX (dbvbox), check, FALSE, FALSE, 0);
 	gtk_widget_show (check);
+	*/
 
-	check = MakeCheckButton (NULL, &ginfo -> automatic_discdb,
-	                         _("Perform disc lookups automatically"));
-	gtk_box_pack_start (GTK_BOX (dbvbox), check, FALSE, FALSE, 0);
-	gtk_widget_show (check);
-	g_settings_bind (ginfo -> settings_cddb, "automatic-discdb", check, "active", G_SETTINGS_BIND_DEFAULT);
 
 	label = gtk_label_new (_("DiscDB"));
 	gtk_notebook_append_page (GTK_NOTEBOOK (config_notebook), dbvbox, label);

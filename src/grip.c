@@ -204,9 +204,10 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
     ginfo -> settings = g_settings_new ("net.sukkology.software.regrip");
     ginfo -> settings_cdplay = g_settings_get_child (ginfo -> settings, "cdplay");
     ginfo -> settings_cdparanoia = g_settings_get_child (ginfo -> settings, "cdparanoia");
-    ginfo -> settings_cddb = g_settings_get_child (ginfo -> settings, "cddb");
     ginfo -> settings_rip = g_settings_get_child (ginfo -> settings, "rip");
     ginfo -> settings_encoder = g_settings_get_child (ginfo -> settings, "encoder");
+    ginfo -> settings_tag = g_settings_get_child (ginfo -> settings, "tag");
+    ginfo -> settings_discdb = g_settings_get_child (ginfo -> settings, "discdb");
     // FIXME: Check for errors
 
 	uinfo = &(ginfo -> gui_info);
@@ -579,37 +580,37 @@ static void MakeHelpPage (GripInfo *ginfo) {
 
 	button = gtk_button_new_with_label (_("Playing CDs"));
 	gtk_signal_connect (GTK_OBJECT (button), "clicked",
-	                    GTK_SIGNAL_FUNC (DoHelp), (gpointer)"cdplayer");
+	                    GTK_SIGNAL_FUNC (DoHelp), (gpointer) "cdplayer");
 	gtk_box_pack_start (GTK_BOX (vbox), button, FALSE, FALSE, 0);
 	gtk_widget_show (button);
 
 	button = gtk_button_new_with_label (_("Ripping CDs"));
 	gtk_signal_connect (GTK_OBJECT (button), "clicked",
-	                    GTK_SIGNAL_FUNC (DoHelp), (gpointer)"ripping");
+	                    GTK_SIGNAL_FUNC (DoHelp), (gpointer) "ripping");
 	gtk_box_pack_start (GTK_BOX (vbox), button, FALSE, FALSE, 0);
 	gtk_widget_show (button);
 
 	button = gtk_button_new_with_label (_("Configuring Grip"));
 	gtk_signal_connect (GTK_OBJECT (button), "clicked",
-	                    GTK_SIGNAL_FUNC (DoHelp), (gpointer)"configure");
+	                    GTK_SIGNAL_FUNC (DoHelp), (gpointer) "configure");
 	gtk_box_pack_start (GTK_BOX (vbox), button, FALSE, FALSE, 0);
 	gtk_widget_show (button);
 
 	button = gtk_button_new_with_label (_("FAQ"));
 	gtk_signal_connect (GTK_OBJECT (button), "clicked",
-	                    GTK_SIGNAL_FUNC (DoHelp), (gpointer)"faq");
+	                    GTK_SIGNAL_FUNC (DoHelp), (gpointer) "faq");
 	gtk_box_pack_start (GTK_BOX (vbox), button, FALSE, FALSE, 0);
 	gtk_widget_show (button);
 
 	button = gtk_button_new_with_label (_("Getting More Help"));
 	gtk_signal_connect (GTK_OBJECT (button), "clicked",
-	                    GTK_SIGNAL_FUNC (DoHelp), (gpointer)"morehelp");
+	                    GTK_SIGNAL_FUNC (DoHelp), (gpointer) "morehelp");
 	gtk_box_pack_start (GTK_BOX (vbox), button, FALSE, FALSE, 0);
 	gtk_widget_show (button);
 
 	button = gtk_button_new_with_label (_("Reporting Bugs"));
 	gtk_signal_connect (GTK_OBJECT (button), "clicked",
-	                    GTK_SIGNAL_FUNC (DoHelp), (gpointer)"bugs");
+	                    GTK_SIGNAL_FUNC (DoHelp), (gpointer) "bugs");
 	gtk_box_pack_start (GTK_BOX (vbox), button, FALSE, FALSE, 0);
 	gtk_widget_show (button);
 
@@ -699,8 +700,8 @@ static void MakeStyles (GripGUI *uinfo) {
 	GdkColor *color_LCD;
 	GdkColor *color_dark_grey;
 
-	gdk_color_white (gdk_colormap_get_system(), &gdkwhite);
-	gdk_color_black (gdk_colormap_get_system(), &gdkblack);
+	gdk_color_white (gdk_colormap_get_system (), &gdkwhite);
+	gdk_color_black (gdk_colormap_get_system (), &gdkblack);
 
 	color_LCD = MakeColor (33686, 38273, 29557);
 	color_dark_grey = MakeColor (0x4444, 0x4444, 0x4444);
@@ -778,7 +779,7 @@ void GripUpdate (GtkWidget *app) {
 	GripInfo *ginfo;
 	time_t secs;
 
-	ginfo = (GripInfo *)gtk_object_get_user_data (GTK_OBJECT (app));
+	ginfo = (GripInfo *) gtk_object_get_user_data (GTK_OBJECT (app));
 
 	if (ginfo -> ffwding) {
 		FastFwd (ginfo);
@@ -891,19 +892,19 @@ static void DoLoadConfig (GripInfo *ginfo) {
 	ginfo -> use_proxy = FALSE;
 	ginfo -> use_proxy_env = FALSE;
 
-	strcpy (ginfo -> dbserver.name, "freedb.freedb.org");
-	strcpy (ginfo -> dbserver.cgi_prog, "~cddb/cddb.cgi");
-	ginfo -> dbserver.port = 80;
-	ginfo -> dbserver.use_proxy = 0;
-	ginfo -> dbserver.proxy = & (ginfo -> proxy_server);
+//	strcpy (ginfo -> dbserver.name, "freedb.freedb.org");
+//	strcpy (ginfo -> dbserver.cgi_prog, "~cddb/cddb.cgi");
+//	ginfo -> dbserver.port = 80;
+//	ginfo -> dbserver.use_proxy = 0;
+//	ginfo -> dbserver.proxy = & (ginfo -> proxy_server);
 
-	strcpy (ginfo -> discdb_submit_email, "freedb-submit@freedb.org");
-	ginfo -> db_use_freedb = TRUE;
+//	strcpy (ginfo -> discdb_submit_email, "freedb-submit@freedb.org");
+//	ginfo -> db_use_freedb = TRUE;
 	*ginfo -> user_email = '\0';
 
 	strcpy (ginfo -> discdb_encoding, "UTF-8");
 	strcpy (ginfo -> id3_encoding, "UTF-8");
-	strcpy (ginfo -> id3v2_encoding, "UTF-8");
+//	strcpy (ginfo -> id3v2_encoding, "UTF-8");
 
 	ginfo -> update_required = FALSE;
 //	ginfo -> automatic_discdb = TRUE;
@@ -969,10 +970,10 @@ static void DoLoadConfig (GripInfo *ginfo) {
 //	strcpy (ginfo -> m3ufileformat, "~/Music/%A-%d.m3u");
 //	ginfo -> kbits_per_sec = 128;
 //	ginfo -> edit_num_cpu = 1;
-	ginfo -> doid3 = TRUE;
-	ginfo -> doid3 = FALSE;
-	ginfo -> tag_mp3_only = TRUE;
-	strcpy (ginfo -> id3_comment, _("Ripped with Regrip"));
+//	ginfo -> doid3 = TRUE;
+//	ginfo -> doid3 = FALSE;
+//	ginfo -> tag_mp3_only = TRUE;
+//	strcpy (ginfo -> id3_comment, _("Ripped with Regrip"));
 	*ginfo -> cdupdate = '\0';
 	ginfo -> sprefs.no_lower_case = FALSE;
 	ginfo -> sprefs.allow_high_bits = FALSE;

@@ -1,3 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
 <!--
 https://forum.dbpoweramp.com/showthread.php?20641-AccurateRip-CRC-Calculation
 
@@ -6,24 +8,23 @@ http://wiki.hydrogenaud.io/index.php?title=Python_Audio_Tools
 https://github.com/thomasvs/morituri
 -->
 
-<?xml version="1.0" encoding="UTF-8"?>
 <schemalist>
-	<enum id="net.sukkology.software.regrip.encoders.faac.object-type">
+	<enum id="net.sukkology.software.regrip.encoder.faac.object-type">
 		<value nick="LC (Low Complexity)" value="1"/>
 		<value nick="Main" value="2"/>
 		<value nick="LTP (Long Term Prediction)" value="3"/>
 	</enum>
-	<enum id="net.sukkology.software.regrip.encoders.faac.mpeg-version">
+	<enum id="net.sukkology.software.regrip.encoder.faac.mpeg-version">
 		<value nick="MPEG2" value="2"/>
 		<value nick="MPEG4" value="4"/>
 	</enum>
-	<enum id="net.sukkology.software.regrip.encoders.faac.block-type">
+	<enum id="net.sukkology.software.regrip.encoder.faac.block-type">
 		<value nick="Short and long" value="0"/>
 		<value nick="Long only" value="1"/>
 		<value nick="Short only" value="2"/>
 	</enum>
 
-	<schema id="net.sukkology.software.regrip.encoders.faac" path="/net/sukkology/software/regrip/encoders/faac/">
+	<schema id="net.sukkology.software.regrip.encoder.faac" path="/net/sukkology/software/regrip/encoder/faac/">
 	    <key type="u" name="quality">
 			<range min="10" max="500" />
 			<default>100</default>
@@ -58,22 +59,22 @@ https://github.com/thomasvs/morituri
 			<default>true</default>
 			<description>Toggle mid/side coding</description>
 		</key>
-		<key enum="net.sukkology.software.regrip.encoders.faac.object-type" name="object-type">
+		<key enum="net.sukkology.software.regrip.encoder.faac.object-type" name="object-type">
 			<default>'LC (Low Complexity)'</default>
 			<description>AAC object type</description>
 		</key>
-		<key enum="net.sukkology.software.regrip.encoders.faac.mpeg-version" name="mpeg-version">
+		<key enum="net.sukkology.software.regrip.encoder.faac.mpeg-version" name="mpeg-version">
 			<default>'MPEG4'</default>
 			<description>AAC MPEG version</description>
 		</key>
-		<key enum="net.sukkology.software.regrip.encoders.faac.block-type" name="block-type">
+		<key enum="net.sukkology.software.regrip.encoder.faac.block-type" name="block-type">
 			<default>'Short and long'</default>
 			<description>Enforce block type</description>
 		</key>
 	</schema>
 </schemalist>
 
-<!--  
+<!--
 #ifdef HAVE_LIBMP4V2
   "  -w\t\tWrap AAC data in MP4 container. (default for *.mp4 and *.m4a)\n"
   "  -s\t\tOptimize MP4 container layout after encoding\n"

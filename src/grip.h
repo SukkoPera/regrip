@@ -195,8 +195,8 @@ typedef struct _grip_info {
 	char discdb_submit_email[MAX_STRING];
 	char discdb_encoding[SMALL_STRING];
 	char id3_encoding[SMALL_STRING];
-	char id3v2_encoding[SMALL_STRING];
-	gboolean db_use_freedb;
+//	char id3v2_encoding[SMALL_STRING];
+//	gboolean db_use_freedb;
 	char user_email[MAX_STRING];
 	gboolean local_mode;
 	gboolean update_required;
@@ -254,7 +254,7 @@ typedef struct _grip_info {
 	char ripfile[PATH_MAX];
 	int start_sector;
 	int end_sector;
-	gboolean doencode;
+//	gboolean doencode;
 	int mp3pid[MAX_NUM_CPU];
 	char mp3file[MAX_NUM_CPU][PATH_MAX];
 	int mp3size[MAX_NUM_CPU];
@@ -304,9 +304,9 @@ typedef struct _grip_info {
 //	int mp3nice;
 	char mp3_filter_cmd[MAX_STRING];
 	gboolean doid3;
-	gboolean doid3v2;
-	gboolean tag_mp3_only;
-	char id3_comment[30];
+//	gboolean doid3v2;
+//	gboolean tag_mp3_only;
+	char id3_comment[MAX_STRING];
 	char cdupdate[MAX_STRING];
 	StrTransPrefs sprefs;
 	gboolean keep_min_size;
@@ -336,9 +336,10 @@ typedef struct _grip_info {
 	GSettings *settings;
 	GSettings *settings_cdplay;
 	GSettings *settings_cdparanoia;
-	GSettings *settings_cddb;
 	GSettings *settings_rip;
 	GSettings *settings_encoder;
+	GSettings *settings_tag;
+	GSettings *settings_discdb;
 } GripInfo;
 
 GtkWidget *GripNew (const gchar* geometry, char *device, char *scsi_device,

@@ -192,9 +192,9 @@ gboolean DiscDBLookupDisc(GripInfo *ginfo,DiscDBServer *server)
   strncpy(hello.hello_program,"Grip",256);
   strncpy(hello.hello_version,VERSION,256);
 
-  if(ginfo->db_use_freedb && !strcasecmp(ginfo->discdb_encoding,"UTF-8"))
-    hello.proto_version=6;
-  else
+//  if(ginfo->db_use_freedb && !strcasecmp(ginfo->discdb_encoding,"UTF-8"))
+//    hello.proto_version=6;
+//  else
     hello.proto_version=5;
 
   if(!DiscDBDoQuery(disc,server,&hello,&query)) {
@@ -1941,14 +1941,14 @@ void SubmitEntry(GtkDialog *dialog, gint reply, gpointer data) {
 	    DiscDBGenre(ginfo->ddata.data_genre),
 	    ginfo->ddata.data_id);
 
-    if(ginfo->db_use_freedb) {
-      fprintf(efp,
-	      "MIME-Version: 1.0\nContent-type: text/plain; charset=UTF-8\n\n");
-    }
+//    if(ginfo->db_use_freedb) {
+//      fprintf(efp,
+//	      "MIME-Version: 1.0\nContent-type: text/plain; charset=UTF-8\n\n");
+//    }
 
     if(DiscDBWriteDiscData(&(ginfo->disc),&(ginfo->ddata),efp,FALSE,
-			   ginfo->db_use_freedb,ginfo->db_use_freedb?
-			   "UTF-8":ginfo->discdb_encoding)<0) {
+			   TRUE /*ginfo->db_use_freedb*/,/*ginfo->db_use_freedb?*/
+			   "UTF-8"/*:ginfo->discdb_encoding*/)<0) {
       show_warning(ginfo->gui_info.app,
                         _("Error: Unable to write disc data."));
       fclose(efp);
