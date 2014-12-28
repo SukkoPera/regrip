@@ -22,7 +22,7 @@
 
 #include <glib.h>
 #include <glib/gi18n.h>
-#include "common.h"
+#include "uihelper.h"
 #include "cdplay.h"
 #include "rip.h"
 #include "tray.h"

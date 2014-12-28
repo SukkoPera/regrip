@@ -28,7 +28,7 @@
 #include "grip.h"
 #include "gripcfg.h"
 #include "dialog.h"
-#include "common.h"
+#include "uihelper.h"
 #include "encoder.h"
 
 

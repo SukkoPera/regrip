@@ -9,7 +9,6 @@ set (
     cdplay.h
     circbuf.c
     circbuf.h
-    common.h
     dialog.c
     dialog.h
     discdb.c
@@ -38,6 +37,7 @@ set (
     tray.c
     tray.h
     uihelper.c
+    uihelper.h
     xpm.h
 
     cppmain.cc

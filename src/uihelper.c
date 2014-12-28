@@ -20,7 +20,7 @@
  * USA
  */
 
-#include "common.h"
+#include "uihelper.h"
 
 GtkTooltips *MakeToolTip(void)
 {

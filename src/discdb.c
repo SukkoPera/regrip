@@ -43,7 +43,7 @@
 #include "cddev.h"
 #include "discdb.h"
 #include "grip_id3.h"
-#include "common.h"
+#include "uihelper.h"
 #include "config.h"
 
 extern char *Program;

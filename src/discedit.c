@@ -26,7 +26,7 @@
 #include "cdplay.h"
 #include "dialog.h"
 #include "grip_id3.h"
-#include "common.h"
+#include "uihelper.h"
 #include "discedit.h"
 
 static void SaveDiscInfo(GtkWidget *widget,gpointer data);

@@ -48,7 +48,7 @@
 #include "launch.h"
 #include "grip_id3.h"
 #include "config.h"
-#include "common.h"
+#include "uihelper.h"
 #include "gain_analysis.h"
 #include "cdpar.h"
 #include "encoder.h"

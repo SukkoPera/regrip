@@ -36,7 +36,7 @@
 #include <glib.h>
 #include <glib/gi18n.h>
 #include "cddev.h"
-#include "common.h"
+#include "uihelper.h"
 
 /* We can check to see if the CD-ROM is mounted if this is available */
 #ifdef HAVE_MNTENT_H

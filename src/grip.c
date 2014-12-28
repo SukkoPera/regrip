@@ -39,7 +39,7 @@
 #include "cdplay.h"
 #include "discedit.h"
 #include "rip.h"
-#include "common.h"
+#include "uihelper.h"
 #include "dialog.h"
 #include "gripcfg.h"
 #include "xpm.h"

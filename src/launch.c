@@ -31,7 +31,7 @@
 #include <glib.h>
 #include <glib/gi18n.h>
 #include "grip.h"
-#include "common.h"
+#include "uihelper.h"
 #include "launch.h"
 
 /* Split a string into an array of arguments */

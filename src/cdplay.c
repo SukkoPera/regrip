@@ -26,7 +26,7 @@
 #include "cdplay.h"
 #include "grip.h"
 #include "config.h"
-#include "common.h"
+#include "uihelper.h"
 #include "discdb.h"
 #include "cddev.h"
 #include "discedit.h"
