@@ -52,7 +52,6 @@ gboolean IsDir(char *path);
 unsigned long long BytesLeftInFS(char *path);
 char *FindExe(char *exename,char **paths);
 char *FindRoot(char *str);
-gboolean CanWrite(char *path);
 void MakeDirs(char *path);
 char *MakePath(char *str);
 void KillRip(GtkWidget *widget,gpointer data);

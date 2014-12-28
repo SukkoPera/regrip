@@ -114,8 +114,8 @@ typedef struct _grip_gui {
 	GtkWidget *rip_prog_label;
 	GtkWidget *ripprogbar;
 	GtkWidget *smile_indicator;
-	GtkWidget *mp3_prog_label;
-	GtkWidget *mp3progbar;
+//	GtkWidget *mp3_prog_label;
+//	GtkWidget *mp3progbar;
 
 	GtkWidget *start_sector_entry;
 	GtkWidget *end_sector_entry;
@@ -123,9 +123,9 @@ typedef struct _grip_gui {
 	/* Overall prgress */
 	GtkWidget *all_label;
 	GtkWidget *all_rip_label;
-	GtkWidget *all_enc_label;
+//	GtkWidget *all_enc_label;
 	GtkWidget *all_ripprogbar;
-	GtkWidget *all_encprogbar;
+//	GtkWidget *all_encprogbar;
 
 	/* Proxy */
 	GtkWidget *proxy_name;
@@ -191,7 +191,7 @@ typedef struct _grip_info {
 	gboolean use_proxy_env;
 	ProxyServer proxy_server;
 	DiscDBServer dbserver;
-	char config_filename[MAX_STRING];
+//	char config_filename[MAX_STRING];
 	char cd_device[MAX_STRING];
 	char force_scsi[MAX_STRING];
 	char discdb_submit_email[MAX_STRING];
@@ -245,7 +245,7 @@ typedef struct _grip_info {
 //	gboolean encoding;
 	gboolean stop_rip;
 //	gboolean stop_encode;
-	gboolean ripping_a_disc;
+//	gboolean ripping_a_disc;
 	time_t rip_finished;
 //	int rippid;
 //	int num_wavs;
@@ -273,7 +273,7 @@ typedef struct _grip_info {
 
 	gpointer encoder_data;
 	GThread *rip_thread;
-	gboolean stop_thread_rip_now;
+//	gboolean stop_thread_rip_now;
 	gboolean disable_paranoia;
 	gboolean disable_extra_paranoia;
 	gboolean disable_scratch_detect;

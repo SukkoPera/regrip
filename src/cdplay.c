@@ -81,7 +81,7 @@ static void DiscDBToggle (GtkWidget *widget, gpointer data) {
 	if (ginfo -> looking_up) {
 		return;
 	} else {
-		if (ginfo -> ripping_a_disc) {
+		if (ginfo -> ripping) {
 			show_warning (ginfo -> gui_info.app,
 			              _("Cannot do lookup while ripping."));
 
@@ -1148,7 +1148,7 @@ static void FastFwdCB (GtkWidget *widget, gpointer data) {
 
 	ginfo = (GripInfo *) data;
 
-	if (ginfo -> ripping_a_disc) {
+	if (ginfo -> ripping) {
 		show_warning (ginfo -> gui_info.app,
 		              _("Cannot fast forward while ripping."));
 
@@ -1179,7 +1179,7 @@ static void RewindCB (GtkWidget *widget, gpointer data) {
 
 	ginfo = (GripInfo *) data;
 
-	if (ginfo -> ripping_a_disc) {
+	if (ginfo -> ripping) {
 		show_warning (ginfo -> gui_info.app,
 		              _("Cannot rewind while ripping."));
 
@@ -1210,7 +1210,7 @@ static void NextDisc (GtkWidget *widget, gpointer data) {
 
 	ginfo = (GripInfo *) data;
 
-	if (ginfo -> ripping_a_disc) {
+	if (ginfo -> ripping) {
 		show_warning (ginfo -> gui_info.app,
 		              _("Cannot switch discs while ripping."));
 
@@ -1231,7 +1231,7 @@ void EjectDisc (GtkWidget *widget, gpointer data) {
 
 	LogStatus (ginfo, _("Eject disc\n"));
 
-	if (ginfo -> ripping_a_disc) {
+	if (ginfo -> ripping) {
 		show_warning (ginfo -> gui_info.app,
 		              _("Cannot eject while ripping."));
 
@@ -1284,7 +1284,7 @@ void StopPlayCB (GtkWidget *widget, gpointer data) {
 
 	ginfo = (GripInfo *) data;
 
-	if (ginfo -> ripping_a_disc) {
+	if (ginfo -> ripping) {
 		return;
 	}
 
@@ -1315,7 +1315,7 @@ void PlayTrackCB (GtkWidget *widget, gpointer data) {
 	ginfo = (GripInfo *) data;
 	disc = &(ginfo -> disc);
 
-	if (ginfo -> ripping_a_disc) {
+	if (ginfo -> ripping) {
 		show_warning (ginfo -> gui_info.app,
 		              _("Cannot play while ripping."));
 
@@ -1385,7 +1385,7 @@ void NextTrackCB (GtkWidget *widget, gpointer data) {
 }
 
 void NextTrack (GripInfo *ginfo) {
-	if (ginfo -> ripping_a_disc) {
+	if (ginfo -> ripping) {
 		show_warning (ginfo -> gui_info.app,
 		              _("Cannot switch tracks while ripping."));
 		return;
@@ -1413,7 +1413,7 @@ void PrevTrackCB (GtkWidget *widget, gpointer data) {
 }
 
 static void PrevTrack (GripInfo *ginfo) {
-	if (ginfo -> ripping_a_disc) {
+	if (ginfo -> ripping) {
 		show_warning (ginfo -> gui_info.app,
 		              _("Cannot switch tracks while ripping."));
 		return;

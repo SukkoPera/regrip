@@ -31,13 +31,14 @@
 	#include <sys/param.h>
 	#include <sys/mount.h>
 #endif
-#include <unistd.h>
+//#include <unistd.h>
 #include <sys/types.h>
-#include <signal.h>
-#include <sys/wait.h>
-#include <fcntl.h>
-#include <pthread.h>
+//#include <signal.h>
+//#include <sys/wait.h>
+//#include <fcntl.h>
+//#include <pthread.h>
 #include <glib.h>
+#include <glib/gstdio.h>
 #include <glib/gi18n.h>
 #include "rip.h"
 #include "dialog.h"
@@ -66,8 +67,6 @@ static void CheckDupNames (GripInfo *ginfo);
 static void RipWholeCD (GtkDialog *dialog, gint reply, gpointer data);
 static int NextTrackToRip (GripInfo *ginfo);
 static gboolean RipNextTrack (GripInfo *ginfo);
-//static void AddToEncode (GripInfo *ginfo, int track);
-//static gboolean MP3Encode (GripInfo *ginfo);
 static void CalculateAll (GripInfo *ginfo);
 static size_t CalculateEncSize (GripInfo *ginfo, int track);
 static size_t CalculateWavSize (GripInfo *ginfo, int track);
@@ -102,16 +101,6 @@ void MakeRipPage (GripInfo *ginfo) {
 	                    GTK_SIGNAL_FUNC (DoRip), (gpointer)ginfo);
 	gtk_box_pack_start (GTK_BOX (vbox2), button, FALSE, FALSE, 0);
 	gtk_widget_show (button);
-
-//	button = gtk_button_new_with_label (_("Abort Rip and Encode"));
-//	gtk_tooltips_set_tip (MakeToolTip(), button,
-//	                      _("Kill all active rip and encode processes"), NULL);
-//	gtk_signal_connect (GTK_OBJECT (button), "clicked",
-//	                    GTK_SIGNAL_FUNC (KillRip), (gpointer)ginfo);
-//	gtk_signal_connect (GTK_OBJECT (button), "clicked",
-//	                    GTK_SIGNAL_FUNC (KillEncode), (gpointer)ginfo);
-//	gtk_box_pack_start (GTK_BOX (vbox2), button, FALSE, FALSE, 0);
-//	gtk_widget_show (button);
 
 	button = gtk_button_new_with_label (_("Abort Rip"));
 	gtk_tooltips_set_tip (MakeToolTip(), button,
@@ -182,15 +171,10 @@ void MakeRipPage (GripInfo *ginfo) {
 	uinfo -> rip_prog_label = gtk_label_new (_("Rip: Idle"));
 
 	/* This should be the largest this string can get */
-
 	layout = gtk_widget_create_pango_layout (GTK_WIDGET (uinfo -> app),
 	         _("Enc: Trk 99 (99.9x)"));
-
-
 	pango_layout_get_size (layout, &label_width, NULL);
-
 	label_width /= PANGO_SCALE;
-
 	g_object_unref (layout);
 
 
@@ -209,10 +193,10 @@ void MakeRipPage (GripInfo *ginfo) {
 	gtk_box_pack_start (GTK_BOX (hbox), uinfo -> smile_indicator, FALSE, FALSE, 0);
 	gtk_widget_show (uinfo -> smile_indicator);
 
-	gtk_box_pack_start (GTK_BOX (vbox2), hbox, FALSE, FALSE, 0);
+	gtk_box_pack_start (GTK_BOX (vbox), hbox, TRUE, FALSE, 0);
 	gtk_widget_show (hbox);
 
-
+/*
     hbox = gtk_hbox_new (FALSE, 3);
 
     uinfo -> mp3_prog_label = gtk_label_new (_("Enc: Idle"));
@@ -232,19 +216,19 @@ void MakeRipPage (GripInfo *ginfo) {
 
 	gtk_box_pack_start (GTK_BOX (vbox), vbox2, TRUE, TRUE, 0);
 	gtk_widget_show (vbox2);
+*/
 
+//	hsep = gtk_hseparator_new ();
+//	gtk_box_pack_start (GTK_BOX (vbox), hsep, TRUE, TRUE, 0);
+//	gtk_widget_show (hsep);
 
-	hsep = gtk_hseparator_new();
-	gtk_box_pack_start (GTK_BOX (vbox), hsep, TRUE, TRUE, 0);
-	gtk_widget_show (hsep);
-
-	vbox2 = gtk_vbox_new (FALSE, 0);
-	uinfo -> all_label = gtk_label_new (_("Overall indicators:"));
-	gtk_box_pack_start (GTK_BOX (vbox2), uinfo -> all_label, FALSE, FALSE, 0);
-	gtk_widget_show (uinfo -> all_label);
+//	vbox2 = gtk_vbox_new (FALSE, 0);
+//	uinfo -> all_label = gtk_label_new (_("Overall indicators:"));
+//	gtk_box_pack_start (GTK_BOX (vbox2), uinfo -> all_label, FALSE, FALSE, 0);
+//	gtk_widget_show (uinfo -> all_label);
 
 	hbox = gtk_hbox_new (FALSE, 2);
-	uinfo -> all_rip_label = gtk_label_new (_("Rip: Idle"));
+	uinfo -> all_rip_label = gtk_label_new (_("Overall: Idle"));
 	gtk_widget_set_usize (uinfo -> all_rip_label, label_width, 0);
 	gtk_box_pack_start (GTK_BOX (hbox), uinfo -> all_rip_label, FALSE, FALSE, 0);
 	gtk_widget_show (uinfo -> all_rip_label);
@@ -253,9 +237,10 @@ void MakeRipPage (GripInfo *ginfo) {
 	gtk_box_pack_start (GTK_BOX (hbox), uinfo -> all_ripprogbar, FALSE, FALSE, 0);
 	gtk_widget_show (uinfo -> all_ripprogbar);
 
-	gtk_box_pack_start (GTK_BOX (vbox2), hbox, FALSE, FALSE, 0);
+	gtk_box_pack_start (GTK_BOX (vbox), hbox, TRUE, FALSE, 0);
 	gtk_widget_show (hbox);
 
+/*
 	hbox = gtk_hbox_new (FALSE, 2);
 	uinfo -> all_enc_label = gtk_label_new (_("Enc: Idle"));
 	gtk_widget_set_usize (uinfo -> all_enc_label, label_width, 0);
@@ -271,6 +256,7 @@ void MakeRipPage (GripInfo *ginfo) {
 
 	gtk_box_pack_start (GTK_BOX (vbox), vbox2, TRUE, TRUE, 0);
 	gtk_widget_show (vbox2);
+*/
 
 	gtk_container_add (GTK_CONTAINER (rippage), vbox);
 	gtk_widget_show (vbox);
@@ -279,7 +265,7 @@ void MakeRipPage (GripInfo *ginfo) {
 static void RipPartialChanged (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 
-	ginfo = (GripInfo *)data;
+	ginfo = (GripInfo *) data;
 
 	gtk_widget_set_sensitive (ginfo -> gui_info.partial_rip_box, ginfo -> rip_partial);
 }
@@ -287,7 +273,7 @@ static void RipPartialChanged (GtkWidget *widget, gpointer data) {
 static void PlaySegmentCB (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 
-	ginfo = (GripInfo *)data;
+	ginfo = (GripInfo *) data;
 
 	PlaySegment (ginfo, CURRENT_TRACK);
 }
@@ -376,37 +362,6 @@ char *FindRoot (char *str) {
 	}
 
 	return c;
-}
-
-// FIXME I think this can be replaced with dirname()
-/* Check if a user has write access to a path */
-gboolean CanWrite (char *path) {
-	char *c;
-	gboolean can_write = FALSE;
-
-	/* First find the filename part, if any */
-	for (c = path + strlen (path); c > path; c--) {
-		if (*c == '/') {
-			break;
-		}
-	}
-
-	/* This is kinda clumsy -- temporarily hack the string to get only the
-	 path part */
-	if (c != path) {
-		*c = '\0';
-	}
-
-	if (!access (path, W_OK)) {
-		can_write = TRUE;
-	}
-
-	/* Put back the '/' */
-	if (c != path) {
-		*c = '/';
-	}
-
-	return can_write;
 }
 
 char *MakePath (char *str) {
@@ -549,7 +504,7 @@ void KillRip (GtkWidget *widget, gpointer data) {
 	g_debug (_("In KillRip"));
 	ginfo = (GripInfo *)data;
 
-	if (!ginfo -> ripping_a_disc) {
+	if (!ginfo -> ripping) {
 		return;
 	}
 
@@ -558,21 +513,18 @@ void KillRip (GtkWidget *widget, gpointer data) {
 	ginfo -> all_riplast = 0;
 
 	ginfo -> stop_rip = TRUE;
-	ginfo -> ripping_a_disc = FALSE;
+	ginfo -> ripping = FALSE;
 
-	if (ginfo -> ripping) {
-		/* Need to decrement all_mp3size */
-		for (track = 0; track < ginfo -> disc.num_tracks; ++track) {
-			if ((!IsDataTrack (&(ginfo -> disc), track)) &&
-			        (TrackIsChecked (&(ginfo -> gui_info), track))) {
-				ginfo -> all_encsize -= CalculateEncSize (ginfo, track);
-			}
-		}
+	// FIXME: What is this doing? Looks unnecessary nowadays.
+    /* Need to decrement all_mp3size */
+    for (track = 0; track < ginfo -> disc.num_tracks; ++track) {
+        if ((!IsDataTrack (&(ginfo -> disc), track)) &&
+                (TrackIsChecked (&(ginfo -> gui_info), track))) {
+            ginfo -> all_encsize -= CalculateEncSize (ginfo, track);
+        }
+    }
 
-		g_debug (_("Now total enc size is: %zu"), ginfo -> all_encsize);
-
-		ginfo -> stop_thread_rip_now = TRUE;
-	}
+    g_debug (_("Now total enc size is: %zu"), ginfo -> all_encsize);
 }
 
 static void ID3Add (GripInfo *ginfo, char *file, EncodeTrack *enc_track) {
@@ -632,7 +584,7 @@ static void DoWavFilter (GripInfo *ginfo) {
 	strcpy (enc_track.wav_filename, ginfo -> ripfile);
 
 	TranslateAndLaunch (ginfo -> wav_filter_cmd, TranslateSwitch, &enc_track,
-	                    FALSE, &(ginfo -> sprefs), CloseStuff, (void *)ginfo);
+	                    FALSE, &(ginfo -> sprefs), CloseStuff, (void *) ginfo);
 }
 
 static void DoDiscFilter (GripInfo *ginfo) {
@@ -642,7 +594,7 @@ static void DoDiscFilter (GripInfo *ginfo) {
 	strcpy (enc_track.wav_filename, ginfo -> ripfile);
 
 	TranslateAndLaunch (ginfo -> disc_filter_cmd, TranslateSwitch, &enc_track,
-	                    FALSE, &(ginfo -> sprefs), CloseStuff, (void *)ginfo);
+	                    FALSE, &(ginfo -> sprefs), CloseStuff, (void *) ginfo);
 }
 
 void UpdateRipProgress (GripInfo *ginfo) {
@@ -658,10 +610,11 @@ void UpdateRipProgress (GripInfo *ginfo) {
 	uinfo = &(ginfo -> gui_info);
 
 	if (ginfo -> ripping) {
+        // Rip percent is calculated by the cdparanoia callback and provided to rip_callback().
 		gtk_progress_bar_update (GTK_PROGRESS_BAR (uinfo -> ripprogbar), ginfo -> rip_percent);
 
 		now = time (NULL);
-		elapsed = (gfloat)now - (gfloat)ginfo -> rip_started;
+		elapsed = (gfloat) now - (gfloat) ginfo -> rip_started;
 
 		/* 1x is 44100*2*2 = 176400 bytes/sec */
 		if (elapsed < 0.1f) { /* 1/10 sec. */
@@ -898,12 +851,12 @@ void UpdateRipProgress (GripInfo *ginfo) {
             }
         }
     }
-#endif
 
 	if (!ginfo -> ripping) {
 		gtk_label_set (GTK_LABEL (uinfo -> all_enc_label), _("Enc: Idle"));
 		gtk_progress_bar_update (GTK_PROGRESS_BAR (uinfo -> all_encprogbar), 0.0);
 	}
+#endif
 }
 
 static void RipIsFinished (GripInfo *ginfo, gboolean aborted) {
@@ -916,12 +869,11 @@ static void RipIsFinished (GripInfo *ginfo, gboolean aborted) {
 	ginfo -> all_riplast = 0;
 
 	gtk_label_set (GTK_LABEL (uinfo -> rip_prog_label), _("Rip: Idle"));
-	gtk_label_set (GTK_LABEL (uinfo -> all_rip_label), _("Rip: Idle"));
+	gtk_label_set (GTK_LABEL (uinfo -> all_rip_label), _("Overall: Idle"));
 	gtk_progress_bar_update (GTK_PROGRESS_BAR (uinfo -> all_ripprogbar), 0.0);
 
 	ginfo -> stop_rip = FALSE;
 	ginfo -> ripping = FALSE;
-	ginfo -> ripping_a_disc = FALSE;
 	ginfo -> rip_finished = time (NULL);
 
 	/* Re-open the cdrom device if it was closed */
@@ -1260,8 +1212,9 @@ static gboolean rip_callback (gint16 *buffer, gsize bufsize, gfloat progress, in
 
 //    g_debug ("%s", get_smilie (smilie_idx));
 
+    // We shall return FALSE to abort the rip, TRUE to continue
     g_assert (ginfo -> encoder != NULL);
-    return ginfo -> encoder -> callback (buffer, bufsize, ginfo -> encoder_data);
+    return ginfo -> encoder -> callback (buffer, bufsize, ginfo -> encoder_data) && !(ginfo -> stop_rip);
 }
 
 static gboolean RipNextTrack (GripInfo *ginfo) {
@@ -1345,7 +1298,7 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
 		g_string_free (str, TRUE);
 
 		gchar *dir = g_path_get_dirname (ginfo -> ripfile);
-		if (dir == NULL || g_mkdir_with_parents (dir, 0755) < 0 || !CanWrite (ginfo -> ripfile)) {
+		if (dir == NULL || g_mkdir_with_parents (dir, 0755) < 0 || g_access (dir, W_OK) != 0) {
 			show_error (ginfo -> gui_info.app,
                         _("No write access to write output file"));
             g_free (dir);
@@ -1384,7 +1337,6 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
 //				}
 
 				ginfo -> ripping = TRUE;
-				ginfo -> ripping_a_disc = TRUE;
 				ginfo -> all_ripdone += CalculateWavSize (ginfo, ginfo -> rip_track);
 				ginfo -> all_riplast = 0;
 				return TRUE;
@@ -1406,9 +1358,6 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
 
 		// Init encoder
 		GError *error = NULL;
-//		encoder_options encopts;
-//		encopts.format = FILEFMT_FLAC;
-//		encopts.quality = 0;
 		g_assert (ginfo -> encoder != NULL);
 		gpointer encoder = ginfo -> encoder -> init (ginfo -> format -> data, ginfo -> ripfile, NULL, &error);
 		if (!encoder) {
@@ -1432,7 +1381,6 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
 		}
 
 		ginfo -> ripping = TRUE;
-		ginfo -> ripping_a_disc = TRUE;
 
 		return TRUE;
 	} else {

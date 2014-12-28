@@ -292,12 +292,12 @@ void GripDie (GtkWidget *widget, gpointer data) {
 
 #ifndef GRIPCD
 
-	if (ginfo -> ripping_a_disc) {
+	if (ginfo -> ripping) {
 		GtkWidget *dialog = gtk_message_dialog_new (GTK_WINDOW (ginfo -> gui_info.app),
 		                    GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
 		                    GTK_MESSAGE_WARNING, GTK_BUTTONS_YES_NO,
-		                    _("Work is in progress.\nReally shut down?"));
-//	gtk_window_set_title (GTK_WINDOW (dialog), "Warning");
+		                    _("Ripping is in progress.\nReally shut down?"));
+        gtk_window_set_title (GTK_WINDOW (dialog), "Rip in progress");
 		g_signal_connect (dialog,
 		                  "response",
 		                  G_CALLBACK (ReallyDie),
@@ -323,11 +323,9 @@ static void ReallyDie (GtkDialog *dialog, gint reply, gpointer data) {
 	ginfo = (GripInfo *)data;
 
 #ifndef GRIPCD
-
-	if (ginfo -> ripping_a_disc) {
+	if (ginfo -> ripping) {
 		KillRip (NULL, ginfo);
 	}
-
 #endif
 
 	if (!ginfo -> no_interrupt) {
@@ -716,9 +714,7 @@ void GripUpdate (GtkWidget *app) {
 
 	if (ginfo -> ripping) {
 		UpdateRipProgress (ginfo);
-	}
-
-	if (!ginfo -> ripping_a_disc) {
+	} else {
 		if (ginfo -> poll_drive && ! (secs % ginfo -> poll_interval)) {
 			if (!ginfo -> have_disc) {
 				CheckNewDisc (ginfo, FALSE);
@@ -840,7 +836,7 @@ static void set_initial_config (GripInfo *ginfo) {
 	ginfo -> curr_pipe_fd = -1;
 
 	ginfo -> ripping = FALSE;
-	ginfo -> ripping_a_disc = FALSE;
+//	ginfo -> ripping_a_disc = FALSE;
 //	ginfo -> encoding = FALSE;
 	ginfo -> rip_partial = FALSE;
 	ginfo -> stop_rip = FALSE;
@@ -855,7 +851,7 @@ static void set_initial_config (GripInfo *ginfo) {
 	ginfo -> rip_thread = NULL;
 	ginfo -> encoder_data = NULL;
 
-	ginfo -> stop_thread_rip_now = FALSE;
+//	ginfo -> stop_thread_rip_now = FALSE;
 //	ginfo -> disable_paranoia = FALSE;
 //	ginfo -> disable_extra_paranoia = FALSE;
 //	ginfo -> disable_scratch_detect = FALSE;
