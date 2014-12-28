@@ -841,7 +841,7 @@ static void set_initial_config (GripInfo *ginfo) {
 	ginfo -> rip_partial = FALSE;
 	ginfo -> stop_rip = FALSE;
 //	ginfo -> stop_encode = FALSE;
-	ginfo -> rip_finished = 0;
+//	ginfo -> rip_finished = 0;
 //	ginfo -> num_wavs = 0;
 //	ginfo -> doencode = FALSE;
 //	ginfo -> encode_list = NULL;

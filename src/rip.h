@@ -47,12 +47,8 @@ typedef struct _encode_track {
 
 
 void MakeRipPage(GripInfo *ginfo);
-gboolean FileExists(char *filename);
-gboolean IsDir(char *path);
 unsigned long long BytesLeftInFS(char *path);
-char *FindExe(char *exename,char **paths);
 char *FindRoot(char *str);
-void MakeDirs(char *path);
 char *MakePath(char *str);
 void KillRip(GtkWidget *widget,gpointer data);
 void UpdateRipProgress(GripInfo *ginfo);

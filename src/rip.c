@@ -1332,10 +1332,6 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
 
 				g_free (utf8_ripfile);
 
-//				if (ginfo -> doencode) {
-//					ginfo -> num_wavs++;
-//				}
-
 				ginfo -> ripping = TRUE;
 				ginfo -> all_ripdone += CalculateWavSize (ginfo, ginfo -> rip_track);
 				ginfo -> all_riplast = 0;

@@ -33,8 +33,6 @@
 #include "eggtrayicon.h"
 #include "encoder.h"
 
-//#define MIN_WINHEIGHT 80
-
 #define RRand(range) (random()%(range))
 
 #if defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__osf__)  /* __osf__ ?? */
@@ -120,7 +118,7 @@ typedef struct _grip_gui {
 	GtkWidget *start_sector_entry;
 	GtkWidget *end_sector_entry;
 
-	/* Overall prgress */
+	/* Overall progress */
 	GtkWidget *all_label;
 	GtkWidget *all_rip_label;
 //	GtkWidget *all_enc_label;
