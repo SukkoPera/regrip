@@ -34,6 +34,7 @@ void InputDialog (char *prompt, char *default_str, int len, char *doit,
 void ChangeStrVal (GtkWidget *widget, gpointer data);
 GtkWidget *MakeStrEntry (GtkWidget **entry, char *var, char *name,
                          int len, gboolean editable);
+GtkWidget *MakeFolderSelector (GtkWidget **entry, char *var, char *name);
 void ChangeIntVal (GtkWidget *widget, gpointer data);
 GtkWidget *MakeNumEntry (GtkWidget **entry, int *var, char *name, int len);
 void ChangeDoubleVal (GtkWidget *widget, gpointer data);

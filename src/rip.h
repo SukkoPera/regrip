@@ -37,7 +37,7 @@ typedef struct _encode_track {
   char wav_filename[256];
   char mp3_filename[256];
   int song_year;
-  int id3_genre;
+  char genre[256];
   int mins;
   int secs;
   int discid;

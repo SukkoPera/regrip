@@ -33,7 +33,7 @@
 #include "dialog.h"
 #include "rip.h"
 #include "tray.h"
-#include "grip_id3.h"
+
 
 static void ShutDownCB (GtkWidget *widget, gpointer data);
 static void DiscDBToggle (GtkWidget *widget, gpointer data);
@@ -111,18 +111,19 @@ void LookupDisc (GripInfo *ginfo, gboolean manual) {
 	if (!manual && present) {
 		DiscDBReadDiscData (disc, ddata, ginfo -> discdb_encoding);
 
-		if (ginfo -> ddata.data_id3genre == -1) {
-			ginfo -> ddata.data_id3genre = DiscDB2ID3 (ginfo -> ddata.data_genre);
-		}
+		// FIXME
+//		if (ginfo -> ddata.data_id3genre == -1) {
+//			ginfo -> ddata.data_id3genre = DiscDB2ID3 (ginfo -> ddata.data_genre);
+//		}
 
 		ginfo -> update_required = TRUE;
 		ginfo -> is_new_disc = TRUE;
 	} else {
 		if (!manual) {
 			ddata -> data_id = DiscDBDiscid (disc);
-			ddata -> data_genre = 7; /* "misc" */
-			strcpy (ddata -> data_title, _("Unknown Disc"));
-			strcpy (ddata -> data_artist, "");
+			strncpy (ddata -> data_genre, "Other", MAX_STRING);
+			strncpy (ddata -> data_title, _("Unknown Disc"), MAX_STRING);
+			strncpy (ddata -> data_artist, "", MAX_STRING);
 
 			for (track = 0; track < disc -> num_tracks; track++) {
 				sprintf (ddata -> data_track[track].track_name, _("Track %02d"), track + 1);
@@ -155,9 +156,10 @@ static void DoLookup (void *data) {
 		ginfo -> ask_submit = TRUE;
 	}
 
-	if (ginfo -> ddata.data_id3genre == -1) {
-		ginfo -> ddata.data_id3genre = DiscDB2ID3 (ginfo -> ddata.data_genre);
-	}
+	// FIXME
+//	if (ginfo -> ddata.data_id3genre == -1) {
+//		ginfo -> ddata.data_id3genre = DiscDB2ID3 (ginfo -> ddata.data_genre);
+//	}
 
 	ginfo -> looking_up = FALSE;
 	pthread_exit (0);
@@ -1801,7 +1803,7 @@ void UpdateTracks (GripInfo *ginfo) {
 		SetTitle (ginfo, ddata -> data_title);
 		SetArtist (ginfo, ddata -> data_artist);
 		SetYear (ginfo, ddata -> data_year);
-		SetID3Genre (ginfo, ddata -> data_id3genre);
+//		SetID3Genre (ginfo, ddata -> data_id3genre);        FIXME
 
 		multi_artist_backup = ddata -> data_multi_artist;
 
@@ -1821,7 +1823,7 @@ void UpdateTracks (GripInfo *ginfo) {
 		SetTitle (ginfo, _("No Disc"));
 		SetArtist (ginfo, "");
 		SetYear (ginfo, 0);
-		SetID3Genre (ginfo, 17);
+		SetID3Genre (ginfo, DEFAULT_GENRE);
 	}
 
 	gtk_entry_set_text (GTK_ENTRY (uinfo -> playlist_entry),
@@ -1919,7 +1921,7 @@ void SubmitEntry (GtkDialog *dialog, gint reply, gpointer data) {
 		fprintf (efp, "To: %s\nFrom: %s\nSubject: cddb %s %02x\n",
 		         ginfo -> discdb_submit_email,
 		         ginfo -> user_email,
-		         DiscDBGenre (ginfo -> ddata.data_genre),
+		         /*DiscDBGenre (ginfo -> ddata.data_genre)*/ "unknown",
 		         ginfo -> ddata.data_id);
 
 //    if(ginfo -> db_use_freedb) {

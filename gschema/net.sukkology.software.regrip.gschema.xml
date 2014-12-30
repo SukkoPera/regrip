@@ -151,6 +151,16 @@
   </schema>
 
   <schema id="net.sukkology.software.regrip.encoder" path="/net/sukkology/software/regrip/encoder/">
+    <key type="s" name="output-folder">
+      <default>'~/Music'</default>
+      <summary>File output format</summary>
+      <description>The folder where ripped tracks will be saved</description>
+    </key>
+    <key type="s" name="output-filename">
+      <default>'%A - %d/%t. %n.%x'</default>
+      <summary>Output filename pattern</summary>
+      <description>The pattern to use to generate filenames for ripped tracks</description>
+    </key>
     <key type="s" name="selected-encoder">
       <default>''</default>
       <summary>Selected encoder</summary>

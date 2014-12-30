@@ -859,7 +859,7 @@ static void set_initial_config (GripInfo *ginfo) {
 //	ginfo -> calc_gain = FALSE;
 	ginfo -> in_rip_thread = FALSE;
 
-	strcpy (ginfo -> ripfileformat, "~/Music/%A/%d/%n");
+//	strcpy (ginfo -> ripfileformat, "~/Music/%A/%d/%n");
 
 //	ginfo -> max_wavs = 99;
 //	ginfo -> auto_rip = FALSE;

@@ -6,8 +6,8 @@
  *
  *   http://sourceforge.net/projects/grip/
  *
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License as 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
  * License, or (at your option) any later version.
  *
@@ -56,7 +56,6 @@ typedef struct _discdb_hello {
 } DiscDBHello;
 
 /* DiscDB entry */
-
 typedef struct _discdb_entry {
    unsigned int entry_id;
    int entry_genre;
@@ -101,8 +100,7 @@ typedef struct _disc_data {
   char data_title[256];	              /* Disc title */
   char data_artist[256];	      /* Disc artist */
   char data_extended[4096];	      /* Extended information */
-  int data_genre;		      /* Discdb genre */
-  int data_id3genre;                  /* ID3 genre */
+  char data_genre[256];		      /* Discdb genre */
   int data_year;                      /* Disc year */
   char data_playlist[256];            /* Playlist info */
   gboolean data_multi_artist;         /* Is CD multi-artist? */

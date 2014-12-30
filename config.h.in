@@ -59,6 +59,9 @@
 #define GNOME_ICONDIR "@CMAKE_INSTALL_FULL_DATADIR@/pixmaps"
 #define HELP_DIR "@CMAKE_INSTALL_FULL_DATADIR@/help/grip/C"
 
+/* Optional libraries */
+#cmakedefine TAGLIB_FOUND
+
 /* Encoding libraries */
 #cmakedefine FAAC_FOUND
 #cmakedefine SNDFILE_FOUND

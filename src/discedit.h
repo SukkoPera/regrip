@@ -4,8 +4,8 @@
  *
  *   http://sourceforge.net/projects/grip/
  *
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License as 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
  * License, or (at your option) any later version.
  *
@@ -25,14 +25,17 @@
 
 #include "grip.h"
 
-GtkWidget *MakeEditBox(GripInfo *ginfo);
-void TrackEditChanged(GtkWidget *widget,gpointer data);
-void UpdateMultiArtist(GtkWidget *widget,gpointer data);
-void ToggleTrackEdit(GtkWidget *widget,gpointer data);
-void SetTitle(GripInfo *ginfo,char *title);
-void SetArtist(GripInfo *ginfo,char *artist);
-void SetYear(GripInfo *ginfo,int year);
-void SetID3Genre(GripInfo *ginfo,int id3_genre);
+#define DEFAULT_GENRE "Other"
+
+
+GtkWidget *MakeEditBox (GripInfo *ginfo);
+void TrackEditChanged (GtkWidget *widget, gpointer data);
+void UpdateMultiArtist (GtkWidget *widget, gpointer data);
+void ToggleTrackEdit (GtkWidget *widget, gpointer data);
+void SetTitle (GripInfo *ginfo, char *title);
+void SetArtist (GripInfo *ginfo, char *artist);
+void SetYear (GripInfo *ginfo, int year);
+void SetID3Genre (GripInfo *ginfo, char *genre);
 
 
 #endif /* ifndef GRIP_DISCEDIT_H */

@@ -40,11 +40,12 @@
 #include <curl/easy.h>
 #include <glib.h>
 #include <glib/gi18n.h>
+#include "grip.h"
 #include "cddev.h"
 #include "discdb.h"
-#include "grip_id3.h"
 #include "uihelper.h"
 #include "config.h"
+
 
 extern char *Program;
 static char *StrConvertEncoding(char *str,const char *from,const char *to,int max_len);
@@ -100,7 +101,6 @@ unsigned int DiscDBDiscid(DiscInfo *disc)
 }
 
 /* Convert numerical genre to text */
-
 char *DiscDBGenre(int genre)
 {
   if(genre>11) return("unknown");
@@ -109,7 +109,6 @@ char *DiscDBGenre(int genre)
 }
 
 /* Convert genre from text form into an integer value */
-
 int DiscDBGenreValue(char *genre)
 {
   int pos;
@@ -121,7 +120,6 @@ int DiscDBGenreValue(char *genre)
 }
 
 /* Read a single line from the buffer and move the pointer along */
-
 static char *DiscDBReadLine(char **dataptr)
 {
   char *data=*dataptr;
@@ -431,10 +429,11 @@ static void DiscDBProcessLine(char *inbuffer,DiscData *data,
 
     st=g_strstrip(st);
 
-    if(*st) {
-      data->data_genre=DiscDBGenreValue(st);
-      data->data_id3genre=ID3GenreValue(st);
-    }
+    // FIXME
+//    if(*st) {
+//      data->data_genre=DiscDBGenreValue(st);
+//      data->data_id3genre=ID3GenreValue(st);
+//    }
   }
   else if(!strncasecmp(inbuffer,"DID3",4)) {
     strtok(inbuffer,"=");
@@ -443,7 +442,8 @@ static void DiscDBProcessLine(char *inbuffer,DiscData *data,
     if(st == NULL)
         return;
 
-    data->data_id3genre=atoi(g_strstrip(st));
+//    data->data_id3genre=atoi(g_strstrip(st));
+    strncpy (data -> data_genre, g_strstrip (st), MAX_STRING);
   }
   else if(!strncasecmp(inbuffer,"TTITLE",6)) {
     track=atoi(strtok(inbuffer+6,"="));
@@ -570,7 +570,8 @@ gboolean DiscDBRead(DiscInfo *disc,DiscDBServer *server,
 
   if(!disc->have_info) CDStat(disc,TRUE);
 
-  data->data_genre=entry->entry_genre;
+  // FIXME
+//  data->data_genre=entry->entry_genre;
   data->data_id=DiscDBDiscid(disc);
   *(data->data_extended)='\0';
   *(data->data_title)='\0';
@@ -578,7 +579,6 @@ gboolean DiscDBRead(DiscInfo *disc,DiscDBServer *server,
   *(data->data_playlist)='\0';
   data->data_multi_artist=FALSE;
   data->data_year=0;
-  data->data_id3genre=-1;
   data->revision=-1;
 
   for(index=0;index<MAX_TRACKS;index++) {
@@ -615,7 +615,7 @@ gboolean DiscDBRead(DiscInfo *disc,DiscDBServer *server,
   free(result);
 
   /* Don't allow the genre to be overwritten */
-  data->data_genre=entry->entry_genre;
+//  data->data_genre=entry->entry_genre;    FIXME
 
   if(strcasecmp(encoding,"utf-8")) {
     DiscDBConvertEncoding(disc,data,encoding,"utf-8");
@@ -687,8 +687,7 @@ int DiscDBReadDiscData(DiscInfo *disc,DiscData *ddata, const char *encoding)
   *(ddata->data_playlist)='\0';
   ddata->data_multi_artist=FALSE;
   ddata->data_year=0;
-  ddata->data_genre=7;
-  ddata->data_id3genre=-1;
+//  ddata->data_genre=7;        // FIXME
   ddata->revision=-1;
 
   for(index=0;index<MAX_TRACKS;index++) {
@@ -709,7 +708,7 @@ int DiscDBReadDiscData(DiscInfo *disc,DiscData *ddata, const char *encoding)
       if(stat(file,&st)==0) {
 	discdb_data=fopen(file, "r");
 
-	ddata->data_genre=genre;
+//	ddata->data_genre=genre;    FIXME
 	break;
       }
     }
@@ -844,13 +843,14 @@ int DiscDBWriteDiscData(DiscInfo *disc,DiscData *ddata,FILE *outfile,
     else fprintf(discdb_data,"DYEAR=\n");
   }
 
-  if(gripext) {
-    fprintf(discdb_data,"DGENRE=%s\n",DiscDBGenre(ddata->data_genre));
-    fprintf(discdb_data,"DID3=%d\n",ddata->data_id3genre);
-  }
-  else if(freedbext) {
-    fprintf(discdb_data,"DGENRE=%s\n",ID3GenreString(ddata->data_id3genre));
-  }
+  // FIXME
+//  if(gripext) {
+//    fprintf(discdb_data,"DGENRE=%s\n",DiscDBGenre(ddata->data_genre));
+//    fprintf(discdb_data,"DID3=%d\n",ddata->data_id3genre);
+//  }
+//  else if(freedbext) {
+//    fprintf(discdb_data,"DGENRE=%s\n",ID3GenreString(ddata->data_id3genre));
+//  }
 
   for(track=0;track<disc->num_tracks;track++) {
     if(gripext||!*(ddata->data_track[track].track_artist)) {

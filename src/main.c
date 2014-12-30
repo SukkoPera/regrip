@@ -52,7 +52,7 @@ static GOptionEntry cmd_options[] = {
 };
 
 
-int Cmain (int argc, char *argv[]) {
+int main (int argc, char *argv[]) {
     GError *error;
     GOptionContext *context;
 

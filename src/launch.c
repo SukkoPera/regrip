@@ -83,6 +83,50 @@ int MakeArgs (char *str, GString **args, int maxargs) {
 	return arg;
 }
 
+gchar *expand_userdir (char *path) {
+    gchar *ret;
+
+	if (*path == '~') {
+		path++;
+
+		/* Expand ~ in dir -- modeled loosely after code from gtkfind by
+		   Matthew Grossman */
+		if (*path == '\0')  {
+		    ret = g_strdup (g_get_home_dir ());
+        } else if (*path == G_DIR_SEPARATOR) {
+            /* This user's dir */
+            ret = g_build_filename (g_get_home_dir (), path + 1, NULL);
+		} else {
+		    /* Another user's dir */
+		    gchar *tok, *username;
+		    struct passwd *pwd;
+
+			tok = strchr (path, G_DIR_SEPARATOR);
+			if (tok) {
+                username = g_strndup (path, tok - path);
+                g_debug ("Looking for username: '%s'", username);
+                ++tok;
+			} else {
+			    username = g_strdup (path);
+			}
+
+			pwd = getpwnam (username);
+			if (!pwd) {
+				g_warning (_("Unable to translate filename - No such user: '%s'"), username);
+				ret = g_strdup (path);
+			} else {
+				ret = g_build_filename (pwd -> pw_dir, tok, NULL);
+			}
+
+			g_free (username);
+		}
+	} else {
+        ret = g_strdup (path);
+	}
+
+	return ret;
+}
+
 /* Translate all '%' switches in a string using the specified function */
 void TranslateString (char *instr, GString *outstr,
 					  char * (*trans_func) (char, void *, gboolean *),
@@ -99,9 +143,8 @@ void TranslateString (char *instr, GString *outstr,
 
 		/* Expand ~ in dir -- modeled loosely after code from gtkfind by
 		   Matthew Grossman */
-
-		if ( (*instr == '\0') || (*instr == '/') ) { /* This user's dir */
-			g_string_sprintf (outstr, "%s", g_get_home_dir() );
+		if ((*instr == '\0') || (*instr == '/')) { /* This user's dir */
+			g_string_sprintf (outstr, "%s", g_get_home_dir ());
 		} else { /* Another user's dir */
 			tok = strchr (instr, '/');
 
@@ -116,7 +159,7 @@ void TranslateString (char *instr, GString *outstr,
 			}
 
 			if (!pwd)
-				g_print (_ ("Error: unable to translate filename. No such user as %s\n"),
+				g_print (_("Error: unable to translate filename. No such user as %s\n"),
 						 tok);
 			else {
 				g_string_sprintf (outstr, "%s", pwd->pw_dir);
@@ -301,7 +344,7 @@ void TranslateAndLaunch (char *cmd, char * (*trans_func) (char, void *, gboolean
 
 		execv (args[0]->str, char_args);
 
-		g_debug (_ ("Exec failed") );
+		g_debug (_("Exec failed") );
 		_exit (0);
 	}
 

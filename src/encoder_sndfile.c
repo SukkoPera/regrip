@@ -5,20 +5,19 @@
 
 
 typedef struct {
-    gchar *extension;
     int sf_format;
 } fmtdata;
 
 static fmtdata format_data[] = {
-    {"wav", SF_FORMAT_WAV | SF_FORMAT_PCM_16},
-    {"ogg", SF_FORMAT_OGG | SF_FORMAT_VORBIS},
-    {"flac", SF_FORMAT_FLAC | SF_FORMAT_PCM_16}
+    {SF_FORMAT_WAV | SF_FORMAT_PCM_16},
+    {SF_FORMAT_OGG | SF_FORMAT_VORBIS},
+    {SF_FORMAT_FLAC | SF_FORMAT_PCM_16}
 };
 
 static supported_format sndfile_formats[] = {
-    {"WAV", &(format_data[0])},
-    {"OGG Vorbis", &(format_data[1])},
-    {"FLAC", &(format_data[2])},
+    {"WAV", "wav", &(format_data[0])},
+    {"OGG Vorbis", "ogg", &(format_data[1])},
+    {"FLAC", "flac", &(format_data[2])},
     {NULL}
 };
 
@@ -37,14 +36,14 @@ enum GripSFEncError {
 };
 
 
-gpointer encoder_sndfile_init (gpointer *fmt, gchar *filename, gpointer opts, GError **error) {
+gpointer encoder_sndfile_init (supported_format *fmt, FILE *fp, gpointer user_data, GError **error) {
     g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
     gpointer ret;
 
 //    g_debug ("encoder_sndfile_init()");
 
-    fmtdata *fmtd = (fmtdata *) fmt;
+    fmtdata *fmtd = (fmtdata *) fmt -> data;
     g_assert (fmtd);
 
     // We only support CD quality output
@@ -58,16 +57,15 @@ gpointer encoder_sndfile_init (gpointer *fmt, gchar *filename, gpointer opts, GE
         g_set_error_literal (error, GRIP_SFENC_ERROR, GRIP_SFENC_ERROR_INVALIDFORMAT, _("Invalid encoder parameters"));
     } else {
         // OK, open output file
-        gchar *filename_ext = g_strdup_printf ("%s.%s", filename, fmtd -> extension);
         SNDFILE *file;
-        if (!(file = sf_open (filename_ext, SFM_WRITE, &sfinfo))) {
-            g_set_error (error, GRIP_SFENC_ERROR, GRIP_SFENC_ERROR_OUTFILE, _("Unable to open output file \"%s\""), filename_ext);
+        int fd = fileno (fp);
+        if (fd < 0 || !(file = sf_open_fd (fd, SFM_WRITE, &sfinfo, FALSE))) {
+            g_set_error (error, GRIP_SFENC_ERROR, GRIP_SFENC_ERROR_OUTFILE, _("Unable to open output file: %s"), sf_strerror (file));
         } else {
             // libsndfile is ready!
             ret = file;
 //            g_debug ("libsndfile ready!");
         }
-        g_free (filename_ext);
     }
 
     return ret;

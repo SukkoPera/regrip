@@ -229,6 +229,11 @@ static gpointer rip_thread_func (gpointer user_data) {
 
     data -> ginfo -> in_rip_thread = TRUE;
 
+    /* Workaround for drives that spin up slowly */
+    if (data -> ginfo -> delay_before_rip) {
+        sleep (5);          // FIXME: Make 5 a constant or even an option
+    }
+
     skipped_flag = 0;
 
     long cursor;

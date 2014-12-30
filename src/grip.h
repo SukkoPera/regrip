@@ -251,6 +251,7 @@ typedef struct _grip_info {
 	time_t rip_started;
 	int ripsize;
 	char ripfile[PATH_MAX];
+	int riptmpfd;
 	int start_sector;
 	int end_sector;
 //	gboolean doencode;
@@ -280,6 +281,8 @@ typedef struct _grip_info {
 	int rip_smile_level;
 	gfloat rip_percent_done;
 
+	char output_folder[PATH_MAX];
+	char rip_tmpfile[PATH_MAX];
 	char ripfileformat[MAX_STRING];
 //	int max_wavs;
 	gboolean auto_rip;

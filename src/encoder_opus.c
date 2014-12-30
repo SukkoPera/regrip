@@ -12,7 +12,7 @@
 #include "encoder_faac.h"
 
 static supported_format opus_formats[] = {
-	{"OPUS", "opus"},
+	{"OPUS", "opus", NULL},
 	{NULL}
 };
 
@@ -25,8 +25,6 @@ GQuark opus_encoder_error_quark (void) {
 }
 
 
-// Size of data we get provided at each callback (in bytes)
-#define CD_SECTOR_SIZE 2352
 #define DEFAULT_FRAME_SIZE 960
 #define MAX_DEFAULT_FRAME_SIZE 6 * DEFAULT_FRAME_SIZE
 #define MAX_PACKET_SIZE (3 * 1276)
@@ -36,7 +34,7 @@ enum GripOpusEncError {
 //    GRIP_OPUSENC_ERROR_NOMEM,
 //    GRIP_OPUSENC_ERROR_INIT,
 //    GRIP_OPUSENC_ERROR_INVALIDFORMAT,
-	GRIP_OPUSENC_ERROR_OUTFILE
+	GRIP_OPUSENC_ERROR_OUTFILE      // FIXME: No longer needed
 };
 
 enum encoding_mode {
@@ -353,8 +351,11 @@ static void encode (encoder_opus_data *eod, float *input, gint32 nb_samples, int
 }
 
 
-static gpointer encoder_opus_init (gpointer *fmt, gchar *filename,
-                                   gpointer opts, GError **error) {
+static gpointer encoder_opus_init (supported_format *fmt, FILE *fp,
+                                   gpointer user_data, GError **error) {
+
+    g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
 	g_debug ("Opus Encoder Module - Using %s", opus_get_version_string());
 
 	int ierror;
@@ -525,21 +526,8 @@ static gpointer encoder_opus_init (gpointer *fmt, gchar *filename,
 	}
 
 	// Prepare output file
-	gchar *extension = (gchar *) fmt;
-	g_assert (extension);
-	gchar *filename_ext = g_strdup_printf ("%s.%s", filename, extension);
-	eod -> fout = fopen (filename_ext, "wb");
-
-	if (!eod -> fout) {
-		g_set_error (error, GRIP_OPUSENC_ERROR, GRIP_OPUSENC_ERROR_OUTFILE,
-		             _ ("Unable to open output file \"%s\""), filename_ext);
-		g_free (filename_ext);
-//		faacEncClose (eod -> codec);
-		g_free (eod);
-		return NULL;
-	}
-
-	g_free (filename_ext);
+	g_assert (fp);
+	eod -> fout = fp;
 
 	// Write header
 	const char *opus_version = opus_get_version_string();

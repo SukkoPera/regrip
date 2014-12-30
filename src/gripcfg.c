@@ -95,11 +95,11 @@ static void on_proxy_use_toggled (GtkToggleButton *togglebutton, gpointer user_d
 	ginfo -> dbserver.use_proxy = ginfo -> use_proxy;
 }
 
-static void on_encoder_selected (GtkComboBox *widget, gpointer data) {
+static void on_encoder_selected (GtkComboBox *widget, gpointer user_data) {
 	GripInfo *ginfo;
 //	GripGUI *uinfo;
 
-	ginfo = (GripInfo *) data;
+	ginfo = (GripInfo *) user_data;
 //	uinfo = &(ginfo -> gui_info);
 
 	GtkTreeIter iter;
@@ -117,10 +117,27 @@ static void on_encoder_selected (GtkComboBox *widget, gpointer data) {
         g_debug ("Selected format: %s", format_name);
 
         // Save selection
-        g_settings_set (ginfo -> settings_encoder, "selected-encoder", "s", ginfo -> encoder -> name);
-        g_settings_set (ginfo -> settings_encoder, "selected-format", "s", format_name);
+        g_settings_set_string (ginfo -> settings_encoder, "selected-encoder", ginfo -> encoder -> name);
+        g_settings_set_string (ginfo -> settings_encoder, "selected-format", format_name);
     }
 }
+
+static void on_output_folder_changed (GtkFileChooserButton *widget, gpointer user_data) {
+   	GripInfo *ginfo;
+
+	ginfo = (GripInfo *) user_data;
+
+    /* This is totally counter-intuitive: we need to use gtk_file_chooser_get_filename()
+     * since gtk_file_chooser_get_current_folder() returns the LAST selected folder when
+     * user chose a folder from 'other' option, not the selected folder in the dropdown menu.
+     */
+    gchar *folder = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (widget));
+    g_debug ("Output folder is now: '%s'", folder);
+    strncpy (ginfo -> output_folder, folder, PATH_MAX);
+    g_settings_set_string (ginfo -> settings_encoder, "output-folder", folder);
+    g_free (folder);
+}
+
 
 void MakeConfigPage (GripInfo *ginfo) {
 	GripGUI *uinfo;
@@ -237,7 +254,7 @@ void MakeConfigPage (GripInfo *ginfo) {
 	gtk_widget_show (check);
 	g_settings_bind (ginfo -> settings_rip, "eject-after-rip", check, "active", G_SETTINGS_BIND_DEFAULT);
 
-	// Use menu here since I don't want to create another variable just for this :)
+    // Use menu here since I don't want to create another variable just for this :)
 	menu = MakeNumEntry (&entry, &ginfo -> eject_delay, _("Auto-eject delay"), 3);
 	gtk_box_pack_start (GTK_BOX (hbox), menu, TRUE, TRUE, 0);
 	gtk_widget_show (menu);
@@ -327,16 +344,34 @@ void MakeConfigPage (GripInfo *ginfo) {
 	vbox = gtk_vbox_new (FALSE, 4);
 	gtk_container_border_width (GTK_CONTAINER (vbox), 3);
 
+	hbox = MakeFolderSelector (&entry, NULL, _("Output Folder"));
+	gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
+	gtk_widget_show (hbox);
+	/* I know it's weird, but selection-changed is the right signal to use here */
+	g_signal_connect (G_OBJECT (entry), "selection-changed", G_CALLBACK (on_output_folder_changed), ginfo);
+	gchar *dir = g_settings_get_string (ginfo -> settings_encoder, "output-folder");
+	gchar *dir2 = expand_userdir (dir);
+    gtk_file_chooser_set_current_folder (GTK_FILE_CHOOSER (entry), dir2);
+    g_free (dir2);
+    g_free (dir);
+    // We have to trigger the first update manually
+    on_output_folder_changed (GTK_FILE_CHOOSER_BUTTON (entry), ginfo);
+
+    hbox = MakeStrEntry (&entry, ginfo -> ripfileformat, _("Output Filename"), MAX_STRING, TRUE);
+    gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
+    gtk_widget_show (hbox);
+    g_settings_bind (ginfo -> settings_encoder, "output-filename", entry, "text", G_SETTINGS_BIND_DEFAULT);
+
 	hbox = gtk_hbox_new (FALSE, 3);
 
-	label = gtk_label_new (_("Output File Format:"));
+	label = gtk_label_new (_("Output File Format"));
 	gtk_box_pack_start (GTK_BOX (hbox), label, TRUE, TRUE, 0);
 	gtk_widget_show (label);
 
 	/* *** Encoders menu START *** */
     gchar *selected_encoder, *selected_format;
-    g_settings_get (ginfo -> settings_encoder, "selected-encoder", "s", &selected_encoder);
-    g_settings_get (ginfo -> settings_encoder, "selected-format", "s", &selected_format);
+    selected_encoder = g_settings_get_string (ginfo -> settings_encoder, "selected-encoder");
+    selected_format = g_settings_get_string (ginfo -> settings_encoder, "selected-format");
 //    g_debug ("Selected encoder/format: %s/%s", selected_encoder, selected_format);
 
 	GtkListStore *store = gtk_list_store_new (3, G_TYPE_STRING, G_TYPE_POINTER, G_TYPE_POINTER);    // Name, supported_format, supported_encoder
@@ -389,6 +424,9 @@ void MakeConfigPage (GripInfo *ginfo) {
 
 	gtk_widget_show (menu);
 	gtk_box_pack_start (GTK_BOX (hbox), menu, TRUE, TRUE, 0);
+
+	g_free (selected_encoder);
+	g_free (selected_format);
 	/* *** Encoders menu END *** */
 
 

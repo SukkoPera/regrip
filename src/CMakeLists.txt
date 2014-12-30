@@ -23,10 +23,8 @@ set (
     gain_analysis.h
     grip.c
     grip.h
-    grip_id3.h
     gripcfg.c
     gripcfg.h
-    id3.c
     launch.c
     launch.h
     main.c
@@ -34,13 +32,13 @@ set (
     rip.h
     status_window.c
     status_window.h
+    tag.c
+    tag.h
     tray.c
     tray.h
     uihelper.c
     uihelper.h
     xpm.h
-
-    cppmain.cc
 )
 
 set (
@@ -57,6 +55,7 @@ set (
 set (
     libraries
 
+    -lm			# For gain analysis
     ${GTK2_LIBRARIES}
     ${GTHREAD_LIBRARIES}
     ${GTHREAD_LDFLAGS_OTHER}
@@ -64,6 +63,20 @@ set (
     ${CURL_LIBRARIES}
     ${CDPARANOIA_LIBRARIES}
 )
+
+if (TAGLIB_FOUND)
+    set (
+        includes
+        ${includes}
+        ${TAGLIB_INCLUDE_DIRS}
+    )
+
+    set (
+        libraries
+        ${libraries}
+        ${TAGLIB_LIBRARIES}
+    )
+endif (TAGLIB_FOUND)
 
 if (SNDFILE_FOUND)
     set (

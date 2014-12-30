@@ -197,6 +197,40 @@ GtkWidget *MakeStrEntry (GtkWidget **entry, char *var, char *name,
 	return hbox;
 }
 
+static void on_folder_selected (GtkFileChooserButton *widget, gpointer user_data) {
+    strcpy ((char *) user_data, gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (widget)));
+    g_debug ("Output folder is now: '%s'", (char *) user_data);
+}
+
+GtkWidget *MakeFolderSelector (GtkWidget **entry, char *var, char *name) {
+	GtkWidget *widget;
+	GtkWidget *label;
+	GtkWidget *hbox;
+
+	hbox = gtk_hbox_new (FALSE, 5);
+
+	label = gtk_label_new (name);
+	gtk_label_set_justify (GTK_LABEL (label), GTK_JUSTIFY_LEFT);
+	gtk_box_pack_start (GTK_BOX (hbox), label, FALSE, FALSE, 0);
+	gtk_widget_show (label);
+
+	widget = gtk_file_chooser_button_new (name, GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER);
+
+	if (var) {
+		g_signal_connect (G_OBJECT (widget), "selection-changed",
+		                    G_CALLBACK (on_folder_selected), (gpointer) var);
+	}
+
+	gtk_box_pack_start (GTK_BOX (hbox), widget, FALSE, FALSE, 0);
+	gtk_widget_show (widget);
+
+	if (entry) {
+		*entry = widget;
+	}
+
+	return hbox;
+}
+
 void ChangeIntVal (GtkWidget *widget, gpointer data) {
 	*((int *)data) = atoi (gtk_entry_get_text (GTK_ENTRY (widget)));
 }

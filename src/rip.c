@@ -46,7 +46,7 @@
 #include "cddev.h"
 #include "gripcfg.h"
 #include "launch.h"
-#include "grip_id3.h"
+#include "tag.h"
 #include "config.h"
 #include "uihelper.h"
 #include "gain_analysis.h"
@@ -528,53 +528,29 @@ void KillRip (GtkWidget *widget, gpointer data) {
 }
 
 static void ID3Add (GripInfo *ginfo, char *file, EncodeTrack *enc_track) {
-	char year[5];
-	GString *comment;
-//	int len;
+    if (ginfo -> doid3) {
+        GString *comment = g_string_new (NULL);
+        g_debug ("comment = '%s'", ginfo -> id3_comment);
+        TranslateString (ginfo -> id3_comment, comment, TranslateSwitch, enc_track,
+                         FALSE, &(ginfo -> sprefs));
+        g_assert (comment);
 
-	/* If we only want to tag mp3 files, look for the correct extension */
-#if 0
-	if (ginfo -> tag_mp3_only) {
-		len = strlen (file);
+        GError *error = NULL;
+        if (!tag_file (file, (*(enc_track -> song_name)) ? enc_track -> song_name :
+                      "Unknown",
+                      (*(enc_track -> song_artist)) ? enc_track -> song_artist :
+                      (*(enc_track -> disc_artist)) ? enc_track -> disc_artist : "Unknown",
+                      (*(enc_track -> disc_name)) ? enc_track -> disc_name : "Unknown",
+                      enc_track -> song_year, comment -> str, enc_track -> genre,
+                      enc_track -> track_num + 1, ginfo -> id3_encoding, &error)) {
 
-		if (len < 4 || strcasecmp (file + (len - 4), ".mp3")) {
-			return;
-		}
-	}
-#endif
+            // Cannot tag file
+            show_error (ginfo -> gui_info.app, error -> message);
+            g_error_free (error);
+        }
 
-	comment = g_string_new (NULL);
-	TranslateString (ginfo -> id3_comment, comment, TranslateSwitch, enc_track,
-	                 FALSE, &(ginfo -> sprefs));
-
-	g_snprintf (year, 5, "%d", enc_track -> song_year);
-
-	/* If we've got id3lib, we have the option of doing v2 tags */
-#ifdef HAVE_ID3V2
-
-	if (ginfo -> doid3v2) {
-		ID3v2TagFile (file, (* (enc_track -> song_name)) ? enc_track -> song_name :
-		              "Unknown",
-		              (* (enc_track -> song_artist)) ? enc_track -> song_artist :
-		              (* (enc_track -> disc_artist)) ? enc_track -> disc_artist : "Unknown",
-		              (* (enc_track -> disc_name)) ? enc_track -> disc_name : "Unknown",
-		              year, comment -> str, enc_track -> id3_genre,
-		              enc_track -> track_num + 1, ginfo -> id3v2_encoding);
-	}
-
-#endif
-
-	if (ginfo -> doid3) {
-		ID3v1TagFile (file, (* (enc_track -> song_name)) ? enc_track -> song_name :
-		              "Unknown",
-		              (* (enc_track -> song_artist)) ? enc_track -> song_artist :
-		              (* (enc_track -> disc_artist)) ? enc_track -> disc_artist : "Unknown",
-		              (* (enc_track -> disc_name)) ? enc_track -> disc_name : "Unknown",
-		              year, comment -> str, enc_track -> id3_genre,
-		              enc_track -> track_num + 1, ginfo -> id3_encoding);
-	}
-
-	g_string_free (comment, TRUE);
+        g_string_free (comment, TRUE);
+    }
 }
 
 static void DoWavFilter (GripInfo *ginfo) {
@@ -682,8 +658,8 @@ void UpdateRipProgress (GripInfo *ginfo) {
                 g_debug (_("Rip thread finished successfully"));
        			LogStatus (ginfo, _("Rip thread finished successfully\n"));
             } else {
-                g_debug (_("Rip thread finished with failure"));
-                LogStatus (ginfo, _("Rip thread finished with failure\n"));
+                g_debug (_("Rip thread finished with failure or was aborted"));
+                LogStatus (ginfo, _("Rip thread finished with failure or was aborted\n"));
             }
             ginfo -> rip_thread = NULL;
 
@@ -698,30 +674,45 @@ void UpdateRipProgress (GripInfo *ginfo) {
             ginfo -> encoder -> close (ginfo -> encoder_data, &error);
             // FIXME Handle error
 
-			ginfo -> all_riplast = 0;
-			ginfo -> ripping = FALSE;
-			SetChecked (uinfo, ginfo -> rip_track, FALSE);
+            // Close and rename temporary file
+//            fclose ()
+            close (ginfo -> riptmpfd);
 
-			/* Get the title gain */
-			if (ginfo -> calc_gain) {
-				ginfo -> track_gain_adjustment = GetTitleGain();
-			}
+            if (rip_ok) {
+                g_rename (ginfo -> rip_tmpfile, ginfo -> ripfile);
 
-			/* Do filtering of .wav file */
-			if (*ginfo -> wav_filter_cmd) {
-				DoWavFilter (ginfo);
-			}
+                ginfo -> all_riplast = 0;
+                ginfo -> ripping = FALSE;
+                SetChecked (uinfo, ginfo -> rip_track, FALSE);
+
+                /* Get the title gain */
+                if (ginfo -> calc_gain) {
+                    ginfo -> track_gain_adjustment = GetTitleGain ();
+                }
+
+                /* Apply tag */
+                EncodeTrack enc_track;
+                FillInTrackInfo (ginfo, ginfo -> rip_track, &enc_track);
+                strcpy (enc_track.wav_filename, ginfo -> ripfile);  // FIXME: probably useless
+                ID3Add (ginfo, ginfo -> ripfile, &enc_track);
+
+                /* Do filtering of .wav file */
+                if (*ginfo -> wav_filter_cmd) {
+                    DoWavFilter (ginfo);
+                }
+            } else {
+                // Remove temporary file
+                g_unlink (ginfo -> rip_tmpfile);
+                (ginfo -> rip_tmpfile)[0] = '\0';
+
+                show_error (ginfo -> gui_info.app, "Rip failed");
+            }
 
 			gtk_progress_bar_update (GTK_PROGRESS_BAR (uinfo -> ripprogbar), 0.0);
 			CopyPixmap (GTK_PIXMAP (uinfo -> empty_image),
 			            GTK_PIXMAP (uinfo -> rip_indicator));
 
 			if (!ginfo -> stop_rip) {
-//				if (ginfo -> doencode) {
-//					AddToEncode (ginfo, ginfo -> rip_track);
-//					MP3Encode (ginfo);
-//				}
-
 				g_debug (_("Rip partial %d"), ginfo -> rip_partial);
 
 				g_debug (_("Next track is %d, total is %d"),
@@ -895,16 +886,6 @@ static void RipIsFinished (GripInfo *ginfo, gboolean aborted) {
 			DoDiscFilter (ginfo);
 		}
 
-//		if (ginfo -> delayed_encoding) {
-//			ginfo -> encode_list = g_list_concat (ginfo -> encode_list,
-//			                                    ginfo -> pending_list);
-//			ginfo -> pending_list = NULL;
-//
-//			/* Start an encoder on all free CPUs
-//			 * This is really only useful the first time through */
-//			while (MP3Encode (ginfo));
-//		}
-
 		if (ginfo -> eject_after_rip) {
 			/* Reset rip_finished since we're ejecting */
 			ginfo -> rip_finished = 0;
@@ -922,7 +903,7 @@ char *TranslateSwitch (char switch_char, void *data, gboolean *munge) {
 	static char res[PATH_MAX];
 	EncodeTrack *enc_track;
 
-	enc_track = (EncodeTrack *)data;
+	enc_track = (EncodeTrack *) data;
 
 	switch (switch_char) {
 //		case 'b':
@@ -1020,13 +1001,9 @@ char *TranslateSwitch (char switch_char, void *data, gboolean *munge) {
 			*munge = FALSE;
 			break;
 
-		case 'g':
-			g_snprintf (res, PATH_MAX, "%d", enc_track -> id3_genre);
-			*munge = FALSE;
-			break;
-
 		case 'G':
-			g_snprintf (res, PATH_MAX, "%s", ID3GenreString (enc_track -> id3_genre));
+			g_snprintf (res, PATH_MAX, "%s", enc_track -> genre);
+			*munge = FALSE;
 			break;
 
 		case 'r':
@@ -1039,10 +1016,10 @@ char *TranslateSwitch (char switch_char, void *data, gboolean *munge) {
 			*munge = FALSE;
 			break;
 
-//		case 'x':
-//			g_snprintf (res, PATH_MAX, "%s", enc_track -> ginfo -> mp3extension);
-//			*munge = FALSE;
-//			break;
+		case 'x':
+			g_snprintf (res, PATH_MAX, "%s", enc_track -> ginfo -> format -> extension);
+			*munge = FALSE;
+			break;
 
 		default:
 			*res = '\0';
@@ -1169,7 +1146,7 @@ static void RipWholeCD (GtkDialog *dialog, gint reply, gpointer data) {
 	}
 
 //	if (ginfo -> doencode) {
-		DoRip (NULL, (gpointer)ginfo);
+		DoRip (NULL, (gpointer) ginfo);
 //	} else {
 //		DoRip ((GtkWidget *)1, (gpointer)ginfo);
 //	}
@@ -1219,17 +1196,12 @@ static gboolean rip_callback (gint16 *buffer, gsize bufsize, gfloat progress, in
 
 static gboolean RipNextTrack (GripInfo *ginfo) {
 	GripGUI *uinfo;
-	char tmp[PATH_MAX];
-//  int arg;
-//  GString *args[100];
-//  char *char_args[101];
+	char tmp[MAX_STRING];
 	unsigned long long bytesleft;
-	struct stat mystat;
 	GString *str;
 	EncodeTrack enc_track;
-	char *conv_str, *utf8_ripfile;
-	gsize rb, wb;
-	const char *charset;
+	char *ripfile, *ripfilefull;
+	GError *error;
 
 	uinfo = &(ginfo -> gui_info);
 
@@ -1279,24 +1251,28 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
 
 		ginfo -> ripsize = 44 + ((ginfo -> end_sector - ginfo -> start_sector) + 1) * 2352;
 
+		// Generate output filename
 		str = g_string_new (NULL);
 		FillInTrackInfo (ginfo, ginfo -> rip_track, &enc_track);
-
 		TranslateString (ginfo -> ripfileformat, str, TranslateSwitch,
 		                 &enc_track, TRUE, &(ginfo -> sprefs));
 
-		g_get_charset (&charset);
-
-		conv_str = g_filename_from_utf8 (str -> str, strlen (str -> str), &rb, &wb, NULL);
-		if (!conv_str) {
-			conv_str = g_strdup (str -> str);
+		ripfile = g_filename_from_utf8 (str -> str, strlen (str -> str), NULL, NULL, &error);
+		if (!ripfile) {
+            g_warning ("Error while converting UTF-8 to filename: %s", error -> message);
+            g_error_free (error);
+			ripfile = g_strdup (str -> str);
 		}
-
-		g_snprintf (ginfo -> ripfile, 256, "%s", conv_str);
-
-		g_free (conv_str);
 		g_string_free (str, TRUE);
 
+		// Make ripfile relative to output folder (which should already be in filename encoding)
+		ripfilefull = g_build_filename (ginfo -> output_folder, ripfile, NULL);
+		g_free (ripfile);
+		g_snprintf (ginfo -> ripfile, PATH_MAX, "%s", ripfilefull);
+		g_free (ripfilefull);
+
+		// Check for writability. Note that dir can be different from ginfo -> output_folder,
+		// since directories can also be specified in ginfo -> ripfileformat.
 		gchar *dir = g_path_get_dirname (ginfo -> ripfile);
 		if (dir == NULL || g_mkdir_with_parents (dir, 0755) < 0 || g_access (dir, W_OK) != 0) {
 			show_error (ginfo -> gui_info.app,
@@ -1304,58 +1280,57 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
             g_free (dir);
 			return FALSE;
 		}
-		g_free (dir);
 
-		/* Workaround for drives that spin up slowly */
-		if (ginfo -> delay_before_rip) {
-			sleep (5);
-		}
-
-		utf8_ripfile = g_filename_to_utf8 (ginfo -> ripfile, strlen (ginfo -> ripfile),
-		                                   &rb, &wb, NULL);
-
-		if (!utf8_ripfile) {
-			utf8_ripfile = strdup (ginfo -> ripfile);
-		}
-
-		LogStatus (ginfo, _("Ripping track %d to %s\n"),
-		           ginfo -> rip_track + 1, utf8_ripfile);
-
-		ginfo -> rip_started = time (NULL);
-		sprintf (tmp, _("Rip: Trk %d (0.0x)"), ginfo -> rip_track + 1);
-		gtk_label_set (GTK_LABEL (uinfo -> rip_prog_label), tmp);
-
-		if (stat (ginfo -> ripfile, &mystat) >= 0) {
-			if (mystat.st_size == ginfo -> ripsize) {
-				LogStatus (ginfo, _("File %s has already been ripped. Skipping...\n"), \
-				           utf8_ripfile);
-
-				g_free (utf8_ripfile);
+		// Check if file already exists
+		GStatBuf mystat;
+		if (g_stat (ginfo -> ripfile, &mystat) >= 0) {
+			if (mystat.st_size > 0) {
+				g_debug (_("File %s has already been ripped. Skipping..."), ginfo -> ripfile);
+				LogStatus (ginfo, _("File %s has already been ripped. Skipping...\n"), ginfo -> ripfile);
 
 				ginfo -> ripping = TRUE;
 				ginfo -> all_ripdone += CalculateWavSize (ginfo, ginfo -> rip_track);
 				ginfo -> all_riplast = 0;
+
 				return TRUE;
 			} else {
-				unlink (ginfo -> ripfile);
+				g_unlink (ginfo -> ripfile);
 			}
 		}
 
-		g_free (utf8_ripfile);
-
+		// This is currently wrong, but works as a sort of (much higher) upper limit, so let's keep it
 		bytesleft = BytesLeftInFS (ginfo -> ripfile);
-
 		if (bytesleft < (ginfo -> ripsize * 1.5)) {
-			show_warning (ginfo -> gui_info.app,
-			              _("Out of space in output directory"));
-
+			show_error (ginfo -> gui_info.app,
+                        _("Out of space in output directory"));
+            // FIXME: Free stuff?
 			return FALSE;
 		}
 
+		// Now that we are sure we can write to output file, generate a temporary one
+		// Reuse ripfilefull
+		ripfilefull = g_build_filename (dir, "regrip-XXXXXX.tmp", NULL);
+		g_snprintf (ginfo -> rip_tmpfile, PATH_MAX, "%s", ripfilefull);
+		g_free (ripfilefull);
+		if ((ginfo -> riptmpfd = g_mkstemp (ginfo -> rip_tmpfile)) < 0) {
+            show_error (ginfo -> gui_info.app,
+			            _("Cannot create temporary rip file"));
+            // FIXME: Free stuff?
+			return FALSE;
+		}
+
+
+		g_debug (_("Ripping track %d to '%s'"), ginfo -> rip_track + 1, ginfo -> ripfile);
+		LogStatus (ginfo, _("Ripping track %d to %s\n"),
+		           ginfo -> rip_track + 1, ripfile);
+		g_debug ("Temp file is: '%s'", ginfo -> rip_tmpfile);
+
 		// Init encoder
-		GError *error = NULL;
 		g_assert (ginfo -> encoder != NULL);
-		gpointer encoder = ginfo -> encoder -> init (ginfo -> format -> data, ginfo -> ripfile, NULL, &error);
+		FILE *fp = fdopen (ginfo -> riptmpfd, "wb");
+		g_assert (fp);
+		error = NULL;
+		gpointer encoder = ginfo -> encoder -> init (ginfo -> format, fp, NULL, &error);
 		if (!encoder) {
             gchar *warn = g_strdup_printf (_("Cannot init encoder: %s"), error -> message);
 			show_error (ginfo -> gui_info.app, warn);
@@ -1364,9 +1339,16 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
 			return FALSE;
 		}
 
+		// This is no longer needed
+		g_free (dir);
+
 		// Start rip thread
+		ginfo -> rip_started = time (NULL);
 		ginfo -> rip_percent = 0;
 		ginfo -> encoder_data = encoder;
+		g_snprintf (tmp, MAX_STRING, _("Rip: Trk %d (0.0x)"), ginfo -> rip_track + 1);
+		gtk_label_set (GTK_LABEL (uinfo -> rip_prog_label), tmp);
+
 		error = NULL;
 		if (!rip_start (ginfo, rip_callback, ginfo, &error)) {
             gchar *warn = g_strdup_printf (_("Cannot start rip thread: %s"), error -> message);
@@ -1414,7 +1396,7 @@ void FillInTrackInfo (GripInfo *ginfo, int track, EncodeTrack *new_track) {
 	            ginfo -> ddata.data_track[track].track_artist);
 	g_snprintf (new_track -> disc_name, 256, "%s", ginfo -> ddata.data_title);
 	g_snprintf (new_track -> disc_artist, 256, "%s", ginfo -> ddata.data_artist);
-	new_track -> id3_genre = ginfo -> ddata.data_id3genre;
+	strcpy (new_track -> genre, ginfo -> ddata.data_genre);
 	new_track -> discid = ginfo -> ddata.data_id;
 }
 
