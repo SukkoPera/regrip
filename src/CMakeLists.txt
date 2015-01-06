@@ -1,6 +1,7 @@
 set (
     regrip_src
 
+    common.h
     cddev.c
     cddev.h
     cdpar.c
@@ -63,6 +64,21 @@ set (
     ${CURL_LIBRARIES}
     ${CDPARANOIA_LIBRARIES}
 )
+
+if (CDDB_FOUND)
+    set (
+        includes
+        ${includes}
+        ${CDDB_INCLUDE_DIRS}
+    )
+
+    set (
+        libraries
+        ${libraries}
+        ${CDDB_LIBRARIES}
+    )
+endif (CDDB_FOUND)
+
 
 if (TAGLIB_FOUND)
     set (

@@ -32,6 +32,7 @@
 #include "status_window.h"
 #include "eggtrayicon.h"
 #include "encoder.h"
+#include "common.h"
 
 #define RRand(range) (random()%(range))
 
@@ -45,8 +46,6 @@
 
 #endif
 
-#define MAX_STRING 256
-#define SMALL_STRING 16
 
 typedef struct _grip_gui {
 	GtkWidget *app;
@@ -180,6 +179,14 @@ typedef struct _grip_gui {
 } GripGUI;
 
 struct _encode_track;
+
+/* HTTP proxy server structure */
+typedef struct _proxy_server {
+	char name[MAX_STRING];
+	int port;
+	char username[MAX_STRING];
+	char pswd[MAX_STRING];
+} ProxyServer;
 
 typedef struct _grip_info {
 	char version[MAX_STRING];

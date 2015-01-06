@@ -6,8 +6,8 @@
  *
  *   http://sourceforge.net/projects/grip/
  *
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License as 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
  * License, or (at your option) any later version.
  *
@@ -27,6 +27,7 @@
 #define GRIP_CDDEV_H
 
 #include <glib.h>
+#include "common.h"
 
 /* Used with disc_info */
 #define CDAUDIO_PLAYING				0
@@ -34,7 +35,6 @@
 #define CDAUDIO_COMPLETED			2
 #define CDAUDIO_NOSTATUS			3
 
-#define MAX_TRACKS				100
 #define MAX_SLOTS				100 /* For CD changers */
 
 #define CURRENT_CDDBREVISION			2
@@ -72,7 +72,7 @@ typedef struct _disc_info {
 } DiscInfo;
 
 /* Channle volume structure */
-typedef struct _channel_volume { 
+typedef struct _channel_volume {
   int left;
   int right;
 } ChannelVolume;

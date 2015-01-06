@@ -594,10 +594,10 @@ static void SaveDiscInfo (GtkWidget *widget, gpointer data) {
 	ginfo = (GripInfo *) data;
 
 	if (ginfo -> have_disc) {
-		if (DiscDBWriteDiscData (&(ginfo -> disc), &(ginfo -> ddata), NULL, TRUE, FALSE,
-		                         "utf-8") < 0)
-			show_warning (ginfo -> gui_info.app,
-			              _("Error saving disc data."));
+//		if (DiscDBWriteDiscData (&(ginfo -> disc), &(ginfo -> ddata), NULL, TRUE, FALSE,
+//		                         "utf-8") < 0)
+//			show_warning (ginfo -> gui_info.app,
+//			              _("Error saving disc data."));
 	} else show_warning (ginfo -> gui_info.app,
 		                     _("No disc present."));
 }
@@ -837,15 +837,15 @@ static void GetDiscDBGenre (GripInfo *ginfo) {
 	gtk_box_pack_start (GTK_BOX (hbox), label, FALSE, FALSE, 0);
 	gtk_widget_show (label);
 
-	for (genre = 0; genre < 12; genre++) {
-		item = gtk_list_item_new_with_label (DiscDBGenre (genre));
-		gtk_object_set_user_data (GTK_OBJECT (item),
-		                          GINT_TO_POINTER (genre));
+//	for (genre = 0; genre < 12; genre++) {
+//		item = gtk_list_item_new_with_label (DiscDBGenre (genre));
+//		gtk_object_set_user_data (GTK_OBJECT (item),
+//		                          GINT_TO_POINTER (genre));
 //		gtk_signal_connect (GTK_OBJECT (item), "select",
 //		                    GTK_SIGNAL_FUNC (DiscDBGenreChanged), (gpointer)ginfo);
-		gtk_container_add (GTK_CONTAINER (GTK_COMBO (genre_combo) -> list), item);
-		gtk_widget_show (item);
-	}
+//		gtk_container_add (GTK_CONTAINER (GTK_COMBO (genre_combo) -> list), item);
+//		gtk_widget_show (item);
+//	}
 
 	gtk_box_pack_start (GTK_BOX (hbox), genre_combo, TRUE, TRUE, 0);
 	gtk_widget_show (genre_combo);

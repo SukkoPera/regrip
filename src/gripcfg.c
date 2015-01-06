@@ -92,7 +92,7 @@ static void on_proxy_use_toggled (GtkToggleButton *togglebutton, gpointer user_d
 	gtk_widget_set_sensitive (uinfo -> proxy_user, enabled && !enabled2);
 	gtk_widget_set_sensitive (uinfo -> proxy_pswd, enabled && !enabled2);
 
-	ginfo -> dbserver.use_proxy = ginfo -> use_proxy;
+//	ginfo -> dbserver.use_proxy = ginfo -> use_proxy;
 }
 
 static void on_encoder_selected (GtkComboBox *widget, gpointer user_data) {

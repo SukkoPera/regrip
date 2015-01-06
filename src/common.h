@@ -1,0 +1,9 @@
+#ifndef COMMON_H_INCLUDED
+#define COMMON_H_INCLUDED
+
+#define MAX_STRING 256
+#define SMALL_STRING 16
+
+#define MAX_TRACKS				99
+
+#endif // COMMON_H_INCLUDED

@@ -106,30 +106,30 @@ void LookupDisc (GripInfo *ginfo, gboolean manual) {
 	ddata -> data_multi_artist = FALSE;
 	ddata -> data_year = 0;
 
-	present = DiscDBStatDiscData (disc);
-
-	if (!manual && present) {
-		DiscDBReadDiscData (disc, ddata, ginfo -> discdb_encoding);
-
-		// FIXME
-//		if (ginfo -> ddata.data_id3genre == -1) {
-//			ginfo -> ddata.data_id3genre = DiscDB2ID3 (ginfo -> ddata.data_genre);
-//		}
-
-		ginfo -> update_required = TRUE;
-		ginfo -> is_new_disc = TRUE;
-	} else {
+//	present = DiscDBStatDiscData (disc);
+//
+//	if (!manual && present) {
+//		DiscDBReadDiscData (disc, ddata, ginfo -> discdb_encoding);
+//
+//		// FIXME
+////		if (ginfo -> ddata.data_id3genre == -1) {
+////			ginfo -> ddata.data_id3genre = DiscDB2ID3 (ginfo -> ddata.data_genre);
+////		}
+//
+//		ginfo -> update_required = TRUE;
+//		ginfo -> is_new_disc = TRUE;
+//	} else {
 		if (!manual) {
-			ddata -> data_id = DiscDBDiscid (disc);
+//			ddata -> data_id = DiscDBDiscid (disc);
 			strncpy (ddata -> data_genre, "Other", MAX_STRING);
 			strncpy (ddata -> data_title, _("Unknown Disc"), MAX_STRING);
 			strncpy (ddata -> data_artist, "", MAX_STRING);
 
 			for (track = 0; track < disc -> num_tracks; track++) {
 				sprintf (ddata -> data_track[track].track_name, _("Track %02d"), track + 1);
-				* (ddata -> data_track[track].track_artist) = '\0';
-				* (ddata -> data_track[track].track_extended) = '\0';
-				* (ddata -> data_playlist) = '\0';
+				*(ddata -> data_track[track].track_artist) = '\0';
+				*(ddata -> data_track[track].track_extended) = '\0';
+				*(ddata -> data_playlist) = '\0';
 			}
 
 			*ddata -> data_extended = '\0';
@@ -137,14 +137,13 @@ void LookupDisc (GripInfo *ginfo, gboolean manual) {
 			ginfo -> update_required = TRUE;
 		}
 
-		if (!ginfo -> local_mode &&(manual ? TRUE : ginfo -> automatic_discdb)) {
+		if (!ginfo -> local_mode && (manual ? TRUE : ginfo -> automatic_discdb)) {
 			ginfo -> looking_up = TRUE;
 
-			pthread_create (&(ginfo -> discdb_thread), NULL, (void *)&DoLookup,
-			                (void *)ginfo);
+			pthread_create (&(ginfo -> discdb_thread), NULL, (void *) DoLookup, (void *) ginfo);
 			pthread_detach (ginfo -> discdb_thread);
 		}
-	}
+//	}
 }
 
 static void DoLookup (void *data) {
@@ -153,7 +152,7 @@ static void DoLookup (void *data) {
 	ginfo = (GripInfo *) data;
 
 	if (!DiscDBLookupDisc (ginfo, &(ginfo -> dbserver))) {
-		ginfo -> ask_submit = TRUE;
+//		ginfo -> ask_submit = TRUE;
 	}
 
 	// FIXME
@@ -166,6 +165,36 @@ static void DoLookup (void *data) {
 }
 
 gboolean DiscDBLookupDisc (GripInfo *ginfo, DiscDBServer *server) {
+   	if (!(ginfo -> disc).have_info) {
+		CDStat (&(ginfo -> disc), TRUE);
+	}
+
+    GError *error = NULL;
+    GList *results = cddb_lookup (&(ginfo -> disc), &(ginfo -> dbserver), &error);
+    if (results == NULL) {
+        if (error != NULL) {
+            // Query failed
+            g_debug ("CDDB lookup failed: %s", error -> message);
+            g_error_free (error);
+        } else {
+            // No matches
+        }
+
+        return FALSE;
+    } else {
+        guint n = g_list_length (results);
+        g_debug ("CDDB matches: %u", n);
+        GList *cur = g_list_first (results);
+        ginfo -> ddata = *(DiscData *) cur -> data;
+
+        ginfo -> update_required = TRUE;
+        ginfo -> is_new_disc = TRUE;
+
+        return TRUE;
+    }
+
+
+#if 0
 	DiscDBHello hello;
 	DiscDBQuery query;
 	DiscDBEntry entry;
@@ -225,6 +254,7 @@ gboolean DiscDBLookupDisc (GripInfo *ginfo, DiscDBServer *server) {
 	}
 
 	return success;
+#endif // 0
 }
 
 int GetLengthRipWidth (GripInfo *ginfo) {
@@ -614,11 +644,11 @@ static void PlaylistChanged (GtkWindow *window, GtkWidget *widget,
 
 	InitProgram (ginfo);
 
-	if (DiscDBWriteDiscData (&(ginfo -> disc), &(ginfo -> ddata), NULL, TRUE, FALSE,
-	                         "utf-8") < 0) {
-		show_warning (ginfo -> gui_info.app,
-		              _("Error saving disc data."));
-	}
+//	if (DiscDBWriteDiscData (&(ginfo -> disc), &(ginfo -> ddata), NULL, TRUE, FALSE,
+//	                         "utf-8") < 0) {
+//		show_warning (ginfo -> gui_info.app,
+//		              _("Error saving disc data."));
+//	}
 }
 
 static void ToggleLoop (GtkWidget *widget, gpointer data) {
@@ -1514,7 +1544,8 @@ void CheckNewDisc (GripInfo *ginfo, gboolean force) {
 			if (CheckTracks (disc)) {
 				g_debug (_("We have a valid disc!"));
 
-				new_id = DiscDBDiscid (disc);
+//				new_id = DiscDBDiscid (disc);
+                new_id = 1;     // FIXME
 
 				InitProgram (ginfo);
 
@@ -1798,7 +1829,8 @@ void UpdateTracks (GripInfo *ginfo) {
 		/* Reset to make sure we don't eject twice */
 		ginfo -> auto_eject_countdown = 0;
 
-		ginfo -> current_discid = DiscDBDiscid (disc);
+		// FIXME
+//		ginfo -> current_discid = DiscDBDiscid (disc);
 
 		SetTitle (ginfo, ddata -> data_title);
 		SetArtist (ginfo, ddata -> data_artist);
@@ -1929,23 +1961,23 @@ void SubmitEntry (GtkDialog *dialog, gint reply, gpointer data) {
 //	      "MIME-Version: 1.0\nContent-type: text/plain; charset=UTF-8\n\n");
 //    }
 
-		if (DiscDBWriteDiscData (&(ginfo -> disc), &(ginfo -> ddata), efp, FALSE,
-		                         TRUE /*ginfo -> db_use_freedb*/,/*ginfo -> db_use_freedb?*/
-		                         "UTF-8"/*:ginfo -> discdb_encoding*/) < 0) {
-			show_warning (ginfo -> gui_info.app,
-			              _("Error: Unable to write disc data."));
-			fclose (efp);
-		} else {
-			fclose (efp);
-			close (fd);
-
-			g_snprintf (mailcmd, 256, "%s < %s", MAILER, filename);
-
-			g_debug (_("Mailing entry to %s"), ginfo -> discdb_submit_email);
-
-			system (mailcmd);
-
-			remove (filename);
-		}
+//		if (DiscDBWriteDiscData (&(ginfo -> disc), &(ginfo -> ddata), efp, FALSE,
+//		                         TRUE /*ginfo -> db_use_freedb*/,/*ginfo -> db_use_freedb?*/
+//		                         "UTF-8"/*:ginfo -> discdb_encoding*/) < 0) {
+//			show_warning (ginfo -> gui_info.app,
+//			              _("Error: Unable to write disc data."));
+//			fclose (efp);
+//		} else {
+//			fclose (efp);
+//			close (fd);
+//
+//			g_snprintf (mailcmd, 256, "%s < %s", MAILER, filename);
+//
+//			g_debug (_("Mailing entry to %s"), ginfo -> discdb_submit_email);
+//
+//			system (mailcmd);
+//
+//			remove (filename);
+//		}
 	}
 }

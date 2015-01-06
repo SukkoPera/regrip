@@ -105,14 +105,12 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 
 	GError *err = NULL;
 	gchar *icon_file = g_build_filename (GNOME_ICONDIR, "gripicon.png", NULL);
-
 	if (!gtk_window_set_default_icon_from_file (icon_file, &err)) {
 		gchar *msg = g_strdup_printf (_("Error: Unable to set window icon: %s"),
 		                              err -> message);
 		show_error (NULL, msg);
 		g_free (msg);
 	}
-
 	g_free (icon_file);
 
 	// Init global object
@@ -125,7 +123,19 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 	gtk_object_set_user_data (GTK_OBJECT (app), (gpointer) ginfo);
 
     // First of all, load settings
+#ifdef MAINTAINER_MODE
+    err = NULL;
+    GSettingsSchemaSource *schema_source = g_settings_schema_source_new_from_directory ("/mnt/nashomes/sukko/gurtdoc/c_hosted/grip/gschema", g_settings_schema_source_get_default (), FALSE, &err);
+    if (schema_source == NULL) {
+        g_error ("Cannot open gsettings schema: %s", error -> message);
+    }
+    GSettingsSchema *schema = g_settings_schema_source_lookup (schema_source, "net.sukkology.software.regrip", TRUE);
+    g_assert (schema);
+    ginfo -> settings = g_settings_new_full (schema, NULL, NULL);
+    g_assert (ginfo -> settings);
+#else
     ginfo -> settings = g_settings_new ("net.sukkology.software.regrip");
+#endif
     ginfo -> settings_cdplay = g_settings_get_child (ginfo -> settings, "cdplay");
     ginfo -> settings_cdparanoia = g_settings_get_child (ginfo -> settings, "cdparanoia");
     ginfo -> settings_rip = g_settings_get_child (ginfo -> settings, "rip");
@@ -147,14 +157,7 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 	uinfo -> win_width_min = g_settings_get_uint (ginfo -> settings, "win-width-min");
 	uinfo -> win_height_min = g_settings_get_uint (ginfo -> settings, "win-height-min");
 
-//	if (config_filename && *config_filename) {
-//		g_snprintf (ginfo -> config_filename, 256, "%s", config_filename);
-//	} else {
-//		strcpy (ginfo -> config_filename, ".grip");
-//	}
-
-//	g_debug ("Using config file [%s]", ginfo -> config_filename);
-
+    // Set default parameters values, excluding stuff handled by GSettings
 	set_initial_config (ginfo);
 
 	if (device) {
