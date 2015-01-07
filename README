@@ -1,80 +1,83 @@
-Grip
-====
+Regrip
+======
 
-Grip is a cd-player and cd-ripper for the Gnome desktop.. It has the ripping
-capabilities of cdparanoia builtin, but can also use external rippers (such
-as cdda2wav). It also provides an automated frontend for MP3 encoders,
-letting you take a disc and transform it easily straight into MP3s. Internet
-disc lookups are supported for retrieving track information from disc
-database servers. Grip works with DigitalDJ to provide a unified
-"computerized" version of your music collection.
+Regrip is a cd-player and cd-ripper for the Linux desktop. It has the ripping
+capabilities of cdparanoia builtin and provides output modules for many common
+file formats, both lossy, such as MP3, OGG, Opus, and lossless, such as WAV and
+FLAC, letting you take a disc and transform it easily straight into your
+favorite format. Internet disc lookups are also supported for retrieving track
+information from disc database servers.
+
+Regrip is a fork of Grip, a once-famous CD player for the GNOME desktop:
+http://sourceforge.net/projects/grip
 
 
 Requirements
 ============
 
-To use Grip, you must have:
+To use Regrip, you must have:
 
- o The Gnome desktop
- o POSIX thread support (http://pauillac.inria.fr/~xleroy/linuxthreads)
- o a net connection (if you want to use disc database lookup)
- o a CD player (surprise, surprise)
+ o A computer with a CD/DVD-Rom drive (Surprise, surprise!)
+ o A modern Linux distribution with GTK+ 2.0 and several other libraries (It
+   might also work under other Unix-like systems, but this has not yet been
+   tested)
+ o A net connection (if you want to use disc database lookup)
 
-Grip requires that you have at least a basic version of the Gnome desktop
-installed on your computer. In particular, make sure that you have libghttp
-installed. If you can't find it, I have mirrored a copy here:
+Regrip uses several external libraries. The following is a list of libraries
+required for proper operation on a recent Ubuntu system:
 
-  http://www.nostatic.org/grip/libghttp-1.0.9.tar.gz
+ o libgtk2.0
+ o libvte
+ o libcdparanoia
 
-If you wish to have builtin cdparanoia support, or id3v2 support, you must
-have the appropriate packages on your system. You can find them here:
+Support for file tagging is optional and relies on TagLib,
+http://taglib.github.io:
+ o libtagc0
 
- cdparanoia: http://xiph.org/paranoia/index.html
- id3v2: http://id3lib.sourceforge.net/
+To produce something useful, you will also need an output module, each of which
+has it own requirements:
+ 
+WAV/OGG/FLAC output module:
+ o libsndfile1 (http://www.mega-nerd.com/libsndfile/)
+ 
+AAC output module:
+ o libfaac (http://www.audiocoding.com/faac.html)
 
-Grip is designed to work closely with DigitalDJ, my SQL-based mp3 jukebox
-system (although it does not require it). DigitalDJ can be obtained from:
-
-  http://www.nostatic.org/ddj
+Opus output module (currently broken):
+ o libopus (http://opus-codec.org)
+ o libsamplerate0 (http://www.mega-nerd.com/SRC/)
 
 
 Installation
 ============
 
-If you obtained Grip from the RPM distribution then they are already
-installed. If you have the source distribution, you need to compile it.
+If you obtained Regrip through the package management system of your
+distribution, there is probably nothing more to do. If you want to compile
+from sources, you will need to make sure that the software development packages
+are available on your system. On an Ubuntu system this means:
 
-To install Grip, simply go through the following steps:
+ o build-essential
+ o cmake
+ o -dev packages of the packages listed under "Requirements"
 
- o after unpacking Grip, cd to the extracted directory
- o './configure'
+Then you will need to go through the following steps:
+
+ o Unpack Regrip and cd to the extracted directory
+ o 'mkdir BUILD'
+ o 'cd BUILD'
+ o 'cmake ..'
  o 'make'
- o become root if you are installing in a non-user directory
- o 'make install'
+ o 'sudo make install'
 
-For information on options to the configure process, run:
+For options to the configure process, run (before the 'make' step):
 
-  ./configure --help
-
-Grip adds the following options that can be specified to configure:
-
-  --disable-shared-cdpar  -- This will force Grip to link statically, rather
-                             than dynamically with cdparanoia
-
-  --disable-cdpar         -- This disable linking with cdparanoia entirely
-
-  --disable-shared-id3    -- This will force Grip to link statically, rather
-                             than dynamically with id3lib
-
-Note that if Gnome is installed in a non-standard place (such as /opt), you
-may need to use the '--with-gnome' configure option for all libraries to be
-found correctly.
+  make edit_cache
 
 
-Running Grip
-============
+Running Regrip
+==============
 
-Grip's usage is:
+Regrip's usage is:
 
   grip [options]
 
@@ -91,27 +94,19 @@ Grip's usage is:
     --verbose                   Run in verbose (debug) mode
 
 
-Getting Mor Help
-================
+Getting More Help
+=================
 
-For more information, see the online documentation within Grip. It can also
+For more information, see the online documentation within Regrip. It can also
 be accessed locally in the source distribution. Load doc/C/grip/grip.html
 into an html viewer.
 
-If you need more help with Grip, your best resource is the Grip mailing
-list. You will find it at:
+To report a bug with Regrip, or to submit a patch, please use the Issue Tracker
+on the Regrip GitHub page:
 
-  http://lists.sourceforge.net/mailman/listinfo/grip-users
-
-Be sure to check the mailing list archives for answers to any questions you
-may have.
-
-To report a bug with Grip, or to submit a patch. Please do so at the Grip
-section on sourceforge.net:
-
-  http://sourceforge.net/projects/grip
+  https://github.com/SukkoPera/regrip/issues
 
 ---
-Mike Oliphant (oliphant@gtk.org)
+SukkoPera <software AT sukkology DOT net>
 
-http://www.nostatic.org/grip
+https://github.com/SukkoPera/regrip
