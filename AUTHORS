@@ -1,7 +1,7 @@
-Mike Oliphant	<grip@nostatic.org>
+Regrip is a fork of Grip, a CD player for the GNOME desktop by Mike Oliphant
+<grip@nostatic.org>. Original homepage: http://sourceforge.net/projects/grip
 
-De-gnomization and version 4.0.0 by
-Giorgio Moscardi <software@sukkology.net>
+Grip version 4.0.0 was released and subsequently forked into Regrip by
+SukkoPera <software@sukkology.net>.
 
-See Changelog and CREDITS for the many code contributions
-by others
+See Changelog and CREDITS for the many code contributions by others.
