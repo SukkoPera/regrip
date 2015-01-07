@@ -40,7 +40,7 @@
  
 * Retrieve, display and save Album art
 
-> We can use http://www.albumart.org or Discogs.
+ > We can use http://www.albumart.org or Discogs.
 
 * Produce ripping logs
 
