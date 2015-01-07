@@ -1,12 +1,40 @@
- o add ability to browse for rip/encode executables
- o overall progress indicator for multi-track rips
- o abort current track from multi-track rip
+Regrip TODO list:
+- Support MP3 through LAME
+- Support M4A through FAAC (Basically AAC with a different container)
+- Support Opus (initial encoder is there, but is not working correctly. I hate having to fit the stream in the container)
+- Make encoders configurable (some GSettings stuff is there, need more and GUIs)
+- Consider plugin architecture, maybe using libpeas: main issue is that libpeas seems to only support GTK3 for plugin configuration GUIs
+- Switch to libcddb for CDDB support (Almost there)
+- Add MusicBrainz support 
+- Add Discogs support
+- Use libcdio for CD playing functions.
+- Add AccurateRip support
+- Use DBus (maybe through GIO/GDrive) to autodetect CD drives and media insertion/ejection, instead of polling drives directly.
+- Make external library of the gain analysis part
+- Remove any code specific to the Solaris port (not necessary, but I cannot test that, plus relaying on external library also aims at making any explicit support unnecessary)
+- Switch to GtkBuilder (added initial stuff, already used for multiple CDDB reults dialog)
+- Reorganize GUI (Preferences should have their own separate dialog, as the ripping process should, not to mention program credits. A toolbar and a status bar might also be handy)
+
+Changes completed in Regrip:
+- Switch to CMake
+- Use GSettings for user settings
+- Remove support for cdda2wav and external cdparanoia, only support libcdparanoia
+- Remove ability to rip and encode separately: this probably made sense when computers were slow, but since now encoding is faster than realtime I really see no need for that.
+- Refactor encoding process
+- Support WAV/OGG/FLAC through libsndfile
+- Support AAC through FAAC
+- Replace ID3Lib with TagLib. This would allow to put tags in OGG and FLAC files as well as MP3s.
+
+Original Grip TODO list:
+ o add ability to browse for rip/encode executables (no longer necessary)
+ o overall progress indicator for multi-track rips (no longer necessary)
+ o abort current track from multi-track rip (no longer necessary)
  o command-line arguments for batch operation
  o some way to get the track name in condensed mode (perhaps a tooltip?)
  o display/edit extended DiscDB info
  o allow ejecting when the tray is closed, but with no disc
  o slider to move within a track
- o add a timeout for DiscDB lookup
+ o add a timeout for DiscDB lookup (no longer necessary)
  o check rip/encode result status and repeat if necessary
  o avoid locking of drive
  o update the track time properly when paused and the track is changed
@@ -16,8 +44,8 @@
  o better display of cdparanoia error status
  o size info as tooltip on rip/encode progress bar
  o remember previous position when smart-relocating on expand
- o support multiple cdrom drives?
+ o support multiple cdrom drives? (no longer necessary)
  o remember Disk Editor toggle status
- o ask if the whole disc should be ripped if no track is selected
- o add an option "CD eject program"
+ o ask if the whole disc should be ripped if no track is selected (done)
+ o add an option "CD eject program" (no longer necessary when we switch to libcdio)
  o allow different file format for multi-artist cds
