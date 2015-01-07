@@ -37,6 +37,13 @@
 * Reorganize GUI
 
  > Preferences should have their own separate dialog, as the ripping process should, not to mention program credits. A toolbar and a status bar might also be handy.
+ 
+* Retrieve, display and save Album art
+
+> We can use http://www.albumart.org or Discogs.
+
+* Produce ripping logs
+
 
 # Changes completed in Regrip
 * Switch to CMake
@@ -50,6 +57,7 @@
 * Support WAV/OGG/FLAC through `libsndfile`
 * Support AAC through `FAAC`
 * Replace `ID3Lib` with `TagLib`. This allows to put tags in OGG and FLAC files as well as MP3s.
+
 
 # Original Grip TODO list
 * ~~add ability to browse for rip/encode executables~~
