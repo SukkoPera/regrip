@@ -1,5 +1,4 @@
 # Regrip
-======
 
 Regrip is an Audio CD (CD-DA) player and ripper for the Linux desktop.
 
@@ -12,74 +11,66 @@ for retrieving track information from disc database servers.
 Regrip is a fork of Grip, a once-famous CD player for the GNOME desktop:
 http://sourceforge.net/projects/grip
 
-
 # Requirements
-============
 
 To use Regrip, you must have:
 
- o A computer with a CD/DVD-Rom drive (Surprise, surprise!)
- o A modern Linux distribution with GTK+ 2.0 and several other libraries (It
+* A computer with a CD/DVD-Rom drive (Surprise, surprise!)
+* A modern Linux distribution with GTK+ 2.0 and several other libraries (It
    might also work under other Unix-like systems, but this has not yet been
    tested)
- o A net connection (if you want to use disc database lookup)
+* A net connection (if you want to use disc database lookup)
 
 Regrip uses several external libraries. The following is a list of libraries
 required for proper operation on a recent Ubuntu system:
 
- o libgtk2.0
- o libvte
- o libcdparanoia (https://xiph.org/paranoia/)
+* `libgtk2.0`
+* `libvte`
+* `libcdparanoia` (https://xiph.org/paranoia/)
 
 Support for file tagging is optional and relies on TagLib:
- o libtagc0 (http://taglib.github.io)
+* `libtagc0` (http://taglib.github.io)
 
-To produce something useful, you will also need an output module, each of which
+To produce useful output, you will also need an output module, each of which
 has it own requirements:
  
-WAV/OGG/FLAC output module:
- o libsndfile1 (http://www.mega-nerd.com/libsndfile/)
+* WAV/OGG/FLAC output module:
+ * `libsndfile1` (http://www.mega-nerd.com/libsndfile/)
  
-AAC output module:
- o libfaac (http://www.audiocoding.com/faac.html)
+* AAC output module:
+ * `libfaac` (http://www.audiocoding.com/faac.html)
 
-Opus output module (currently broken):
- o libopus (http://opus-codec.org)
- o libsamplerate0 (http://www.mega-nerd.com/SRC/)
+* Opus output module (currently broken):
+ * `libopus` (http://opus-codec.org)
+ * `libsamplerate0` (http://www.mega-nerd.com/SRC/)
 
 
-Installation
-============
+# Installation
 
 If you obtained Regrip through the package management system of your
 distribution, there is probably nothing more to do. If you want to compile
 from sources, you will need to make sure that the software development packages
 are available on your system. On an Ubuntu system this means:
 
- o build-essential
- o cmake
- o -dev packages of the packages listed under "Requirements"
+* `build-essential`
+* `cmake`
+* `-dev` packages of the packages listed under *Requirements*
 
 Then you will need to go through the following steps:
 
- o Unpack Regrip and cd to the extracted directory
- o 'mkdir BUILD'
- o 'cd BUILD'
- o 'cmake ..'
- o 'make'
- o 'sudo make install'
+1. Unpack Regrip and cd to the extracted directory
+2. `mkdir BUILD`
+3. `cd BUILD`
+4. `cmake ..`
+5. Optionally, if you want to customize the build options: `make edit_cache`
+5. `make`
+6. `sudo make install`
 
-For options to the configure process, run (before the 'make' step):
+# Running Regrip
 
-  make edit_cache
+Regrip usage is:
 
-
-Running Regrip
-==============
-
-Regrip's usage is:
-
-  grip [options]
+`regrip [options]`
 
   where the available options are:
 
@@ -93,9 +84,7 @@ Regrip's usage is:
     --no-redirect               Do not do I/O redirection
     --verbose                   Run in verbose (debug) mode
 
-
-Getting More Help
-=================
+# Getting More Help
 
 For more information, see the online documentation within Regrip. It can also
 be accessed locally in the source distribution. Load doc/C/grip/grip.html
@@ -103,7 +92,6 @@ into an html viewer.
 
 To report a bug with Regrip, or to submit a patch, please use the Issue Tracker
 on the Regrip GitHub page:
-
   https://github.com/SukkoPera/regrip/issues
 
 ---
