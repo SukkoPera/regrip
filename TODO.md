@@ -1,15 +1,25 @@
 # Regrip TODO list
 * Support MP3 through LAME
 * Support M4A through FAAC
+
 > Basically AAC with a different container, but requires fiddling with bits to put in the container.
+
 * Support Opus
+
 > Initial encoder is there, but is not working correctly. Yes, I hate having to fit the stream in the container.
+
 * Make encoders configurable
+
 > Some GSettings stuff is there, need more and GUIs.
+
 * Consider plugin architecture, maybe using libpeas
+
 > Main issue is that libpeas seems to only support GTK3 for plugin configuration GUIs.
+
 * Switch to `libcddb` for CDDB support
+
 * > Almost there.
+
 * Add *MusicBrainz* support 
 * Add *Discogs* support
 * Use `libcdio` for CD playing functions.
