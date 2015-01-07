@@ -1,18 +1,19 @@
-Regrip
+# Regrip
 ======
 
-Regrip is a cd-player and cd-ripper for the Linux desktop. It has the ripping
-capabilities of cdparanoia builtin and provides output modules for many common
-file formats, both lossy, such as MP3, OGG, Opus, and lossless, such as WAV and
-FLAC, letting you take a disc and transform it easily straight into your
-favorite format. Internet disc lookups are also supported for retrieving track
-information from disc database servers.
+Regrip is an Audio CD (CD-DA) player and ripper for the Linux desktop.
+
+It has the ripping capabilities of cdparanoia builtin and provides output
+modules for many common file formats, both lossy, such as MP3, OGG, Opus, and
+lossless, such as WAV and FLAC, letting you take a disc and transform it easily
+straight into your favorite format. Internet disc lookups are also supported
+for retrieving track information from disc database servers.
 
 Regrip is a fork of Grip, a once-famous CD player for the GNOME desktop:
 http://sourceforge.net/projects/grip
 
 
-Requirements
+# Requirements
 ============
 
 To use Regrip, you must have:
@@ -28,11 +29,10 @@ required for proper operation on a recent Ubuntu system:
 
  o libgtk2.0
  o libvte
- o libcdparanoia
+ o libcdparanoia (https://xiph.org/paranoia/)
 
-Support for file tagging is optional and relies on TagLib,
-http://taglib.github.io:
- o libtagc0
+Support for file tagging is optional and relies on TagLib:
+ o libtagc0 (http://taglib.github.io)
 
 To produce something useful, you will also need an output module, each of which
 has it own requirements:
