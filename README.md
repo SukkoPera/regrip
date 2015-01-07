@@ -74,11 +74,9 @@ Regrip usage is:
 
   where the available options are:
 
-    --config=CONFIG             Specify the configuration file to use
-                                (defaults to .grip, relative to home dir)
     --device=DEVICE             Specify the cdrom device to use
     --scsi-device=DEVICE        Specify the generic scsi device to use
-    --small                     Launch in "small" (cd-only) mode
+    --small                     Launch in "small" (CD-only) mode
     --local                     "Local" mode -- do not look up disc info on
                                 the net
     --no-redirect               Do not do I/O redirection
