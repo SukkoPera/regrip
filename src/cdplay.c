@@ -37,7 +37,6 @@
 
 static void ShutDownCB (GtkWidget *widget, gpointer data);
 static void DiscDBToggle (GtkWidget *widget, gpointer data);
-static void DoLookup (void *data);
 static void SetCurrentTrack (GripInfo *ginfo, int track);
 static void ToggleChecked (GripGUI *uinfo, int track);
 static void ClickColumn (GtkTreeViewColumn *column, gpointer data);
@@ -73,189 +72,73 @@ static void ShutDownCB (GtkWidget *widget, gpointer data) {
 	GripDie (ginfo -> gui_info.app, ginfo);
 }
 
+// DiscDB lookup button clicked
 static void DiscDBToggle (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 
 	ginfo = (GripInfo *) data;
 
-	if (ginfo -> looking_up) {
-		return;
-	} else {
-		if (ginfo -> ripping) {
-			show_warning (ginfo -> gui_info.app,
-			              _("Cannot do lookup while ripping."));
-
-			return;
-		}
-
-		if (ginfo -> have_disc) {
-			LookupDisc (ginfo, TRUE);
-		}
+	// OK, we have a small race condition here, but it will be ok for the moment
+	if (ginfo -> looking_up != DISCDB_IDLE || ginfo -> ripping) {
+//        show_warning (ginfo -> gui_info.app,
+//                      _("Cannot do lookup while ripping."));
+    } else if (ginfo -> have_disc) {
+        LookupDisc (ginfo);
 	}
 }
 
-void LookupDisc (GripInfo *ginfo, gboolean manual) {
-	int track;
-	gboolean present;
-	DiscInfo *disc;
-	DiscData *ddata;
+static gpointer cddb_lookup_thread_func (gpointer data) {
+    gpointer ret;
 
-	disc = &(ginfo -> disc);
-	ddata = &(ginfo -> ddata);
+	GripInfo *ginfo = (GripInfo *) data;
 
-	ddata -> data_multi_artist = FALSE;
-	ddata -> data_year = 0;
+	g_debug ("cddb_lookup_thread_func() starting");
 
-//	present = DiscDBStatDiscData (disc);
-//
-//	if (!manual && present) {
-//		DiscDBReadDiscData (disc, ddata, ginfo -> discdb_encoding);
-//
-//		// FIXME
-////		if (ginfo -> ddata.data_id3genre == -1) {
-////			ginfo -> ddata.data_id3genre = DiscDB2ID3 (ginfo -> ddata.data_genre);
-////		}
-//
-//		ginfo -> update_required = TRUE;
-//		ginfo -> is_new_disc = TRUE;
-//	} else {
-		if (!manual) {
-//			ddata -> data_id = DiscDBDiscid (disc);
-			strncpy (ddata -> data_genre, "Other", MAX_STRING);
-			strncpy (ddata -> data_title, _("Unknown Disc"), MAX_STRING);
-			strncpy (ddata -> data_artist, "", MAX_STRING);
+	ginfo -> looking_up = DISCDB_QUERYING;
 
-			for (track = 0; track < disc -> num_tracks; track++) {
-				sprintf (ddata -> data_track[track].track_name, _("Track %02d"), track + 1);
-				*(ddata -> data_track[track].track_artist) = '\0';
-				*(ddata -> data_track[track].track_extended) = '\0';
-				*(ddata -> data_playlist) = '\0';
-			}
+    if (!(ginfo -> disc).have_info) {
+        CDStat (&(ginfo -> disc), TRUE);
+    }
 
-			*ddata -> data_extended = '\0';
-
-			ginfo -> update_required = TRUE;
-		}
-
-		if (!ginfo -> local_mode && (manual ? TRUE : ginfo -> automatic_discdb)) {
-			ginfo -> looking_up = TRUE;
-
-			pthread_create (&(ginfo -> discdb_thread), NULL, (void *) DoLookup, (void *) ginfo);
-			pthread_detach (ginfo -> discdb_thread);
-		}
-//	}
-}
-
-static void DoLookup (void *data) {
-	GripInfo *ginfo;
-
-	ginfo = (GripInfo *) data;
-
-	if (!DiscDBLookupDisc (ginfo, &(ginfo -> dbserver))) {
-//		ginfo -> ask_submit = TRUE;
-	}
+    GError *error = NULL;
+    GList *results = cddb_lookup (&(ginfo -> disc), &(ginfo -> dbserver), &error);
+    if (results == NULL && error != NULL) {
+        // Query failed
+        g_warning ("CDDB lookup failed: %s", error -> message);
+        g_error_free (error);
+        ret = GINT_TO_POINTER (FALSE);
+    } else {
+        // Query OK
+        ginfo -> cddb_results = results;
+        ret = GINT_TO_POINTER (TRUE);
+    }
 
 	// FIXME
 //	if (ginfo -> ddata.data_id3genre == -1) {
 //		ginfo -> ddata.data_id3genre = DiscDB2ID3 (ginfo -> ddata.data_genre);
 //	}
 
-	ginfo -> looking_up = FALSE;
-	pthread_exit (0);
+	ginfo -> looking_up = DISCDB_RESULTS_READY;
+
+	g_debug ("cddb_lookup_thread_func() returning");
+
+	return ret;
 }
 
-gboolean DiscDBLookupDisc (GripInfo *ginfo, DiscDBServer *server) {
-   	if (!(ginfo -> disc).have_info) {
-		CDStat (&(ginfo -> disc), TRUE);
-	}
+void LookupDisc (GripInfo *ginfo) {
+    if (ginfo -> looking_up == DISCDB_IDLE && !ginfo -> ripping) {
+        g_debug ("Starting DiscDB lookup thread");
 
-    GError *error = NULL;
-    GList *results = cddb_lookup (&(ginfo -> disc), &(ginfo -> dbserver), &error);
-    if (results == NULL) {
-        if (error != NULL) {
-            // Query failed
-            g_debug ("CDDB lookup failed: %s", error -> message);
-            g_error_free (error);
+		GError *error = NULL;
+        ginfo -> discdb_thread = g_thread_try_new ("Regrip DiscDB Lookup Thread", cddb_lookup_thread_func, ginfo, &error);
+        if (ginfo -> discdb_thread) {
+            g_debug ("DiscDB lookup thread started");
         } else {
-            // No matches
+            g_warning ("Cannot start DiscDB lookup thread: %s", error -> message);
         }
-
-        return FALSE;
-    } else {
-        guint n = g_list_length (results);
-        g_debug ("CDDB matches: %u", n);
-        GList *cur = g_list_first (results);
-        ginfo -> ddata = *(DiscData *) cur -> data;
-
-        ginfo -> update_required = TRUE;
-        ginfo -> is_new_disc = TRUE;
-
-        return TRUE;
-    }
-
-
-#if 0
-	DiscDBHello hello;
-	DiscDBQuery query;
-	DiscDBEntry entry;
-	gboolean success = FALSE;
-	DiscInfo *disc;
-	DiscData *ddata;
-
-	disc = &(ginfo -> disc);
-	ddata = &(ginfo -> ddata);
-
-	if (server -> use_proxy)
-		LogStatus (ginfo, _("Querying %s (through %s) for disc %02x.\n"),
-		           server -> name,
-		           server -> proxy -> name,
-		           DiscDBDiscid (disc));
-	else
-		LogStatus (ginfo, _("Querying %s for disc %02x.\n"), server -> name,
-		           DiscDBDiscid (disc));
-
-	strncpy (hello.hello_program, "Grip", 256);
-	strncpy (hello.hello_version, VERSION, 256);
-
-//  if(ginfo -> db_use_freedb &&!strcasecmp(ginfo -> discdb_encoding,"UTF-8"))
-//    hello.proto_version=6;
-//  else
-	hello.proto_version = 5;
-
-	if (!DiscDBDoQuery (disc, server, &hello, &query)) {
-		ginfo -> update_required = TRUE;
-	} else {
-		switch (query.query_match) {
-			case MATCH_INEXACT:
-			case MATCH_EXACT:
-				LogStatus (ginfo, _("Match for \"%s / %s\"\nDownloading data...\n"),
-				           query.query_list[0].list_artist,
-				           query.query_list[0].list_artist);
-
-				entry.entry_genre = query.query_list[0].list_genre;
-				entry.entry_id = query.query_list[0].list_id;
-				DiscDBRead (disc, server, &hello, &entry, ddata, ginfo -> discdb_encoding);
-
-				g_debug (_("Done"));
-				success = TRUE;
-
-				if (DiscDBWriteDiscData (disc, ddata, NULL, TRUE, FALSE, "utf-8") < 0) {
-					g_print (_("Error saving disc data\n"));
-				}
-
-				ginfo -> update_required = TRUE;
-				ginfo -> is_new_disc = TRUE;
-				break;
-
-			case MATCH_NOMATCH:
-				LogStatus (ginfo, _("No match\n"));
-				break;
-		}
 	}
-
-	return success;
-#endif // 0
 }
+
 
 int GetLengthRipWidth (GripInfo *ginfo) {
 	GtkWidget *track_list;
@@ -1527,6 +1410,32 @@ static void ShuffleTracks (GripInfo *ginfo) {
 	}
 }
 
+// Fills disc information with generic data
+static void stub_disc_data (GripInfo *ginfo) {
+	DiscInfo *disc = &(ginfo -> disc);
+	DiscData *ddata = &(ginfo -> ddata);
+
+	ddata -> data_multi_artist = FALSE;
+	ddata -> data_year = 0;
+
+    ddata -> data_id = 0;
+    strncpy (ddata -> data_genre, "Other", MAX_STRING);
+    strncpy (ddata -> data_title, _("Unknown Disc"), MAX_STRING);
+    strncpy (ddata -> data_artist, "", MAX_STRING);
+
+	int track;
+    for (track = 0; track < disc -> num_tracks; track++) {
+        sprintf (ddata -> data_track[track].track_name, _("Track %02d"), track + 1);
+        *(ddata -> data_track[track].track_artist) = '\0';
+        *(ddata -> data_track[track].track_extended) = '\0';
+        *(ddata -> data_playlist) = '\0';
+    }
+
+    *ddata -> data_extended = '\0';
+
+    ginfo -> update_required = TRUE;
+}
+
 void CheckNewDisc (GripInfo *ginfo, gboolean force) {
 	int new_id;
 	DiscInfo *disc;
@@ -1558,13 +1467,19 @@ void CheckNewDisc (GripInfo *ginfo, gboolean force) {
 					}
 
 				if (new_id || force) {
+                    // New disc inserted!
+
 					ginfo -> have_disc = TRUE;
+
+					stub_disc_data (ginfo);
 
 					if (ginfo -> play_on_insert) {
 						PlayTrackCB (NULL, (gpointer)ginfo);
 					}
 
-					LookupDisc (ginfo, FALSE);
+					if (ginfo -> automatic_discdb) {
+                        LookupDisc (ginfo);
+					}
 				}
 			} else {
 				if (ginfo -> have_disc) {
@@ -1586,7 +1501,6 @@ void CheckNewDisc (GripInfo *ginfo, gboolean force) {
 }
 
 /* Check to make sure we didn't get a false alarm from the cdrom device */
-
 static gboolean CheckTracks (DiscInfo *disc) {
 	int track;
 	gboolean have_track = FALSE;
@@ -1648,7 +1562,7 @@ void UpdateDisplay (GripInfo *ginfo) {
 		                     &uinfo -> win_height_min);
 	}
 
-	if (!ginfo -> looking_up) {
+	if (ginfo -> looking_up != DISCDB_IDLE) {
 		if (discdb_counter % 2) {
 			discdb_counter++;
 		}
@@ -1783,7 +1697,7 @@ void UpdateDisplay (GripInfo *ginfo) {
 
 			gtk_label_set (GTK_LABEL (uinfo -> play_time_label), buf);
 
-			if (!ginfo -> looking_up) {
+			if (ginfo -> looking_up != DISCDB_IDLE) {
 				CopyPixmap (GTK_PIXMAP (uinfo -> empty_image),
 				            GTK_PIXMAP (uinfo -> discdb_indicator));
 
@@ -1809,6 +1723,118 @@ void UpdateDisplay (GripInfo *ginfo) {
 
 		gdk_window_set_icon_name (uinfo -> app -> window, icon_buf);
 	}
+}
+
+//////////////////////////
+#if 0
+// Not necessary for the moment
+static void on_disc_changed (GtkTreeSelection *selection, gpointer user_data) {
+//	GtkDialog *dialog = GTK_DIALOG (user_data);
+
+	//~ GtkTreeSelection *selection = gtk_tree_view_get_selection (tree_view);
+	if (gtk_tree_selection_count_selected_rows (selection) > 0) {
+		g_debug ("enable ok");
+	} else {
+		g_debug ("disable ok");
+	}
+}
+#endif // 0
+
+static void on_disc_double_clicked (GtkTreeView *tree_view, GtkTreePath *path, GtkTreeViewColumn *column, gpointer user_data) {
+	gtk_dialog_response (GTK_DIALOG (user_data), 1);
+}
+
+static void process_cddb_results (GripInfo *ginfo) {
+    g_debug ("process_cddb_results() starting");
+
+    // Clear thread struct first
+    g_assert (ginfo -> discdb_thread);
+    gboolean discdb_ok = GPOINTER_TO_INT (g_thread_join (ginfo -> discdb_thread));
+    if (discdb_ok) {
+        g_debug (_("DiscDB thread finished successfully"));
+    } else {
+        g_debug (_("DiscDB thread finished with failure or was aborted"));
+    }
+    ginfo -> discdb_thread = NULL;
+
+    // Process results
+    guint n = g_list_length (ginfo -> cddb_results);
+    if (n == 0) {
+        // No results :(
+        g_debug ("No CDDB results");
+    } else if (n == 1) {
+        // Single match, use right away
+        GList *cur = g_list_first (ginfo -> cddb_results);
+        ginfo -> ddata = *(DiscData *) cur -> data;
+        g_free (cur -> data);
+        g_list_free (ginfo -> cddb_results);
+        ginfo -> cddb_results = NULL;
+
+        ginfo -> update_required = TRUE;
+        ginfo -> is_new_disc = TRUE;
+    } else {
+        /* Ask the user what match to use */
+        GripGUI *uinfo = &(ginfo -> gui_info);
+
+        /* Have the ok button call the ok_button_clicked callback */
+        GtkWidget *widget = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "dialog_cddb_results"));
+        g_assert (widget);
+
+        GtkTreeView *treeview = GTK_TREE_VIEW (gtk_builder_get_object (uinfo -> builder, "treeview_cddb_results"));
+        g_assert (treeview);
+        GtkTreeSelection *selection = gtk_tree_view_get_selection (treeview);
+        gtk_tree_selection_set_mode (selection, GTK_SELECTION_BROWSE);		// Can't do this in Glade?
+    //    g_signal_connect (G_OBJECT (selection), "changed", G_CALLBACK (on_disc_changed), widget);
+        g_signal_connect (GTK_OBJECT (treeview), "row-activated", G_CALLBACK (on_disc_double_clicked), widget);
+        GtkListStore *liststore = GTK_LIST_STORE (gtk_tree_view_get_model (treeview));
+        g_assert (liststore);
+
+        GtkTreeIter iter;
+        GList *cur, *next;
+        for (cur = g_list_first (ginfo -> cddb_results); next; cur = next) {
+            DiscData *data = (DiscData *) cur -> data;
+
+            gtk_list_store_append (liststore, &iter);
+            gtk_list_store_set (liststore, &iter, 0, data -> data_artist, 1, data -> data_title, 2, data -> data_genre, 3, data -> data_category, 4, data -> data_id, -1);
+
+            next = g_list_next (cur);
+            g_free (data);
+        }
+        g_list_free (ginfo -> cddb_results);
+        ginfo -> cddb_results = NULL;
+
+        gtk_widget_show_all (widget);
+        if (gtk_dialog_run (GTK_DIALOG (widget))) {
+            GtkTreeSelection *sel = gtk_tree_view_get_selection (treeview);
+            if (gtk_tree_selection_get_selected (sel, NULL, &iter)) {
+                gchar *category;
+                guint id;
+
+                gtk_tree_model_get (GTK_TREE_MODEL (liststore), &iter, 3, &category, 4, &id, -1);
+                g_debug ("Selected item: %s/%u", category, id);
+
+                // Fetch data. We don't use a thread here, since the entry should be in cddb cache
+                GError *error = NULL;
+                DiscData *dd = cddb_get_entry (&(ginfo -> dbserver), category, id, &error);
+                g_assert (dd);
+                ginfo -> ddata = *dd;
+
+                ginfo -> update_required = TRUE;
+                ginfo -> is_new_disc = TRUE;
+
+                g_free (dd);
+                g_free (category);
+            }
+        }
+
+        gtk_widget_destroy (widget);
+    }
+
+    // Done with results
+    g_assert (ginfo -> cddb_results == NULL);
+    ginfo -> looking_up = DISCDB_IDLE;
+
+    g_debug ("process_cddb_results() returning");
 }
 
 void UpdateTracks (GripInfo *ginfo) {
@@ -1868,6 +1894,11 @@ void UpdateTracks (GripInfo *ginfo) {
 	SetCurrentTrackIndex (ginfo, disc -> curr_track - 1);
 
 	if (ginfo -> have_disc) {
+        if (ginfo -> looking_up == DISCDB_RESULTS_READY) {
+            // CDDB query finished, take care of it
+            process_cddb_results (ginfo);
+        }
+
 		col_strings[0] = (char *) malloc (260);
 		col_strings[1] = (char *) malloc (6);
 		col_strings[2] = NULL;
@@ -1901,6 +1932,7 @@ void UpdateTracks (GripInfo *ginfo) {
 		SelectRow (ginfo, CURRENT_TRACK);
 	}
 
+#if 0
 	if (ginfo -> ask_submit) {
 		GtkWidget *dialog = gtk_message_dialog_new (GTK_WINDOW (uinfo -> app),
 		                    GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
@@ -1917,11 +1949,12 @@ void UpdateTracks (GripInfo *ginfo) {
 
 		ginfo -> ask_submit = FALSE;
 	}
-
+#endif
 	ginfo -> first_time = 0;
 }
 
 void SubmitEntry (GtkDialog *dialog, gint reply, gpointer data) {
+#if 0
 	GripInfo *ginfo;
 	int fd;
 	FILE *efp;
@@ -1979,5 +2012,6 @@ void SubmitEntry (GtkDialog *dialog, gint reply, gpointer data) {
 //
 //			remove (filename);
 //		}
-	}
+
+#endif
 }

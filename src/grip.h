@@ -34,20 +34,14 @@
 #include "encoder.h"
 #include "common.h"
 
-#define RRand(range) (random()%(range))
+#define RRand(range) (random () % (range))
 
-#if defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__osf__)  /* __osf__ ?? */
-
-#define MAILER "/usr/sbin/sendmail -i -t"
-
-#elif defined(__sparc__)
-
-#define MAILER "/usr/lib/sendmail -i -t"
-
-#endif
+#define UI_FILE "/home/sukko/Development/grip/ui/regrip.ui"
 
 
 typedef struct _grip_gui {
+    GtkBuilder *builder;
+
 	GtkWidget *app;
 	GtkWidget *winbox;
 	GtkWidget *notebook;
@@ -188,29 +182,49 @@ typedef struct _proxy_server {
 	char pswd[MAX_STRING];
 } ProxyServer;
 
+typedef enum {
+    DISCDB_IDLE,
+    DISCDB_QUERYING,
+    DISCDB_RESULTS_READY
+} discdb_thread_status;
+
 typedef struct _grip_info {
+    /* Program version */
 	char version[MAX_STRING];
+
+	/* GUI info */
+    GripGUI gui_info;
+
+	/* Physical disc information (i.e. offsets and such) */
+    char cd_device[MAX_STRING];
+	char force_scsi[MAX_STRING];
 	DiscInfo disc;
+
+	/* Disc Data (i.e.: Album/Song titles/artist, etc.) */
 	DiscData ddata;
+
+	/* Network connection */
 	gboolean use_proxy;
 	gboolean use_proxy_env;
 	ProxyServer proxy_server;
+	gboolean local_mode;
+
+	/* DiscDB stuff */
 	DiscDBServer dbserver;
-//	char config_filename[MAX_STRING];
-	char cd_device[MAX_STRING];
-	char force_scsi[MAX_STRING];
+	GList *cddb_results;
+	GThread *discdb_thread;
 	char discdb_submit_email[MAX_STRING];
 	char discdb_encoding[SMALL_STRING];
+	char user_email[MAX_STRING];
+	discdb_thread_status looking_up;
+
 	char id3_encoding[SMALL_STRING];
 //	char id3v2_encoding[SMALL_STRING];
 //	gboolean db_use_freedb;
-	char user_email[MAX_STRING];
-	gboolean local_mode;
 	gboolean update_required;
 	gboolean have_disc;
 	gboolean tray_open;
 	gboolean faulty_eject;
-	gboolean looking_up;
 	gboolean ask_submit;
 	gboolean is_new_disc;
 	gboolean first_time;
@@ -223,7 +237,6 @@ typedef struct _grip_info {
 	int poll_interval;
 	int auto_eject_countdown;
 	int current_discid;
-	pthread_t discdb_thread;
 	int volume;
 
 	int current_disc;
@@ -241,8 +254,6 @@ typedef struct _grip_info {
 	gboolean automatic_reshuffle;
 
 	char title_split_chars[6];
-
-	GripGUI gui_info;
 
 	int curr_pipe_fd;
 

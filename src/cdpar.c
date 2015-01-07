@@ -484,7 +484,7 @@ gboolean rip_start (GripInfo *ginfo, cdrip_callback callback, gpointer callback_
     ripdata -> callback_data = callback_data;
 
     g_debug ("Starting rip thread");
-    ginfo -> rip_thread = g_thread_try_new ("Grip Rip Thread", rip_thread_func, ripdata, error);
+    ginfo -> rip_thread = g_thread_try_new ("Regrip Rip Thread", rip_thread_func, ripdata, error);
     if (ginfo -> rip_thread) {
         g_debug ("Rip thread started");
     } else {
@@ -494,16 +494,3 @@ gboolean rip_start (GripInfo *ginfo, cdrip_callback callback, gpointer callback_
 
 	return ginfo -> rip_thread != NULL;
 }
-
-
-//gboolean rip_start (char *device, char *generic_scsi_device, int track,
-//                 long first_sector, long last_sector,
-//                 char *outfile, int paranoia_mode, int *rip_smile_level,
-//                 gfloat *rip_percent_done, gboolean *stop_thread_rip_now,
-//                 gboolean do_gain_calc, FILE *output_fp) {
-//
-//
-//
-//	return TRUE;
-//}
-

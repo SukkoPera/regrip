@@ -50,7 +50,7 @@ set (
     ${GTHREAD_INCLUDE_DIRS}
     ${VTE_INCLUDE_DIRS}
     ${CDPARANOIA_INCLUDE_DIRS}
-    ${CURL_INCLUDE_DIRS}
+#    ${CURL_INCLUDE_DIRS}
 )
 
 set (
@@ -61,7 +61,7 @@ set (
     ${GTHREAD_LIBRARIES}
     ${GTHREAD_LDFLAGS_OTHER}
     ${VTE_LIBRARIES}
-    ${CURL_LIBRARIES}
+#    ${CURL_LIBRARIES}
     ${CDPARANOIA_LIBRARIES}
 )
 
@@ -220,11 +220,6 @@ if (OPUS_FOUND AND OGG_FOUND AND SAMPLERATE_FOUND)
         PUBLIC -DTESTENC=opus
     )
 endif (OPUS_FOUND AND OGG_FOUND AND SAMPLERATE_FOUND)
-
-#if (${CDDB_FOUND})
-#    set (includes ${includes} ${CDDB_INCLUDES})
-#    set (libraries ${libraries} ${CDDB_LIBRARIES})
-#endif (${CDDB_FOUND})
 
 include_directories (
     ${includes}

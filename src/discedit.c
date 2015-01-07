@@ -815,8 +815,8 @@ static void GetDiscDBGenre (GripInfo *ginfo) {
 	GtkWidget *cancel_button;
 	GtkWidget *hbox;
 	GtkWidget *genre_combo;
-	GtkWidget *item;
-	int genre;
+//	GtkWidget *item;
+//	int genre;
 
 	dialog = gtk_dialog_new ();
 	gtk_window_set_title (GTK_WINDOW (dialog), _("Genre selection"));

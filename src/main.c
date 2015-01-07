@@ -41,7 +41,6 @@ static int no_redirect = FALSE;
 static int verbose = FALSE;
 
 static GOptionEntry cmd_options[] = {
-	{"config", 'c', 0, G_OPTION_ARG_STRING, &config_filename, N_ ("Specify the config file to use (in your home dir)"), N_ ("CONFIG")},
 	{"device", 'd', 0, G_OPTION_ARG_STRING, &device, N_ ("Specify the cdrom device to use"), N_ ("DEVICE")},
 	{"scsi-device", 0, 0, G_OPTION_ARG_STRING, &scsi_device, N_ ("Specify the generic scsi device to use"), N_ ("DEVICE")},
 	{"verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose, "Be verbose", NULL},

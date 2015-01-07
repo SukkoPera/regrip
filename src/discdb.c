@@ -25,6 +25,7 @@
 
 #include <string.h>
 #include <glib.h>
+#include <glib/gi18n.h>
 #include <cddb/cddb.h>
 #include "discdb.h"
 
@@ -48,6 +49,66 @@ enum GripDiscDbError {
             strncpy (dst, src, n); \
     }
 
+// Gets a single CDDB entry
+DiscData *cddb_get_entry (DiscDBServer *server, gchar *category, guint id, GError **error) {
+    g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	cddb_conn_t *conn = cddb_new ();
+	if (conn == NULL) {
+		g_set_error_literal (error, GRIP_DISCDB_ERROR, GRIP_DISCDB_ERROR_NOMEM, _("Out of memory, unable to create CDDB connection"));
+		return NULL;
+	}
+
+//	cddb_set_server_name (conn, server -> name);
+	if (server -> port != 0)
+        cddb_set_server_port (conn, server -> port);
+
+	cddb_disc_t *disc = cddb_disc_new ();
+	if (conn == NULL) {
+		g_set_error_literal (error, GRIP_DISCDB_ERROR, GRIP_DISCDB_ERROR_NOMEM, _("Out of memory, unable to create disc"));
+		return NULL;
+	}
+
+    cddb_disc_set_category_str (disc, category);
+    cddb_disc_set_discid (disc, id);
+
+    if (cddb_read (conn, disc)) {
+        DiscData *data = g_new0 (DiscData, 1);
+        g_assert (data);
+
+        // Disc data
+        data -> data_id = cddb_disc_get_discid (disc);
+        smart_strncpy (data -> data_title, cddb_disc_get_title (disc), MAX_STRING);
+        smart_strncpy (data -> data_artist, cddb_disc_get_artist (disc), MAX_STRING);
+        smart_strncpy (data -> data_extended, cddb_disc_get_ext_data (disc), MAX_EXTENDED_STRING);
+        smart_strncpy (data -> data_genre, cddb_disc_get_genre (disc), MAX_STRING);
+    //            data -> category = g_strdup (cddb_disc_get_category_str(disc));
+        data -> data_year = cddb_disc_get_year (disc);
+    //            data -> num_tracks = cddb_disc_get_track_count(disc);
+        data -> revision = cddb_disc_get_revision (disc);
+
+        // Track data
+        int i;
+        cddb_track_t *track = cddb_disc_get_track_first (disc);
+        for (i = 0; track != NULL && i < MAX_TRACKS; ++i) {
+            /* ... use track ...  */
+            smart_strncpy (data -> data_track[i].track_name, cddb_track_get_title (track), MAX_STRING);
+            smart_strncpy (data -> data_track[i].track_artist, cddb_track_get_artist (track), MAX_STRING);
+            smart_strncpy (data -> data_track[i].track_extended, cddb_track_get_ext_data (track), MAX_EXTENDED_STRING);
+
+            track = cddb_disc_get_track_next (disc);
+        }
+
+        return data;
+    } else {
+        /* something went wrong, print error */
+        g_set_error (error, GRIP_DISCDB_ERROR, GRIP_DISCDB_ERROR_READFAILED, _("CDDB read query results failed: %s"), cddb_error_str (cddb_errno (conn)));
+        // FIXME: FREE
+        return NULL;
+    }
+}
+
+
 // Returns a list of DiscData with no TrackData
 GList *cddb_lookup (const DiscInfo *dinfo, DiscDBServer *server, GError **error) {
     g_return_val_if_fail (error == NULL || *error == NULL, NULL);
@@ -57,7 +118,7 @@ GList *cddb_lookup (const DiscInfo *dinfo, DiscDBServer *server, GError **error)
 
 	cddb_conn_t *conn = cddb_new ();
 	if (conn == NULL) {
-		g_set_error_literal (error, GRIP_DISCDB_ERROR, GRIP_DISCDB_ERROR_NOMEM, "Out of memory, unable to create CDDB connection");
+		g_set_error_literal (error, GRIP_DISCDB_ERROR, GRIP_DISCDB_ERROR_NOMEM, _("Out of memory, unable to create CDDB connection"));
 		return results;
 	}
 
@@ -67,7 +128,7 @@ GList *cddb_lookup (const DiscInfo *dinfo, DiscDBServer *server, GError **error)
 
 	cddb_disc_t *disc = cddb_disc_new ();
 	if (conn == NULL) {
-		g_set_error_literal (error, GRIP_DISCDB_ERROR, GRIP_DISCDB_ERROR_NOMEM, "Out of memory, unable to create disc");
+		g_set_error_literal (error, GRIP_DISCDB_ERROR, GRIP_DISCDB_ERROR_NOMEM, _("Out of memory, unable to create disc"));
 		return results;
 	}
 
@@ -78,7 +139,7 @@ GList *cddb_lookup (const DiscInfo *dinfo, DiscDBServer *server, GError **error)
 	for (i = 0; i < dinfo -> num_tracks; ++i) {
 		cddb_track_t *track = cddb_track_new ();
 		if (track == NULL) {
-			g_set_error_literal (error, GRIP_DISCDB_ERROR, GRIP_DISCDB_ERROR_NOMEM, "Out of memory, unable to create track");
+			g_set_error_literal (error, GRIP_DISCDB_ERROR, GRIP_DISCDB_ERROR_NOMEM, _("Out of memory, unable to create track"));
 			cddb_disc_destroy (disc);
 			cddb_destroy (conn);
 		}
@@ -92,7 +153,7 @@ GList *cddb_lookup (const DiscInfo *dinfo, DiscDBServer *server, GError **error)
 	int matches = cddb_query (conn, disc);
 	if (matches < 0) {
 		/* Something went wrong, print error */
-		g_set_error (error, GRIP_DISCDB_ERROR, GRIP_DISCDB_ERROR_QUERYFAILED, "CDDB query failed: %s", cddb_error_str (cddb_errno (conn)));
+		g_set_error (error, GRIP_DISCDB_ERROR, GRIP_DISCDB_ERROR_QUERYFAILED, _("CDDB query failed: %s"), cddb_error_str (cddb_errno (conn)));
 		// FIXME: Free stuff
 		return results;
 	} else if (matches == 1) {
@@ -129,19 +190,34 @@ GList *cddb_lookup (const DiscInfo *dinfo, DiscDBServer *server, GError **error)
         } else {
             /* something went wrong, print error */
 //            cddb_error_print (cddb_errno (conn));
-            g_set_error (error, GRIP_DISCDB_ERROR, GRIP_DISCDB_ERROR_READFAILED, "CDDB read query results failed: %s", cddb_error_str (cddb_errno (conn)));
+            g_set_error (error, GRIP_DISCDB_ERROR, GRIP_DISCDB_ERROR_READFAILED, _("CDDB read query results failed: %s"), cddb_error_str (cddb_errno (conn)));
             // FIXME: FREE
             return results;
         }
 	} else {
 		g_debug ("Found %d CDDB matches", matches);
 		for (i = 0; i < matches; ++i) {
-			g_debug ("Match %d: %s - %s (%s)\n", i, cddb_disc_get_artist (disc), cddb_disc_get_title (disc), cddb_disc_get_genre (disc));
+			g_debug ("Match %d (%s/%u): %s - %s (%s, %d)", i, cddb_disc_get_category_str (disc), cddb_disc_get_discid (disc), cddb_disc_get_artist (disc), cddb_disc_get_title (disc), cddb_disc_get_genre (disc), cddb_disc_get_year (disc));
 
-			int success = cddb_read (conn, disc);
-			if (!success) {
+            if (cddb_read (conn, disc)) {
+                DiscData *data = g_new0 (DiscData, 1);
+                g_assert (data);
+
+                // Disc data
+                data -> data_id = cddb_disc_get_discid (disc);
+                smart_strncpy (data -> data_title, cddb_disc_get_title (disc), MAX_STRING);
+                smart_strncpy (data -> data_artist, cddb_disc_get_artist (disc), MAX_STRING);
+                smart_strncpy (data -> data_extended, cddb_disc_get_ext_data (disc), MAX_EXTENDED_STRING);
+                smart_strncpy (data -> data_genre, cddb_disc_get_genre (disc), MAX_STRING);
+                smart_strncpy (data -> data_category, cddb_disc_get_category_str (disc), MAX_STRING);
+                data -> data_year = cddb_disc_get_year (disc);
+    //            data -> num_tracks = cddb_disc_get_track_count(disc);
+                data -> revision = cddb_disc_get_revision (disc);
+
+                results = g_list_append (results, data);
+            } else {
 				/* something went wrong, print error */
-                g_set_error (error, GRIP_DISCDB_ERROR, GRIP_DISCDB_ERROR_READFAILED, "CDDB read query results failed: %s", cddb_error_str (cddb_errno (conn)));
+                g_set_error (error, GRIP_DISCDB_ERROR, GRIP_DISCDB_ERROR_READFAILED, _("CDDB read query results failed: %s"), cddb_error_str (cddb_errno (conn)));
                 // FIXME: FREE
                 return results;
 			}

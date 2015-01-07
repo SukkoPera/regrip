@@ -530,7 +530,7 @@ void KillRip (GtkWidget *widget, gpointer data) {
 static void ID3Add (GripInfo *ginfo, char *file, EncodeTrack *enc_track) {
     if (ginfo -> doid3) {
         GString *comment = g_string_new (NULL);
-        g_debug ("comment = '%s'", ginfo -> id3_comment);
+//        g_debug ("comment = '%s'", ginfo -> id3_comment);
         TranslateString (ginfo -> id3_comment, comment, TranslateSwitch, enc_track,
                          FALSE, &(ginfo -> sprefs));
         g_assert (comment);

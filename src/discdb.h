@@ -42,7 +42,10 @@ typedef struct _track_data {
 
 /* Disc database structure */
 typedef struct _disc_data {
+    // The first two fields uniquely identify a CDDB entry
 	unsigned int data_id;                 /* CD id */
+	char data_category[MAX_STRING];                 /* Disc title */
+
 	char data_title[MAX_STRING];                 /* Disc title */
 	char data_artist[MAX_STRING];        /* Disc artist */
 	char data_extended[MAX_EXTENDED_STRING];         /* Extended information */
@@ -65,6 +68,7 @@ typedef struct _discdb_server {
 } DiscDBServer;
 
 
+DiscData *cddb_get_entry (DiscDBServer *server, gchar *category, guint id, GError **error);
 
 // Returns a list of DiscData with no TrackData
 GList *cddb_lookup (const DiscInfo *dinfo, DiscDBServer *server, GError **error);

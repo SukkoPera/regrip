@@ -160,6 +160,12 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
     // Set default parameters values, excluding stuff handled by GSettings
 	set_initial_config (ginfo);
 
+    // Load UI
+	uinfo -> builder = gtk_builder_new ();
+	gtk_builder_add_from_file (uinfo -> builder, UI_FILE, NULL);
+	//~ gtk_builder_connect_signals (gtk_builder, NULL);
+
+
 	if (device) {
 		g_snprintf (ginfo -> cd_device, 256, "%s", device);
 	}
@@ -323,7 +329,7 @@ static void ReallyDie (GtkDialog *dialog, gint reply, gpointer data) {
 		return;
 	}
 
-	ginfo = (GripInfo *)data;
+	ginfo = (GripInfo *) data;
 
 #ifndef GRIPCD
 	if (ginfo -> ripping) {
@@ -334,6 +340,8 @@ static void ReallyDie (GtkDialog *dialog, gint reply, gpointer data) {
 	if (!ginfo -> no_interrupt) {
 		CDStop (& (ginfo -> disc));
 	}
+
+    g_object_unref (G_OBJECT ((ginfo -> gui_info).builder));
 
 	gtk_main_quit ();
 }
@@ -733,7 +741,7 @@ void GripUpdate (GtkWidget *app) {
 void Busy (GripGUI *uinfo) {
 	gdk_window_set_cursor (uinfo -> app -> window, uinfo -> wait_cursor);
 
-	UpdateGTK();
+	UpdateGTK ();
 }
 
 void UnBusy (GripGUI *uinfo) {
@@ -782,7 +790,7 @@ static void set_initial_config (GripInfo *ginfo) {
 	ginfo -> have_disc = FALSE;
 	ginfo -> tray_open = FALSE;
 //	ginfo -> faulty_eject = FALSE;
-	ginfo -> looking_up = FALSE;
+	ginfo -> looking_up = DISCDB_IDLE;
 	ginfo -> play_mode = PM_NORMAL;
 	ginfo -> playloop = TRUE;
 //	ginfo -> automatic_reshuffle = TRUE;
@@ -809,6 +817,7 @@ static void set_initial_config (GripInfo *ginfo) {
 	ginfo -> use_proxy = FALSE;
 	ginfo -> use_proxy_env = FALSE;
 
+	ginfo -> cddb_results = NULL;
 //	strcpy (ginfo -> dbserver.name, "freedb.freedb.org");
 //	strcpy (ginfo -> dbserver.cgi_prog, "~cddb/cddb.cgi");
 //	ginfo -> dbserver.port = 80;
