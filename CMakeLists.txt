@@ -34,7 +34,7 @@ CHECK_INCLUDE_FILES (sys/statvfs.h HAVE_SYS_STATVFS_H)
 CHECK_INCLUDE_FILES (sys/vfs.h HAVE_SYS_VFS_H)
 
 list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-find_package (CURL REQUIRED)
+#find_package (CURL REQUIRED)
 find_package (CDParanoia REQUIRED)
 find_package (FAAC)
 
