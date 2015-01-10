@@ -21,6 +21,3 @@
  */
 
 void MakeConfigPage (GripInfo *ginfo);
-gboolean LoadEncoderConfig (GripInfo *ginfo, int encodecfg);
-char *FindExe (char *exename, char **paths);
-//void FindExeInPath (char *exename, char *buf, int bsize);

@@ -211,9 +211,13 @@
       <default>true</default>
       <summary>Perform disc lookups automatically</summary>
     </key>
+    <key type="b" name="use-freedb">
+      <default>true</default>
+      <summary>Use freedb (instead of specifying your own server)</summary>
+    </key>
     <key type="s" name="server-url">
       <default>'http://freedb.freedb.org/~cddb/cddb.cgi'</default>
-      <summary>DiscDB server URL</summary>
+      <summary>DiscDB server URL - Only Used if use-freedb is disabled</summary>
     </key>
     <key type="s" name="discdb-submit-email">
       <default>'freedb-submit@freedb.org'</default>

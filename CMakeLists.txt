@@ -38,6 +38,8 @@ find_package (CURL REQUIRED)
 find_package (CDParanoia REQUIRED)
 find_package (FAAC)
 
+option (MAINTAINER_MODE "Enable maintainer mode" OFF)
+
 configure_file (
     config.h.in
     config.h

@@ -10,9 +10,6 @@
 /* Define to 1 if you have the <cdda_paranoia.h> header file. */
 #cmakedefine HAVE_CDDA_PARANOIA_H
 
-/* Description */
-#undef HAVE_ID3V2
-
 /* Define to 1 if you have the <io/cam/cdrom.h> header file. */
 #cmakedefine HAVE_IO_CAM_CDROM_H
 
@@ -34,30 +31,22 @@
 /* Version number of package */
 #define VERSION "@VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_REVISION@"
 
-/* Define to the address where bug reports for this package should be sent. */
-//#define PACKAGE_BUGREPORT "software@sukkology.net"
-
-/* Define to the full name of this package. */
-//#define PACKAGE_NAME "@CMAKE_PROJECT_NAME@ " VERSION
-
-/* Define to the full name and version of this package. */
-//#define PACKAGE_STRING
-
-/* Define to the one symbol short name of this package. */
-//#define PACKAGE_TARNAME
-
-/* Define to the home page for this package. */
-//#define PACKAGE_URL
-
-/* Define to the version of this package. */
-//#define PACKAGE_VERSION
-
 /* Gettext package */
 #define GETTEXT_PACKAGE "@CMAKE_PROJECT_NAME@-" VERSION
 #define GNOMELOCALEDIR "@CMAKE_INSTALL_FULL_LOCALEDIR@"
 
-#define GNOME_ICONDIR "@CMAKE_INSTALL_FULL_DATADIR@/pixmaps"
-#define HELP_DIR "@CMAKE_INSTALL_FULL_DATADIR@/help/grip/C"
+/* Maintainer mode */
+#cmakedefine MAINTAINER_MODE
+
+/* Paths */
+#ifdef MAINTAINER_MODE
+    #define GNOME_ICONDIR "@CMAKE_SOURCE_DIR@/pixmaps"
+    #define HELP_DIR "@CMAKE_SOURCE_DIR@/doc/C"
+    #define GSCHEMA_DIR "@CMAKE_SOURCE_DIR@/gschema"
+#else
+    #define GNOME_ICONDIR "@CMAKE_INSTALL_FULL_DATADIR@/pixmaps"
+    #define HELP_DIR "@CMAKE_INSTALL_FULL_DATADIR@/help/grip/C"
+#endif
 
 /* Optional libraries */
 #cmakedefine TAGLIB_FOUND

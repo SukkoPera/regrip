@@ -79,7 +79,6 @@ typedef struct _grip_gui {
 	GtkWidget *artist_edit_entry;
 	GtkWidget *title_edit_entry;
 	GtkWidget *genre_combo;
-	GList *id3_genre_item_list;
 	GtkWidget *year_spin_button;
 	GtkWidget *track_edit_entry;
 	GtkWidget *multi_artist_box;
@@ -105,8 +104,6 @@ typedef struct _grip_gui {
 	GtkWidget *rip_prog_label;
 	GtkWidget *ripprogbar;
 	GtkWidget *smile_indicator;
-//	GtkWidget *mp3_prog_label;
-//	GtkWidget *mp3progbar;
 
 	GtkWidget *start_sector_entry;
 	GtkWidget *end_sector_entry;
@@ -117,6 +114,9 @@ typedef struct _grip_gui {
 //	GtkWidget *all_enc_label;
 	GtkWidget *all_ripprogbar;
 //	GtkWidget *all_encprogbar;
+
+    /* DiscDB */
+    GtkWidget *discdb_server;
 
 	/* Proxy */
 	GtkWidget *proxy_name;
@@ -215,12 +215,12 @@ typedef struct _grip_info {
 	GThread *discdb_thread;
 	char discdb_submit_email[MAX_STRING];
 	char discdb_encoding[SMALL_STRING];
-	char user_email[MAX_STRING];
+//	char user_email[MAX_STRING];
 	discdb_thread_status looking_up;
 
 	char id3_encoding[SMALL_STRING];
 //	char id3v2_encoding[SMALL_STRING];
-//	gboolean db_use_freedb;
+	gboolean use_freedb;
 	gboolean update_required;
 	gboolean have_disc;
 	gboolean tray_open;

@@ -125,9 +125,9 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
     // First of all, load settings
 #ifdef MAINTAINER_MODE
     err = NULL;
-    GSettingsSchemaSource *schema_source = g_settings_schema_source_new_from_directory ("/mnt/nashomes/sukko/gurtdoc/c_hosted/grip/gschema", g_settings_schema_source_get_default (), FALSE, &err);
+    GSettingsSchemaSource *schema_source = g_settings_schema_source_new_from_directory (GSCHEMA_DIR, g_settings_schema_source_get_default (), FALSE, &err);
     if (schema_source == NULL) {
-        g_error ("Cannot open gsettings schema: %s", error -> message);
+        g_error ("Cannot open gsettings schema: %s", err -> message);
     }
     GSettingsSchema *schema = g_settings_schema_source_lookup (schema_source, "net.sukkology.software.regrip", TRUE);
     g_assert (schema);
@@ -774,7 +774,7 @@ static void set_initial_config (GripInfo *ginfo) {
 
 	uinfo -> tray_icon = NULL;
 
-	uinfo -> id3_genre_item_list = NULL;
+//	uinfo -> id3_genre_item_list = NULL;
 
 	*ginfo -> version = '\0';
 
@@ -797,7 +797,6 @@ static void set_initial_config (GripInfo *ginfo) {
 	ginfo -> ask_submit = FALSE;
 	ginfo -> is_new_disc = FALSE;
 	ginfo -> first_time = TRUE;
-//	ginfo -> automatic_discdb = TRUE;
 	ginfo -> auto_eject_countdown = 0;
 	ginfo -> volume = 255;
 //#if defined(__FreeBSD__) || defined(__NetBSD__)
@@ -825,7 +824,7 @@ static void set_initial_config (GripInfo *ginfo) {
 
 //	strcpy (ginfo -> discdb_submit_email, "freedb-submit@freedb.org");
 //	ginfo -> db_use_freedb = TRUE;
-	*ginfo -> user_email = '\0';
+//	*ginfo -> user_email = '\0';
 
 	strcpy (ginfo -> discdb_encoding, "UTF-8");
 	strcpy (ginfo -> id3_encoding, "UTF-8");
@@ -952,6 +951,7 @@ static void set_initial_config (GripInfo *ginfo) {
 	g_free (filename);
 #endif
 
+#if 0
 	if (!*ginfo -> user_email) {
 		char *host;
 		char *user;
@@ -974,6 +974,7 @@ static void set_initial_config (GripInfo *ginfo) {
 
 		g_snprintf (ginfo -> user_email, 256, "%s@%s", user, host);
 	}
+#endif // 0
 
 	if (ginfo -> use_proxy_env) {  /* Get proxy info from "http_proxy" */
 		proxy_env = getenv ("http_proxy");

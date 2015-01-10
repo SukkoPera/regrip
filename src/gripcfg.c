@@ -76,6 +76,17 @@ static void on_proxy_use_env_toggled (GtkToggleButton *togglebutton, gpointer us
 	gtk_widget_set_sensitive (uinfo -> proxy_pswd, !enabled);
 }
 
+static void on_use_freedb_toggled (GtkToggleButton *togglebutton, gpointer user_data) {
+	GripInfo *ginfo;
+	GripGUI *uinfo;
+
+	ginfo = (GripInfo *) user_data;
+	uinfo = &(ginfo -> gui_info);
+
+	gboolean enabled = gtk_toggle_button_get_active (togglebutton);
+	gtk_widget_set_sensitive (uinfo -> discdb_server, !enabled);
+}
+
 static void on_proxy_use_toggled (GtkToggleButton *togglebutton, gpointer user_data) {
 	GripInfo *ginfo;
 	GripGUI *uinfo;
@@ -488,7 +499,7 @@ void MakeConfigPage (GripInfo *ginfo) {
 
 
     /*************************************************************************/
-	/* ID3 PAGE                                                              */
+	/* TAG PAGE                                                              */
 	/*************************************************************************/
 
 	vbox = gtk_vbox_new (FALSE, 2);
@@ -554,10 +565,22 @@ void MakeConfigPage (GripInfo *ginfo) {
 	gtk_widget_show (check);
 	g_settings_bind (ginfo -> settings_discdb, "automatic-discdb", check, "active", G_SETTINGS_BIND_DEFAULT);
 
+    check = MakeCheckButton (NULL, &ginfo -> use_freedb,
+	                         _("Use freedb"));
+	gtk_box_pack_start (GTK_BOX (vbox), check, FALSE, FALSE, 0);
+	gtk_widget_show (check);
+	g_settings_bind (ginfo -> settings_discdb, "use-freedb", check, "active", G_SETTINGS_BIND_DEFAULT);
+    g_signal_connect (GTK_OBJECT (check), "toggled",
+                      G_CALLBACK (on_use_freedb_toggled), (gpointer) ginfo);
+
 	hbox = MakeStrEntry (&entry, ginfo -> dbserver.name, _("DiscDB server URL"), 255, TRUE);
 	gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
 	gtk_widget_show (hbox);
 	g_settings_bind (ginfo -> settings_discdb, "server-url", entry, "text", G_SETTINGS_BIND_DEFAULT);
+	uinfo -> discdb_server = hbox;
+
+    // Call handler manually to init sensitivity of widgets
+	on_use_freedb_toggled (GTK_TOGGLE_BUTTON (check), ginfo);
 
 	hbox = MakeStrEntry (&entry, ginfo -> discdb_submit_email,
 	                      _("DB Submit email"), 255, TRUE);
@@ -650,9 +673,9 @@ void MakeConfigPage (GripInfo *ginfo) {
 	vbox = gtk_vbox_new (FALSE, 2);
 	gtk_container_border_width (GTK_CONTAINER (vbox), 3);
 
-	entry = MakeStrEntry (NULL, ginfo -> user_email, _("E-Mail address"), 255, TRUE);
-	gtk_box_pack_start (GTK_BOX (vbox), entry, FALSE, FALSE, 0);
-	gtk_widget_show (entry);
+//	entry = MakeStrEntry (NULL, ginfo -> user_email, _("E-Mail address"), 255, TRUE);
+//	gtk_box_pack_start (GTK_BOX (vbox), entry, FALSE, FALSE, 0);
+//	gtk_widget_show (entry);
 
 	entry = MakeStrEntry (NULL, ginfo -> cdupdate, _("CD update program"), 255,
 	                      TRUE);

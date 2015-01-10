@@ -101,7 +101,7 @@ static gpointer cddb_lookup_thread_func (gpointer data) {
     }
 
     GError *error = NULL;
-    GList *results = cddb_lookup (&(ginfo -> dbserver), ginfo -> local_mode, &(ginfo -> disc), &error);
+    GList *results = cddb_lookup (ginfo -> use_freedb ? NULL : &(ginfo -> dbserver), ginfo -> local_mode, &(ginfo -> disc), &error);
     if (results == NULL && error != NULL) {
         // Query failed
         g_warning ("CDDB lookup failed: %s", error -> message);
@@ -1615,7 +1615,7 @@ static void process_cddb_results (GripInfo *ginfo) {
 
                 // Fetch data. We don't use a thread here, since the entry should be in cddb cache
                 GError *error = NULL;
-                DiscData *dd = cddb_get_entry (&(ginfo -> dbserver), ginfo -> local_mode, category, id, &error);
+                DiscData *dd = cddb_get_entry (ginfo -> use_freedb ? NULL : &(ginfo -> dbserver), ginfo -> local_mode, category, id, &error);
                 g_assert (dd);
                 ginfo -> ddata = *dd;
 
@@ -1891,9 +1891,9 @@ void UpdateTracks (GripInfo *ginfo) {
 	gtk_entry_set_text (GTK_ENTRY (uinfo -> playlist_entry),
 	                    ddata -> data_playlist);
 
-	if (!ginfo -> first_time) {
+//	if (!ginfo -> first_time) {
 		gtk_list_store_clear (uinfo -> track_list_store);
-	}
+//	}
 
 	SetCurrentTrackIndex (ginfo, disc -> curr_track - 1);
 
