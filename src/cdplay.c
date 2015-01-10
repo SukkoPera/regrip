@@ -1167,7 +1167,6 @@ void EjectDisc (GtkWidget *widget, gpointer data) {
 		ginfo -> playing = FALSE;
 		ginfo -> have_disc = FALSE;
 		ginfo -> update_required = TRUE;
-		ginfo -> current_discid = 0;
 		ginfo -> tray_open = TRUE;
 	} else {
 		if (ginfo -> faulty_eject) {
@@ -1848,7 +1847,6 @@ void UpdateDisplay (GripInfo *ginfo) {
 
 void UpdateTracks (GripInfo *ginfo) {
 	int track;
-	char *col_strings[3];
 	gboolean multi_artist_backup;
 	GripGUI *uinfo;
 	DiscInfo *disc;
@@ -1864,13 +1862,10 @@ void UpdateTracks (GripInfo *ginfo) {
 		/* Reset to make sure we don't eject twice */
 		ginfo -> auto_eject_countdown = 0;
 
-		// FIXME
-//		ginfo -> current_discid = DiscDBDiscid (disc);
-
 		SetTitle (ginfo, ddata -> data_title);
 		SetArtist (ginfo, ddata -> data_artist);
 		SetYear (ginfo, ddata -> data_year);
-//		SetID3Genre (ginfo, ddata -> data_id3genre);        FIXME
+		SetGenre (ginfo, ddata -> data_genre);
 
 		multi_artist_backup = ddata -> data_multi_artist;
 
@@ -1890,7 +1885,7 @@ void UpdateTracks (GripInfo *ginfo) {
 		SetTitle (ginfo, _("No Disc"));
 		SetArtist (ginfo, "");
 		SetYear (ginfo, 0);
-		SetID3Genre (ginfo, DEFAULT_GENRE);
+		SetGenre (ginfo, DEFAULT_GENRE);
 	}
 
 	gtk_entry_set_text (GTK_ENTRY (uinfo -> playlist_entry),
@@ -1903,35 +1898,32 @@ void UpdateTracks (GripInfo *ginfo) {
 	SetCurrentTrackIndex (ginfo, disc -> curr_track - 1);
 
 	if (ginfo -> have_disc) {
-		col_strings[0] = (char *) malloc (260);
-		col_strings[1] = (char *) malloc (6);
-		col_strings[2] = NULL;
+        gchar *track_col, *len_col;
 
 		for (track = 0; track < disc -> num_tracks; track++) {
 			if (*ddata -> data_track[track].track_artist) {
-				g_snprintf (col_strings[0], 260, "%02d  %s (%s)", track + 1,
+				track_col = g_strdup_printf ("%02d  %s (%s)", track + 1,
 				            ddata -> data_track[track].track_name,
 				            ddata -> data_track[track].track_artist);
-			} else
-				g_snprintf (col_strings[0], 260, "%02d  %s", track + 1,
+			} else {
+				track_col = g_strdup_printf ("%02d  %s", track + 1,
 				            ddata -> data_track[track].track_name);
+			}
 
-			g_snprintf (col_strings[1], 6, "%2d:%02d",
+			len_col = g_strdup_printf ("%2d:%02d",
 			            disc -> track[track].length.mins,
 			            disc -> track[track].length.secs);
 
 			gtk_list_store_append (uinfo -> track_list_store, &iter);
-
 			gtk_list_store_set (uinfo -> track_list_store, &iter,
-			                    TRACKLIST_TRACK_COL, col_strings[0],
-			                    TRACKLIST_LENGTH_COL, col_strings[1],
+			                    TRACKLIST_TRACK_COL, track_col,
+			                    TRACKLIST_LENGTH_COL, len_col,
 			                    TRACKLIST_RIP_COL, FALSE,
 			                    TRACKLIST_NUM_COL, track, -1);
 
+            g_free (track_col);
+            g_free (len_col);
 		}
-
-		free (col_strings[0]);
-		free (col_strings[1]);
 
 		SelectRow (ginfo, CURRENT_TRACK);
 	}

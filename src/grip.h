@@ -78,7 +78,7 @@ typedef struct _grip_gui {
 	GtkWidget *track_edit_box;
 	GtkWidget *artist_edit_entry;
 	GtkWidget *title_edit_entry;
-	GtkWidget *id3_genre_combo;
+	GtkWidget *genre_combo;
 	GList *id3_genre_item_list;
 	GtkWidget *year_spin_button;
 	GtkWidget *track_edit_entry;
@@ -236,7 +236,7 @@ typedef struct _grip_info {
 	gboolean poll_drive;
 	int poll_interval;
 	int auto_eject_countdown;
-	int current_discid;
+//	int current_discid;
 	int volume;
 
 	int current_disc;

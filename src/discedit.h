@@ -35,7 +35,7 @@ void ToggleTrackEdit (GtkWidget *widget, gpointer data);
 void SetTitle (GripInfo *ginfo, char *title);
 void SetArtist (GripInfo *ginfo, char *artist);
 void SetYear (GripInfo *ginfo, int year);
-void SetID3Genre (GripInfo *ginfo, char *genre);
+void SetGenre (GripInfo *ginfo, char *genre);
 
 
 #endif /* ifndef GRIP_DISCEDIT_H */

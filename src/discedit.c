@@ -255,7 +255,7 @@ static void TitleEditChanged (GtkWidget *widget, gpointer data);
 static void ArtistEditChanged (GtkWidget *widget, gpointer data);
 static void YearEditChanged (GtkWidget *widget, gpointer data);
 static void EditNextTrack (GtkWidget *widget, gpointer data);
-static void ID3GenreChanged (GtkWidget *widget, gpointer data);
+static void GenreChanged (GtkWidget *widget, gpointer data);
 static void SeparateFields (char *buf, char *field1, char *field2, char *sep);
 static void SplitTitleArtist (GtkWidget *widget, gpointer data);
 static void SubmitEntryCB (GtkWidget *widget, gpointer data);
@@ -348,14 +348,14 @@ GtkWidget *MakeEditBox (GripInfo *ginfo) {
 	/* For the genre list we use a combo with entry, populated with
 	 * the standard ID3v1 genres, but since TagLib treats genres as
 	 * a string, we accept everything. */
-	uinfo -> id3_genre_combo = gtk_combo_box_text_new_with_entry ();
+	uinfo -> genre_combo = gtk_combo_box_text_new_with_entry ();
     for (i = 0; i < GENRES_NUM; ++i) {
-        gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (uinfo -> id3_genre_combo), genres[i]);
+        gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (uinfo -> genre_combo), genres[i]);
     }
 
     // Enable autocompletion
-    GtkTreeModel *model = gtk_combo_box_get_model (GTK_COMBO_BOX (uinfo -> id3_genre_combo));
-    GtkEntry *boxEntry = GTK_ENTRY (gtk_bin_get_child (GTK_BIN (uinfo -> id3_genre_combo)));
+    GtkTreeModel *model = gtk_combo_box_get_model (GTK_COMBO_BOX (uinfo -> genre_combo));
+    GtkEntry *boxEntry = GTK_ENTRY (gtk_bin_get_child (GTK_BIN (uinfo -> genre_combo)));
     g_assert (boxEntry);
     GtkEntryCompletion *comp = gtk_entry_completion_new ();
     gtk_entry_completion_set_model (comp, model);
@@ -363,12 +363,12 @@ GtkWidget *MakeEditBox (GripInfo *ginfo) {
     gtk_entry_completion_set_minimum_key_length (comp, 1);
     gtk_entry_set_completion (boxEntry, comp);
 
-    gtk_signal_connect (GTK_OBJECT (uinfo -> id3_genre_combo), "changed", G_CALLBACK (ID3GenreChanged), ginfo);
+    gtk_signal_connect (GTK_OBJECT (uinfo -> genre_combo), "changed", G_CALLBACK (GenreChanged), ginfo);
 
-	gtk_box_pack_start (GTK_BOX (hbox), uinfo -> id3_genre_combo, TRUE, TRUE, 0);
-	gtk_widget_show (uinfo -> id3_genre_combo);
+	gtk_box_pack_start (GTK_BOX (hbox), uinfo -> genre_combo, TRUE, TRUE, 0);
+	gtk_widget_show (uinfo -> genre_combo);
 
-	SetID3Genre (ginfo, ginfo -> ddata.data_genre);
+	SetGenre (ginfo, ginfo -> ddata.data_genre);
 
 	gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
 	gtk_widget_show (hbox);
@@ -582,10 +582,10 @@ void SetYear (GripInfo *ginfo, int year) {
 	                           (gfloat) year);
 }
 
-void SetID3Genre (GripInfo *ginfo, char *genre) {
+void SetGenre (GripInfo *ginfo, char *genre) {
 	GripGUI *uinfo = &(ginfo -> gui_info);
 
-    gtk_entry_set_text (GTK_ENTRY (gtk_bin_get_child (GTK_BIN (uinfo -> id3_genre_combo))), genre);
+    gtk_entry_set_text (GTK_ENTRY (gtk_bin_get_child (GTK_BIN (uinfo -> genre_combo))), genre);
 }
 
 static void SaveDiscInfo (GtkWidget *widget, gpointer data) {
@@ -682,11 +682,11 @@ static void EditNextTrack (GtkWidget *widget, gpointer data) {
 	gtk_widget_grab_focus (GTK_WIDGET (ginfo -> gui_info.track_edit_entry));
 }
 
-static void ID3GenreChanged (GtkWidget *widget, gpointer data) {
+static void GenreChanged (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo = (GripInfo *) data;
 	GripGUI *uinfo = &(ginfo -> gui_info);
 
-	const char *genre = gtk_entry_get_text (GTK_ENTRY (gtk_bin_get_child (GTK_BIN (uinfo -> id3_genre_combo))));
+	const char *genre = gtk_entry_get_text (GTK_ENTRY (gtk_bin_get_child (GTK_BIN (uinfo -> genre_combo))));
 	strncpy (ginfo -> ddata.data_genre, genre, MAX_STRING);
 }
 
@@ -837,6 +837,7 @@ static void GetDiscDBGenre (GripInfo *ginfo) {
 	gtk_box_pack_start (GTK_BOX (hbox), label, FALSE, FALSE, 0);
 	gtk_widget_show (label);
 
+	// FIXME
 //	for (genre = 0; genre < 12; genre++) {
 //		item = gtk_list_item_new_with_label (DiscDBGenre (genre));
 //		gtk_object_set_user_data (GTK_OBJECT (item),
@@ -884,7 +885,7 @@ static void DiscDBGenreChanged (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo = (GripInfo *) data;
 	GripGUI *uinfo = &(ginfo -> gui_info);
 
-	char *genre = gtk_entry_get_text (GTK_ENTRY (gtk_bin_get_child (GTK_BIN (uinfo -> id3_genre_combo))));
+	char *genre = gtk_entry_get_text (GTK_ENTRY (gtk_bin_get_child (GTK_BIN (uinfo -> genre_combo))));
 	strncpy (ginfo -> ddata.data_genre, genre, MAX_STRING);
 	// genre must not be freed
 }

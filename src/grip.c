@@ -799,7 +799,6 @@ static void set_initial_config (GripInfo *ginfo) {
 	ginfo -> first_time = TRUE;
 //	ginfo -> automatic_discdb = TRUE;
 	ginfo -> auto_eject_countdown = 0;
-	ginfo -> current_discid = 0;
 	ginfo -> volume = 255;
 //#if defined(__FreeBSD__) || defined(__NetBSD__)
 //	ginfo -> poll_drive = FALSE;
