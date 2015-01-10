@@ -83,12 +83,12 @@ static gboolean on_window_resize (GtkWindow *window, GdkEvent *event, gpointer u
     GdkEventConfigure *e = (GdkEventConfigure *) event;
     GripInfo *ginfo = (GripInfo *) user_data;
 
-    g_debug ("New window size: %dx%d", e -> width, e -> height);
-    g_debug ("New window position: %dx%d", e -> x, e -> y);
+//    g_debug ("New window size: %dx%d", e -> width, e -> height);
+//    g_debug ("New window position: %dx%d", e -> x, e -> y);
 
     g_settings_set_uint (ginfo -> settings, "win-width", e -> width);
     g_settings_set_uint (ginfo -> settings, "win-height", e -> height);
-    // FIXME: Also save position
+    // FIXME: Also save position?
 
     // FALSE propagates event further
     return FALSE;

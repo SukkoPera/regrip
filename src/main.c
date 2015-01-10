@@ -45,7 +45,7 @@ static GOptionEntry cmd_options[] = {
 	{"scsi-device", 0, 0, G_OPTION_ARG_STRING, &scsi_device, N_ ("Specify the generic scsi device to use"), N_ ("DEVICE")},
 	{"verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose, "Be verbose", NULL},
 	{"small", 0, 0, G_OPTION_ARG_NONE, &force_small, N_ ("Launch in \"small\" (CD-only) mode"), NULL},
-	{"local", 0, 0, G_OPTION_ARG_NONE, &local_mode, N_ ("\"Local\" mode -- do not look up disc info on the net"), NULL},
+	{"local", 'l', 0, G_OPTION_ARG_NONE, &local_mode, N_ ("\"Local\" mode -- do not look up disc info on the net"), NULL},
 	{"no-redirect", 0, 0, G_OPTION_ARG_NONE, &no_redirect, N_ ("Do not do I/O redirection"), NULL},
 	{NULL}
 };

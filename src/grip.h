@@ -258,13 +258,8 @@ typedef struct _grip_info {
 	int curr_pipe_fd;
 
 	gboolean ripping;
-//	gboolean encoding;
 	gboolean stop_rip;
-//	gboolean stop_encode;
-//	gboolean ripping_a_disc;
 	time_t rip_finished;
-//	int rippid;
-//	int num_wavs;
 	int rip_track;
 	time_t rip_started;
 	int ripsize;
@@ -272,32 +267,25 @@ typedef struct _grip_info {
 	int riptmpfd;
 	int start_sector;
 	int end_sector;
-//	gboolean doencode;
-/*
-	char mp3file[PATH_MAX];
-	int mp3size[MAX_NUM_CPU];
-	int mp3_started;
-	int mp3_enc_track[MAX_NUM_CPU];
-	char rip_delete_file[MAX_NUM_CPU][PATH_MAX];*/
+
 	double track_gain_adjustment;
 	double disc_gain_adjustment;
 	struct _encode_track *encoded_track;
-//	GList *encode_list;
-//	GList *pending_list;
-//  gboolean delayed_encoding;
-	gboolean in_rip_thread;
 	gboolean do_redirect;
 
 	gpointer encoder_data;
+
+	/* Ripper */
+	gboolean in_rip_thread;
 	GThread *rip_thread;
-//	gboolean stop_thread_rip_now;
 	gboolean disable_paranoia;
 	gboolean disable_extra_paranoia;
 	gboolean disable_scratch_detect;
 	gboolean disable_scratch_repair;
-	gboolean calc_gain;
 	int rip_smile_level;
 	gfloat rip_percent_done;
+
+	gboolean calc_gain;
 
 	char output_folder[PATH_MAX];
 	char rip_tmpfile[PATH_MAX];

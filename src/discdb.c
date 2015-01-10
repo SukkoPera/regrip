@@ -50,8 +50,11 @@ enum GripDiscDbError {
     }
 
 // Gets a single CDDB entry
-DiscData *cddb_get_entry (DiscDBServer *server, gchar *category, guint id, GError **error) {
+DiscData *cddb_get_entry (DiscDBServer *server, gboolean local_only, gchar *category, guint id, GError **error) {
     g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	libcddb_init ();
+	libcddb_set_flags (CDDB_F_NO_TRACK_ARTIST);
 
 	cddb_conn_t *conn = cddb_new ();
 	if (conn == NULL) {
@@ -59,9 +62,16 @@ DiscData *cddb_get_entry (DiscDBServer *server, gchar *category, guint id, GErro
 		return NULL;
 	}
 
-//	cddb_set_server_name (conn, server -> name);
-	if (server -> port != 0)
-        cddb_set_server_port (conn, server -> port);
+	// Use specified server, in case
+	if (server) {
+    //	cddb_set_server_name (conn, server -> name);
+        if (server -> port != 0)
+            cddb_set_server_port (conn, server -> port);
+	}
+
+	// Only use cache, if requested
+	if (local_only)
+        cddb_cache_only (conn);
 
 	cddb_disc_t *disc = cddb_disc_new ();
 	if (conn == NULL) {
@@ -106,15 +116,20 @@ DiscData *cddb_get_entry (DiscDBServer *server, gchar *category, guint id, GErro
         // FIXME: FREE
         return NULL;
     }
+
+    libcddb_shutdown ();
 }
 
 
 // Returns a list of DiscData with no TrackData
-GList *cddb_lookup (const DiscInfo *dinfo, DiscDBServer *server, GError **error) {
+GList *cddb_lookup (DiscDBServer *server, gboolean local_only, const DiscInfo *dinfo, GError **error) {
     g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	int i;
 	GList *results = NULL;
+
+	libcddb_init ();
+	libcddb_set_flags (CDDB_F_NO_TRACK_ARTIST);
 
 	cddb_conn_t *conn = cddb_new ();
 	if (conn == NULL) {
@@ -122,13 +137,21 @@ GList *cddb_lookup (const DiscInfo *dinfo, DiscDBServer *server, GError **error)
 		return results;
 	}
 
-//	cddb_set_server_name (conn, server -> name);
-	if (server -> port != 0)
-        cddb_set_server_port (conn, server -> port);
+	// Use specified server, in case
+	if (server) {
+    //	cddb_set_server_name (conn, server -> name);
+        if (server -> port != 0)
+            cddb_set_server_port (conn, server -> port);
+	}
+
+	// Only use cache, if requested
+	if (local_only)
+        cddb_cache_only (conn);
 
 	cddb_disc_t *disc = cddb_disc_new ();
-	if (conn == NULL) {
+	if (disc == NULL) {
 		g_set_error_literal (error, GRIP_DISCDB_ERROR, GRIP_DISCDB_ERROR_NOMEM, _("Out of memory, unable to create disc"));
+        cddb_destroy (conn);
 		return results;
 	}
 
@@ -148,16 +171,14 @@ GList *cddb_lookup (const DiscInfo *dinfo, DiscDBServer *server, GError **error)
 		cddb_disc_add_track (disc, track);
 	}
 
-	/* (2) execute query command */
+	/* Execute query command */
 	g_debug ("Querying CDDB server %s with len %u", cddb_get_server_name (conn), cddb_disc_get_length (disc));
 	int matches = cddb_query (conn, disc);
 	if (matches < 0) {
-		/* Something went wrong, print error */
+		/* Something went wrong */
 		g_set_error (error, GRIP_DISCDB_ERROR, GRIP_DISCDB_ERROR_QUERYFAILED, _("CDDB query failed: %s"), cddb_error_str (cddb_errno (conn)));
-		// FIXME: Free stuff
-		return results;
 	} else if (matches == 1) {
-	    /* Single match, fetch it and return it immediately */
+	    /* Single match, fetch it and return a complete record (i.e.: with tracks) */
 	    g_debug ("Found single CDDB match");
 
         if (cddb_read (conn, disc)) {
@@ -170,7 +191,7 @@ GList *cddb_lookup (const DiscInfo *dinfo, DiscDBServer *server, GError **error)
             smart_strncpy (data -> data_artist, cddb_disc_get_artist (disc), MAX_STRING);
             smart_strncpy (data -> data_extended, cddb_disc_get_ext_data (disc), MAX_EXTENDED_STRING);
             smart_strncpy (data -> data_genre, cddb_disc_get_genre (disc), MAX_STRING);
-//            data -> category = g_strdup (cddb_disc_get_category_str(disc));
+            smart_strncpy (data -> data_category, cddb_disc_get_category_str (disc), MAX_STRING);
             data -> data_year = cddb_disc_get_year (disc);
 //            data -> num_tracks = cddb_disc_get_track_count(disc);
             data -> revision = cddb_disc_get_revision (disc);
@@ -183,21 +204,24 @@ GList *cddb_lookup (const DiscInfo *dinfo, DiscDBServer *server, GError **error)
 				smart_strncpy (data -> data_track[i].track_artist, cddb_track_get_artist (track), MAX_STRING);
 				smart_strncpy (data -> data_track[i].track_extended, cddb_track_get_ext_data (track), MAX_EXTENDED_STRING);
 
+//				cddb_track_destroy (track);
 				track = cddb_disc_get_track_next (disc);
 			}
 
             results = g_list_append (results, data);
         } else {
-            /* something went wrong, print error */
-//            cddb_error_print (cddb_errno (conn));
+            /* Something went wrong */
             g_set_error (error, GRIP_DISCDB_ERROR, GRIP_DISCDB_ERROR_READFAILED, _("CDDB read query results failed: %s"), cddb_error_str (cddb_errno (conn)));
-            // FIXME: FREE
-            return results;
+
+            // results will be NULL at this point, which is fine
         }
-	} else {
-		g_debug ("Found %d CDDB matches", matches);
-		for (i = 0; i < matches; ++i) {
-			g_debug ("Match %d (%s/%u): %s - %s (%s, %d)", i, cddb_disc_get_category_str (disc), cddb_disc_get_discid (disc), cddb_disc_get_artist (disc), cddb_disc_get_title (disc), cddb_disc_get_genre (disc), cddb_disc_get_year (disc));
+	} else if (matches > 1) {
+	    /* Multiple matches, only return details for each album (without track data).
+         * Once a match is chosen, full details for it can be retrieved with the cddb_get_entry() function.
+         */
+		g_debug ("Found %d CDDB matches:", matches);
+        do {
+			g_debug ("- %s/%u: %s - %s (%s, %d)", cddb_disc_get_category_str (disc), cddb_disc_get_discid (disc), cddb_disc_get_artist (disc), cddb_disc_get_title (disc), cddb_disc_get_genre (disc), cddb_disc_get_year (disc));
 
             if (cddb_read (conn, disc)) {
                 DiscData *data = g_new0 (DiscData, 1);
@@ -216,54 +240,24 @@ GList *cddb_lookup (const DiscInfo *dinfo, DiscDBServer *server, GError **error)
 
                 results = g_list_append (results, data);
             } else {
-				/* something went wrong, print error */
-                g_set_error (error, GRIP_DISCDB_ERROR, GRIP_DISCDB_ERROR_READFAILED, _("CDDB read query results failed: %s"), cddb_error_str (cddb_errno (conn)));
-                // FIXME: FREE
-                return results;
+				/* Something went wrong */
+				// Results will be partly populated at this point, and subsequent results might be read fine, so just issue a warning
+				g_warning (_("CDDB read query results failed: %s"), cddb_error_str (cddb_errno (conn)));
+//                g_set_error (error, GRIP_DISCDB_ERROR, GRIP_DISCDB_ERROR_READFAILED, _("CDDB read query results failed: %s"), cddb_error_str (cddb_errno (conn)));
 			}
-
-			/* (3) ... use disc ... */
-			cddb_track_t *track = cddb_disc_get_track_first (disc);
-			while (track != NULL) {
-				/* ... use track ...  */
-//				printf ("%d. %s\n", cddb_track_get_number (track), cddb_track_get_title (track) );
-
-				track = cddb_disc_get_track_next (disc);
-			}
-
-			/* (4) get next query result if there is one left */
-			if (i < matches - 1)
-				g_assert (cddb_query_next (conn, disc));
-		}
+        } while (cddb_query_next (conn, disc));
 	}
 
     cddb_disc_destroy (disc);
 	cddb_destroy (conn);
+
+	libcddb_shutdown ();
 
 	return results;
 }
 
 
 #if 0
-
-/* Produce DiscDB ID for CD currently in CD-ROM */
-
-unsigned int DiscDBDiscid (DiscInfo *disc) {
-	int index, tracksum = 0, discid;
-
-	if (!disc->have_info) {
-		CDStat (disc, TRUE);
-	}
-
-	for (index = 0; index < disc->num_tracks; index++)
-		tracksum += DiscDBSum (disc->track[index].start_pos.mins * 60 +
-		                       disc->track[index].start_pos.secs);
-
-	discid = (disc->length.mins * 60 + disc->length.secs) -
-	         (disc->track[0].start_pos.mins * 60 + disc->track[0].start_pos.secs);
-
-	return (tracksum % 0xFF) << 24 | discid << 8 | disc->num_tracks;
-}
 
 /* Convert numerical genre to text */
 char *DiscDBGenre (int genre) {

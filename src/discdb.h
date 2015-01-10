@@ -68,10 +68,10 @@ typedef struct _discdb_server {
 } DiscDBServer;
 
 
-DiscData *cddb_get_entry (DiscDBServer *server, gchar *category, guint id, GError **error);
+DiscData *cddb_get_entry (DiscDBServer *server, gboolean local_only, gchar *category, guint id, GError **error);
 
 // Returns a list of DiscData with no TrackData
-GList *cddb_lookup (const DiscInfo *dinfo, DiscDBServer *server, GError **error);
+GList *cddb_lookup (DiscDBServer *server, gboolean local_only, const DiscInfo *dinfo, GError **error);
 
 
 

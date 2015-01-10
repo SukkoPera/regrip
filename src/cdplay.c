@@ -101,7 +101,7 @@ static gpointer cddb_lookup_thread_func (gpointer data) {
     }
 
     GError *error = NULL;
-    GList *results = cddb_lookup (&(ginfo -> disc), &(ginfo -> dbserver), &error);
+    GList *results = cddb_lookup (&(ginfo -> dbserver), ginfo -> local_mode, &(ginfo -> disc), &error);
     if (results == NULL && error != NULL) {
         // Query failed
         g_warning ("CDDB lookup failed: %s", error -> message);
@@ -1525,6 +1525,121 @@ void ScanDisc (GtkWidget *widget, gpointer data) {
 	CheckNewDisc (ginfo, TRUE);
 }
 
+
+//////////////////////////
+#if 0
+// Not necessary for the moment
+static void on_disc_changed (GtkTreeSelection *selection, gpointer user_data) {
+//	GtkDialog *dialog = GTK_DIALOG (user_data);
+
+	//~ GtkTreeSelection *selection = gtk_tree_view_get_selection (tree_view);
+	if (gtk_tree_selection_count_selected_rows (selection) > 0) {
+		g_debug ("enable ok");
+	} else {
+		g_debug ("disable ok");
+	}
+}
+#endif // 0
+
+static void on_disc_double_clicked (GtkTreeView *tree_view, GtkTreePath *path, GtkTreeViewColumn *column, gpointer user_data) {
+	gtk_dialog_response (GTK_DIALOG (user_data), 1);
+}
+
+static void process_cddb_results (GripInfo *ginfo) {
+    g_debug ("process_cddb_results() starting");
+
+    // Clear thread struct first
+    g_assert (ginfo -> discdb_thread);
+    gboolean discdb_ok = GPOINTER_TO_INT (g_thread_join (ginfo -> discdb_thread));
+    if (discdb_ok) {
+        g_debug (_("DiscDB thread finished successfully"));
+    } else {
+        g_debug (_("DiscDB thread finished with failure or was aborted"));
+    }
+    ginfo -> discdb_thread = NULL;
+
+    // Process results
+    guint n = g_list_length (ginfo -> cddb_results);
+    if (n == 0) {
+        // No results :(
+        g_debug ("No CDDB results");
+    } else if (n == 1) {
+        // Single match, use right away
+        GList *cur = g_list_first (ginfo -> cddb_results);
+        ginfo -> ddata = *(DiscData *) cur -> data;
+        g_free (cur -> data);
+        g_list_free (ginfo -> cddb_results);
+        ginfo -> cddb_results = NULL;
+
+        ginfo -> update_required = TRUE;
+        ginfo -> is_new_disc = TRUE;
+    } else {
+        /* Ask the user what match to use */
+        GripGUI *uinfo = &(ginfo -> gui_info);
+
+        /* Have the ok button call the ok_button_clicked callback */
+        GtkWidget *widget = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "dialog_cddb_results"));
+        g_assert (widget);
+
+        GtkTreeView *treeview = GTK_TREE_VIEW (gtk_builder_get_object (uinfo -> builder, "treeview_cddb_results"));
+        g_assert (treeview);
+        GtkTreeSelection *selection = gtk_tree_view_get_selection (treeview);
+        gtk_tree_selection_set_mode (selection, GTK_SELECTION_BROWSE);		// Can't do this in Glade?
+    //    g_signal_connect (G_OBJECT (selection), "changed", G_CALLBACK (on_disc_changed), widget);
+        g_signal_connect (GTK_OBJECT (treeview), "row-activated", G_CALLBACK (on_disc_double_clicked), widget);
+        GtkListStore *liststore = GTK_LIST_STORE (gtk_tree_view_get_model (treeview));
+        g_assert (liststore);
+
+        GtkTreeIter iter;
+        GList *cur, *next;
+        for (cur = g_list_first (ginfo -> cddb_results); next; cur = next) {
+            DiscData *data = (DiscData *) cur -> data;
+
+            gtk_list_store_append (liststore, &iter);
+            gtk_list_store_set (liststore, &iter, 0, data -> data_artist, 1, data -> data_title, 2, data -> data_genre, 3, data -> data_category, 4, data -> data_id, -1);
+
+            next = g_list_next (cur);
+            g_free (data);
+        }
+        g_list_free (ginfo -> cddb_results);
+        ginfo -> cddb_results = NULL;
+
+        gtk_widget_show_all (widget);
+        if (gtk_dialog_run (GTK_DIALOG (widget))) {
+            GtkTreeSelection *sel = gtk_tree_view_get_selection (treeview);
+            if (gtk_tree_selection_get_selected (sel, NULL, &iter)) {
+                gchar *category;
+                guint id;
+
+                gtk_tree_model_get (GTK_TREE_MODEL (liststore), &iter, 3, &category, 4, &id, -1);
+                g_debug ("Selected item: %s/%u", category, id);
+
+                // Fetch data. We don't use a thread here, since the entry should be in cddb cache
+                GError *error = NULL;
+                DiscData *dd = cddb_get_entry (&(ginfo -> dbserver), ginfo -> local_mode, category, id, &error);
+                g_assert (dd);
+                ginfo -> ddata = *dd;
+
+                ginfo -> update_required = TRUE;
+                ginfo -> is_new_disc = TRUE;
+
+                g_free (dd);
+                g_free (category);
+            }
+        }
+
+        gtk_widget_destroy (widget);
+    }
+
+    // Done with results
+    g_assert (ginfo -> cddb_results == NULL);
+    ginfo -> looking_up = DISCDB_IDLE;
+
+    g_debug ("process_cddb_results() returning");
+}
+
+//////////////////
+
 void UpdateDisplay (GripInfo *ginfo) {
 	/* Note: need another solution other than statics if we ever want to be
 	   reentrant */
@@ -1566,9 +1681,15 @@ void UpdateDisplay (GripInfo *ginfo) {
 		if (discdb_counter % 2) {
 			discdb_counter++;
 		}
-	} else
+
+        if (ginfo -> looking_up == DISCDB_RESULTS_READY) {
+            // CDDB query finished, take care of it
+            process_cddb_results (ginfo);
+        }
+	} else {
 		CopyPixmap (GTK_PIXMAP (uinfo -> discdb_pix[discdb_counter++ % 2]),
 		            GTK_PIXMAP (uinfo -> discdb_indicator));
+	}
 
 	if (!ginfo -> update_required) {
 		if (ginfo -> have_disc) {
@@ -1725,118 +1846,6 @@ void UpdateDisplay (GripInfo *ginfo) {
 	}
 }
 
-//////////////////////////
-#if 0
-// Not necessary for the moment
-static void on_disc_changed (GtkTreeSelection *selection, gpointer user_data) {
-//	GtkDialog *dialog = GTK_DIALOG (user_data);
-
-	//~ GtkTreeSelection *selection = gtk_tree_view_get_selection (tree_view);
-	if (gtk_tree_selection_count_selected_rows (selection) > 0) {
-		g_debug ("enable ok");
-	} else {
-		g_debug ("disable ok");
-	}
-}
-#endif // 0
-
-static void on_disc_double_clicked (GtkTreeView *tree_view, GtkTreePath *path, GtkTreeViewColumn *column, gpointer user_data) {
-	gtk_dialog_response (GTK_DIALOG (user_data), 1);
-}
-
-static void process_cddb_results (GripInfo *ginfo) {
-    g_debug ("process_cddb_results() starting");
-
-    // Clear thread struct first
-    g_assert (ginfo -> discdb_thread);
-    gboolean discdb_ok = GPOINTER_TO_INT (g_thread_join (ginfo -> discdb_thread));
-    if (discdb_ok) {
-        g_debug (_("DiscDB thread finished successfully"));
-    } else {
-        g_debug (_("DiscDB thread finished with failure or was aborted"));
-    }
-    ginfo -> discdb_thread = NULL;
-
-    // Process results
-    guint n = g_list_length (ginfo -> cddb_results);
-    if (n == 0) {
-        // No results :(
-        g_debug ("No CDDB results");
-    } else if (n == 1) {
-        // Single match, use right away
-        GList *cur = g_list_first (ginfo -> cddb_results);
-        ginfo -> ddata = *(DiscData *) cur -> data;
-        g_free (cur -> data);
-        g_list_free (ginfo -> cddb_results);
-        ginfo -> cddb_results = NULL;
-
-        ginfo -> update_required = TRUE;
-        ginfo -> is_new_disc = TRUE;
-    } else {
-        /* Ask the user what match to use */
-        GripGUI *uinfo = &(ginfo -> gui_info);
-
-        /* Have the ok button call the ok_button_clicked callback */
-        GtkWidget *widget = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "dialog_cddb_results"));
-        g_assert (widget);
-
-        GtkTreeView *treeview = GTK_TREE_VIEW (gtk_builder_get_object (uinfo -> builder, "treeview_cddb_results"));
-        g_assert (treeview);
-        GtkTreeSelection *selection = gtk_tree_view_get_selection (treeview);
-        gtk_tree_selection_set_mode (selection, GTK_SELECTION_BROWSE);		// Can't do this in Glade?
-    //    g_signal_connect (G_OBJECT (selection), "changed", G_CALLBACK (on_disc_changed), widget);
-        g_signal_connect (GTK_OBJECT (treeview), "row-activated", G_CALLBACK (on_disc_double_clicked), widget);
-        GtkListStore *liststore = GTK_LIST_STORE (gtk_tree_view_get_model (treeview));
-        g_assert (liststore);
-
-        GtkTreeIter iter;
-        GList *cur, *next;
-        for (cur = g_list_first (ginfo -> cddb_results); next; cur = next) {
-            DiscData *data = (DiscData *) cur -> data;
-
-            gtk_list_store_append (liststore, &iter);
-            gtk_list_store_set (liststore, &iter, 0, data -> data_artist, 1, data -> data_title, 2, data -> data_genre, 3, data -> data_category, 4, data -> data_id, -1);
-
-            next = g_list_next (cur);
-            g_free (data);
-        }
-        g_list_free (ginfo -> cddb_results);
-        ginfo -> cddb_results = NULL;
-
-        gtk_widget_show_all (widget);
-        if (gtk_dialog_run (GTK_DIALOG (widget))) {
-            GtkTreeSelection *sel = gtk_tree_view_get_selection (treeview);
-            if (gtk_tree_selection_get_selected (sel, NULL, &iter)) {
-                gchar *category;
-                guint id;
-
-                gtk_tree_model_get (GTK_TREE_MODEL (liststore), &iter, 3, &category, 4, &id, -1);
-                g_debug ("Selected item: %s/%u", category, id);
-
-                // Fetch data. We don't use a thread here, since the entry should be in cddb cache
-                GError *error = NULL;
-                DiscData *dd = cddb_get_entry (&(ginfo -> dbserver), category, id, &error);
-                g_assert (dd);
-                ginfo -> ddata = *dd;
-
-                ginfo -> update_required = TRUE;
-                ginfo -> is_new_disc = TRUE;
-
-                g_free (dd);
-                g_free (category);
-            }
-        }
-
-        gtk_widget_destroy (widget);
-    }
-
-    // Done with results
-    g_assert (ginfo -> cddb_results == NULL);
-    ginfo -> looking_up = DISCDB_IDLE;
-
-    g_debug ("process_cddb_results() returning");
-}
-
 void UpdateTracks (GripInfo *ginfo) {
 	int track;
 	char *col_strings[3];
@@ -1875,7 +1884,7 @@ void UpdateTracks (GripInfo *ginfo) {
 			FillInTrackInfo (ginfo, 0, &enc_track);
 
 			TranslateAndLaunch (ginfo -> cdupdate, TranslateSwitch, &enc_track,
-			                    FALSE, &(ginfo -> sprefs), CloseStuff, (void *)ginfo);
+			                    FALSE, &(ginfo -> sprefs), CloseStuff, (void *) ginfo);
 		}
 	} else {
 		SetTitle (ginfo, _("No Disc"));
@@ -1894,11 +1903,6 @@ void UpdateTracks (GripInfo *ginfo) {
 	SetCurrentTrackIndex (ginfo, disc -> curr_track - 1);
 
 	if (ginfo -> have_disc) {
-        if (ginfo -> looking_up == DISCDB_RESULTS_READY) {
-            // CDDB query finished, take care of it
-            process_cddb_results (ginfo);
-        }
-
 		col_strings[0] = (char *) malloc (260);
 		col_strings[1] = (char *) malloc (6);
 		col_strings[2] = NULL;
