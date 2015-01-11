@@ -10,15 +10,6 @@
 /* Define to 1 if you have the <cdda_paranoia.h> header file. */
 #cmakedefine HAVE_CDDA_PARANOIA_H
 
-/* Define to 1 if you have the <io/cam/cdrom.h> header file. */
-#cmakedefine HAVE_IO_CAM_CDROM_H
-
-/* Define to 1 if you have the <linux/cdrom.h> header file. */
-#cmakedefine HAVE_LINUX_CDROM_H
-
-/* Define to 1 if you have the <sys/cdio.h> header file. */
-#cmakedefine HAVE_SYS_CDIO_H
-
 /* Define to 1 if you have the <sys/statvfs.h> header file. */
 #cmakedefine HAVE_SYS_STATVFS_H
 

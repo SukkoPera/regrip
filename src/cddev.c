@@ -86,6 +86,7 @@ gboolean CDInitDevice (char *device_name, DiscInfo *disc) {
 gboolean CDCloseDevice (DiscInfo *disc) {
     if (disc -> cdio)
         cdio_destroy (disc -> cdio);
+    disc -> cdio = NULL;
 
 	return TRUE;
 }
@@ -95,10 +96,6 @@ gboolean CDCloseDevice (DiscInfo *disc) {
 gboolean CDStat (DiscInfo *disc, gboolean force_read_toc) {
 	if (!disc -> cdio) {
 		CDInitDevice (disc -> devname, disc);
-	}
-
-	if (!disc -> cdio < 0) {
-		return FALSE;
 	}
 
     discmode_t discmode = cdio_get_discmode (disc -> cdio);
