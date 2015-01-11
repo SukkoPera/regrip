@@ -499,7 +499,7 @@ static gboolean AddM3U (GripInfo *ginfo) {
 
 void KillRip (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
-	int track;
+//	int track;
 
 	g_debug (_("In KillRip"));
 	ginfo = (GripInfo *)data;
@@ -517,12 +517,12 @@ void KillRip (GtkWidget *widget, gpointer data) {
 
 	// FIXME: What is this doing? Looks unnecessary nowadays.
     /* Need to decrement all_mp3size */
-    for (track = 0; track < ginfo -> disc.num_tracks; ++track) {
-        if ((!IsDataTrack (&(ginfo -> disc), track)) &&
-                (TrackIsChecked (&(ginfo -> gui_info), track))) {
-            ginfo -> all_encsize -= CalculateEncSize (ginfo, track);
-        }
-    }
+//    for (track = 0; track < ginfo -> disc.num_tracks; ++track) {
+//        if ((!IsDataTrack (&(ginfo -> disc), track)) &&
+//                (TrackIsChecked (&(ginfo -> gui_info), track))) {
+//            ginfo -> all_encsize -= CalculateEncSize (ginfo, track);
+//        }
+//    }
 
     g_debug (_("Now total enc size is: %zu"), ginfo -> all_encsize);
 }
@@ -1157,9 +1157,10 @@ static int NextTrackToRip (GripInfo *ginfo) {
 
 	for (track = 0; (track < ginfo -> disc.num_tracks) &&
 	        (!TrackIsChecked (&(ginfo -> gui_info), track) ||
-	         IsDataTrack (&(ginfo -> disc), track)); track++);
+	         (ginfo -> disc).track[track].is_audio); track++)
+        ;
 
-	return track;
+    return track;
 }
 
 /* Do the replay gain calculation on a sector */
@@ -1243,7 +1244,7 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
 
 			/* Compensate for the gap before a data track */
 			if ((ginfo -> rip_track < (ginfo -> disc.num_tracks - 1) &&
-			        IsDataTrack (&(ginfo -> disc), ginfo -> rip_track + 1) &&
+			        (ginfo -> disc).track[ginfo -> rip_track + 1].is_audio &&
 			        (ginfo -> end_sector - ginfo -> start_sector) > 11399)) {
 				ginfo -> end_sector -= 11400;
 			}
@@ -1382,7 +1383,7 @@ void FillInTrackInfo (GripInfo *ginfo, int track, EncodeTrack *new_track) {
 
 	/* Compensate for the gap before a data track */
 	if ((track < (ginfo -> disc.num_tracks - 1) &&
-	        IsDataTrack (&(ginfo -> disc), track + 1) &&
+	        (ginfo -> disc).track[track + 1].is_audio &&
 	        (new_track -> end_frame - new_track -> start_frame) > 11399)) {
 		new_track -> end_frame -= 11400;
 	}
@@ -1583,7 +1584,7 @@ void CalculateAll (GripInfo *ginfo) {
 	}
 
 	for (track = 0; track < ginfo -> disc.num_tracks; ++track) {
-		if (!IsDataTrack (&(ginfo -> disc), track) &&
+		if (!(ginfo -> disc).track[track].is_audio &&
 		        (TrackIsChecked (uinfo, track))) {
 			ginfo -> all_ripsize += CalculateWavSize (ginfo, track);
 			ginfo -> all_encsize += CalculateEncSize (ginfo, track);
@@ -1601,7 +1602,7 @@ static size_t CalculateWavSize (GripInfo *ginfo, int track) {
 	         ginfo -> disc.track[track].start_frame;
 
 	if ((track < (ginfo -> disc.num_tracks) - 1) &&
-	        (IsDataTrack (&(ginfo -> disc), track + 1)) &&
+	        ((ginfo -> disc).track[track + 1].is_audio) &&
 	        (frames > 11399)) {
 		frames -= 11400;
 	}

@@ -101,7 +101,6 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 	GtkWidget *app;
 	GripInfo *ginfo;
 	GripGUI *uinfo;
-	char buf[256];
 
 	GError *err = NULL;
 	gchar *icon_file = g_build_filename (GNOME_ICONDIR, "gripicon.png", NULL);
@@ -178,12 +177,12 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 	ginfo -> local_mode = local_mode;
 	ginfo -> do_redirect = !no_redirect;
 
-	if (!CDInitDevice (ginfo -> cd_device, & (ginfo -> disc))) {
-		sprintf (buf, _("Error: Unable to initialize [%s]\n"), ginfo -> cd_device);
-
-		show_error (ginfo -> gui_info.app, buf);
+	// Init drive (and disc structure)
+	if (!CDInitDevice (ginfo -> cd_device, &(ginfo -> disc))) {
+		gchar *msg = g_strdup_printf(_("Error: Unable to initialize CD-ROM drive %s"), ginfo -> cd_device);
+		show_error (ginfo -> gui_info.app, msg);
+		g_free (msg);
 	}
-
 	CDStat (&(ginfo -> disc), TRUE);
 
 	gtk_window_set_policy (GTK_WINDOW (app), FALSE, TRUE, FALSE);
@@ -807,7 +806,6 @@ static void set_initial_config (GripInfo *ginfo) {
 //	ginfo -> poll_interval = 1;
 //#endif
 
-	ginfo -> changer_slots = 0;
 	ginfo -> current_disc = 0;
 
 	ginfo -> proxy_server.name[0] = '\0';

@@ -57,7 +57,6 @@ static void ToggleVol (GtkWidget *widget, gpointer data);
 static void SetVolume (GtkWidget *widget, gpointer data);
 static void FastFwdCB (GtkWidget *widget, gpointer data);
 static void RewindCB (GtkWidget *widget, gpointer data);
-static void NextDisc (GtkWidget *widget, gpointer data);
 static void PlayTrack (GripInfo *ginfo, int track);
 static void PrevTrack (GripInfo *ginfo);
 static void InitProgram (GripInfo *ginfo);
@@ -96,9 +95,7 @@ static gpointer cddb_lookup_thread_func (gpointer data) {
 
 	ginfo -> looking_up = DISCDB_QUERYING;
 
-    if (!(ginfo -> disc).have_info) {
-        CDStat (&(ginfo -> disc), TRUE);
-    }
+    g_assert ((ginfo -> disc).toc_up_to_date);
 
     GError *error = NULL;
     GList *results = cddb_lookup (ginfo -> use_freedb ? NULL : &(ginfo -> dbserver), ginfo -> local_mode, &(ginfo -> disc), &error);
@@ -112,11 +109,6 @@ static gpointer cddb_lookup_thread_func (gpointer data) {
         ginfo -> cddb_results = results;
         ret = GINT_TO_POINTER (TRUE);
     }
-
-	// FIXME
-//	if (ginfo -> ddata.data_id3genre == -1) {
-//		ginfo -> ddata.data_id3genre = DiscDB2ID3 (ginfo -> ddata.data_genre);
-//	}
 
 	ginfo -> looking_up = DISCDB_RESULTS_READY;
 
@@ -817,17 +809,6 @@ GtkWidget *MakeControls (GripInfo *ginfo) {
 	                      _("Toggle play mode options"), NULL);
 	gtk_widget_show (button);
 
-	if (ginfo -> changer_slots > 1) {
-		button = ImageButton (GTK_WIDGET (uinfo -> app), uinfo -> rotate_image);
-		gtk_widget_set_style (button, uinfo -> style_dark_grey);
-		gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
-		g_signal_connect (G_OBJECT (button), "clicked",
-		                  G_CALLBACK (NextDisc), (gpointer) ginfo);
-		gtk_tooltips_set_tip (MakeToolTip (), button,
-		                      _("Next Disc"), NULL);
-		gtk_widget_show (button);
-	}
-
 	gtk_box_pack_start (GTK_BOX (uinfo -> control_button_box), hbox, TRUE, TRUE, 0);
 	gtk_widget_show (hbox);
 
@@ -1055,7 +1036,8 @@ static void SetVolume (GtkWidget *widget, gpointer data) {
 	ginfo -> volume = vol.vol_front.left = vol.vol_front.right =
 	        vol.vol_back.left = vol.vol_back.right = GTK_ADJUSTMENT (widget) -> value;
 
-	CDSetVolume (&(ginfo -> disc), &vol);
+	if (!CDSetVolume (&(ginfo -> disc), &vol))
+        g_warning ("Cannot set volume");
 }
 
 static void FastFwdCB (GtkWidget *widget, gpointer data) {
@@ -1120,25 +1102,6 @@ void Rewind (GripInfo *ginfo) {
 	}
 }
 
-static void NextDisc (GtkWidget *widget, gpointer data) {
-	GripInfo *ginfo;
-
-	ginfo = (GripInfo *) data;
-
-	if (ginfo -> ripping) {
-		show_warning (ginfo -> gui_info.app,
-		              _("Cannot switch discs while ripping."));
-
-		return;
-	}
-
-	if (ginfo -> changer_slots > 1) {
-		ginfo -> current_disc = (ginfo -> current_disc + 1) % ginfo -> changer_slots;
-		CDChangerSelectDisc (&(ginfo -> disc), ginfo -> current_disc);
-		ginfo -> have_disc = FALSE;
-	}
-}
-
 void EjectDisc (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 
@@ -1176,7 +1139,7 @@ void EjectDisc (GtkWidget *widget, gpointer data) {
 				CDEject (&(ginfo -> disc));
 			}
 		} else {
-			if (TrayOpen (&(ginfo -> disc)) != 0) {
+			if (IsTrayOpen (&(ginfo -> disc)) != 0) {
 				CDClose (&(ginfo -> disc));
 			} else {
 				CDEject (&(ginfo -> disc));

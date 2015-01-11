@@ -27,51 +27,65 @@
 #define GRIP_CDDEV_H
 
 #include <glib.h>
+//#include <cdio/cdio.h>
+//#include <cdio/cdio_unconfig.h>
 #include "common.h"
 
 /* Used with disc_info */
-#define CDAUDIO_PLAYING				0
-#define CDAUDIO_PAUSED				1
-#define CDAUDIO_COMPLETED			2
-#define CDAUDIO_NOSTATUS			3
+#define CDAUDIO_PLAYING             0
+#define CDAUDIO_PAUSED              1
+#define CDAUDIO_COMPLETED           2
+#define CDAUDIO_NOSTATUS            3
 
-#define MAX_SLOTS				100 /* For CD changers */
-
-#define CURRENT_CDDBREVISION			2
+#define MAX_SLOTS               100 /* For CD changers */
 
 
 /* Used for keeping track of times */
 typedef struct _disc_time {
-   int mins;
-   int secs;
+	int mins;
+	int secs;
 } DiscTime;
 
 /* Track specific information */
 typedef struct _track_info {
-  DiscTime length;
-  DiscTime start_pos;
-  int num_frames;
-  int start_frame;
-  unsigned char flags;
+    int num;                // Actual track number
+	DiscTime length;
+	DiscTime start_pos;
+	int num_frames;
+	gint32 start_frame;
+	gboolean is_audio;
+//	unsigned char flags;
 } TrackInfo;
+
+// Forward declation from libcdio headers
+typedef struct _CdIo CdIo_t;
 
 /* Disc information such as current track, amount played, etc */
 typedef struct _disc_info {
-  int cd_desc;                              /* CD device file desc. */
-  char *devname;                            /* CD device file pathname */
-  gboolean have_info;                       /* Do we have disc info yet? */
-  gboolean disc_present;	            /* Is disc present? */
-  int disc_mode;		            /* Current disc mode */
-  DiscTime track_time;		            /* Current track time */
-  DiscTime disc_time;		            /* Current disc time */
-  DiscTime length;		            /* Total disc length */
-  int curr_frame;			    /* Current frame */
-  int curr_track;		            /* Current track */
-  int num_tracks;		            /* Number of tracks on disc */
-  TrackInfo track[MAX_TRACKS];	            /* Track specific information */
+    CdIo_t *cdio;
+	int cd_desc;                              /* CD device file desc. */
+	char *devname;                            /* CD device file pathname */
+
+	gboolean toc_up_to_date;
+	gboolean disc_present;                /* Is disc present? */
+	int disc_mode;                    /* Current disc mode */
+	DiscTime track_time;                  /* Current track time */
+	DiscTime disc_time;                   /* Current disc time */
+	DiscTime length;                  /* Total disc length */
+	int curr_frame;               /* Current frame */
+	int curr_track;                   /* Current track */
+
+	int first_track;
+    int last_track;
+    int first_audio_track;
+    int last_audio_track;
+
+	int num_tracks;                   /* Number of audio tracks on disc */
+	int num_data_tracks;                   /* Number of data tracks on disc */
+	TrackInfo track[MAX_TRACKS];              /* Track specific information */
 } DiscInfo;
 
-/* Channle volume structure */
+/* Channel volume structure */
 typedef struct _channel_volume {
   int left;
   int right;
@@ -83,25 +97,21 @@ typedef struct _disc_volume {
    ChannelVolume vol_back;
 } DiscVolume;
 
-
-gboolean CDInitDevice(char *device_name,DiscInfo *disc);
-gboolean CDCloseDevice(DiscInfo *disc);
-gboolean CDStat(DiscInfo *disc,gboolean read_toc);
-gboolean IsDataTrack(DiscInfo *disc,int track);
-gboolean CDPlayFrames(DiscInfo *disc,int startframe,int endframe);
-gboolean CDPlayTrackPos(DiscInfo *disc,int starttrack,
-			int endtrack,int startpos);
-gboolean CDPlayTrack(DiscInfo *disc,int starttrack,int endtrack);
-gboolean CDAdvance(DiscInfo *disc,DiscTime *time);
-gboolean CDStop(DiscInfo *disc);
-gboolean CDPause(DiscInfo *disc);
-gboolean CDResume(DiscInfo *disc);
-gboolean TrayOpen(DiscInfo *disc);
-gboolean CDEject(DiscInfo *disc);
-gboolean CDClose(DiscInfo *disc);
-gboolean CDGetVolume(DiscInfo *disc,DiscVolume *vol);
-gboolean CDSetVolume(DiscInfo *disc,DiscVolume *vol);
-gboolean CDChangerSelectDisc(DiscInfo *disc,int disc_num);
-int CDChangerSlots(DiscInfo *disc);
+gboolean CDInitDevice (char *device_name, DiscInfo *disc);
+gboolean CDCloseDevice (DiscInfo *disc);
+gboolean CDStat (DiscInfo *disc, gboolean force_read_toc);
+gboolean CDPlayFrames (DiscInfo *disc, int startframe, int endframe);
+gboolean CDPlayTrackPos (DiscInfo *disc, int starttrack,
+                         int endtrack, int startpos);
+gboolean CDPlayTrack (DiscInfo *disc, int starttrack, int endtrack);
+gboolean CDAdvance (DiscInfo *disc, DiscTime *time);
+gboolean CDStop (DiscInfo *disc);
+gboolean CDPause (DiscInfo *disc);
+gboolean CDResume (DiscInfo *disc);
+gboolean IsTrayOpen (DiscInfo *disc);
+gboolean CDEject (DiscInfo *disc);
+gboolean CDClose (DiscInfo *disc);
+gboolean CDGetVolume(DiscInfo *disc, DiscVolume *vol);
+gboolean CDSetVolume(DiscInfo *disc, DiscVolume *vol);
 
 #endif /* GRIP_CDDEV_H */

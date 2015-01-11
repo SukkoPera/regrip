@@ -236,11 +236,9 @@ typedef struct _grip_info {
 	gboolean poll_drive;
 	int poll_interval;
 	int auto_eject_countdown;
-//	int current_discid;
 	int volume;
 
 	int current_disc;
-	int changer_slots;
 
 	gboolean playing;
 	gboolean stopped;
