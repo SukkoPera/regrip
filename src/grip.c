@@ -190,24 +190,6 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 	g_assert (widget);
 	g_signal_connect (widget, "activate", G_CALLBACK (on_menuitem_about_activate), ginfo);
 
-	widget = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "menu_drive"));
-	g_assert (widget);
-
-	// Populate drive list
-	GList *cur, *next, *drives = get_cd_drives ();
-	for (cur = g_list_first (drives); cur && next; cur = next) {
-        cd_drive *drive = (cd_drive *) cur -> data;
-
-        gchar *tmp = g_strdup_printf ("%s %s %s (%s)", drive -> vendor, drive -> model, drive -> revision, drive -> device);
-        GtkWidget *mi = gtk_menu_item_new_with_label (tmp);
-        gtk_widget_show (mi);
-        gtk_menu_shell_append (GTK_MENU_SHELL (widget), mi);
-        g_free (tmp);
-
-        next = g_list_next (cur);
-        g_free (drive);
-	}
-	g_list_free (drives);
 
 	if (device) {
 		strncpy (ginfo -> cd_device, device, MAX_STRING);
@@ -216,6 +198,47 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 	if (scsi_device) {
 		strncpy (ginfo -> force_scsi, scsi_device, MAX_STRING);
 	}
+
+
+	// Populate drive list
+	{
+        GtkComboBox *combobox_drive = GTK_COMBO_BOX (gtk_builder_get_object (uinfo -> builder, "combobox_drive"));
+        g_assert (combobox_drive);
+        GtkListStore *liststore = GTK_LIST_STORE (gtk_combo_box_get_model (combobox_drive));
+        g_assert (liststore);
+
+        gboolean selected_found = FALSE;
+        GtkTreeIter iter, iter_to_select;
+        GList *cur, *drives = get_cd_drives ();
+//        g_debug ("Found %d drives", g_list_length (drives));
+        for (cur = g_list_first (drives); cur; cur = g_list_next (cur)) {
+            cd_drive *drive = (cd_drive *) cur -> data;
+
+            gchar *tmp = g_strdup_printf ("%s %s %s (%s)", drive -> vendor, drive -> model, drive -> revision, drive -> device);
+            gtk_list_store_append (liststore, &iter);
+            gtk_list_store_set (liststore, &iter, 0, tmp, 1, drive -> device, -1);
+            g_free (tmp);
+
+            if (strcmp (drive -> device, ginfo -> cd_device) == 0) {
+//                g_debug ("Found selected drive");
+                iter_to_select = iter;
+                selected_found = TRUE;
+            }
+
+            g_free (drive);
+        }
+        g_list_free (drives);
+
+        //	g_signal_connect (GTK_OBJECT (menu), "changed",
+        //	                    G_CALLBACK (on_encoder_selected), (gpointer) ginfo);
+
+        // Make default drive selected. This MUST be called after connecting the signal handler
+        if (selected_found)
+            gtk_combo_box_set_active_iter (combobox_drive, &iter_to_select);
+        else        // Select first available encoder
+            gtk_combo_box_set_active (combobox_drive, 1);
+	}
+
 
 	uinfo -> minimized = force_small;
 	ginfo -> local_mode = local_mode;

@@ -53,7 +53,7 @@ GList *get_cd_drives (void) {
     char **drvs = cdio_get_devices_with_cap (NULL, CDIO_FS_AUDIO, false);
     char **c;
     for (c = drvs; c && *c != NULL; c++) {
-        g_debug ("-- Found Drive %s\n", *c);
+        g_debug ("-- Found Drive %s", *c);
 
         CdIo_t *p_cdio = cdio_open (*c, DRIVER_DEVICE);
         if (p_cdio) {
@@ -75,6 +75,8 @@ GList *get_cd_drives (void) {
     }
 
     cdio_free_device_list (drvs);
+
+    g_debug ("Autodetection complete");
 
     return drives;
 }

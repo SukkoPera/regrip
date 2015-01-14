@@ -554,6 +554,14 @@ Please select your CD:</property>
       <column type="guint"/>
     </columns>
   </object>
+  <object class="GtkListStore" id="liststore_drive">
+    <columns>
+      <!-- column-name description -->
+      <column type="gchararray"/>
+      <!-- column-name device -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
   <object class="GtkListStore" id="liststore_rip_format">
     <columns>
       <!-- column-name fmt -->
@@ -793,15 +801,44 @@ Please select your CD:</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkMenuToolButton" id="toolbutton_drive">
+                  <object class="GtkToolItem" id="toolbutton4">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">toolbutton4</property>
-                    <property name="use_underline">True</property>
-                    <child type="menu">
-                      <object class="GtkMenu" id="menu_drive">
+                    <child>
+                      <object class="GtkHBox" id="hbox1">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <child>
+                          <object class="GtkLabel" id="label1">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="xalign">1</property>
+                            <property name="label" translatable="yes">Drive:</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">False</property>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkComboBox" id="combobox_drive">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="model">liststore_drive</property>
+                            <child>
+                              <object class="GtkCellRendererText" id="cellrenderertext5"/>
+                              <attributes>
+                                <attribute name="text">0</attribute>
+                              </attributes>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="expand">True</property>
+                            <property name="fill">True</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
                       </object>
                     </child>
                   </object>
@@ -834,8 +871,8 @@ Please select your CD:</property>
                             <property name="label" translatable="yes">Format:</property>
                           </object>
                           <packing>
-                            <property name="expand">True</property>
-                            <property name="fill">True</property>
+                            <property name="expand">False</property>
+                            <property name="fill">False</property>
                             <property name="position">0</property>
                           </packing>
                         </child>
@@ -843,7 +880,7 @@ Please select your CD:</property>
                           <object class="GtkComboBox" id="combobox_rip_format">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="model">liststore_rip_format</property>
+                            <property name="model"/>
                             <child>
                               <object class="GtkCellRendererText" id="cellrenderertext4"/>
                               <attributes>
