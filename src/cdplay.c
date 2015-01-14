@@ -1107,7 +1107,7 @@ void EjectDisc (GtkWidget *widget, gpointer data) {
 
 	ginfo = (GripInfo *) data;
 
-	LogStatus (ginfo, _("Eject disc\n"));
+	g_message (_("Ejecting disc"));
 
 	if (ginfo -> ripping) {
 		show_warning (ginfo -> gui_info.app,

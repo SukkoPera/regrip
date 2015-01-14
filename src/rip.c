@@ -641,10 +641,8 @@ void UpdateRipProgress (GripInfo *ginfo) {
 			gboolean rip_ok = GPOINTER_TO_INT (g_thread_join (ginfo -> rip_thread));
 			if (rip_ok) {
 				g_debug (_("Rip thread finished successfully"));
-				LogStatus (ginfo, _("Rip thread finished successfully\n"));
 			} else {
 				g_debug (_("Rip thread finished with failure or was aborted"));
-				LogStatus (ginfo, _("Rip thread finished with failure or was aborted\n"));
 			}
 			ginfo -> rip_thread = NULL;
 
@@ -785,7 +783,7 @@ void UpdateRipProgress (GripInfo *ginfo) {
 			waitpid (ginfo -> mp3pid[mycpu], NULL, 0);
 			ginfo -> encoding &= ~ (1 << mycpu);
 
-			LogStatus (ginfo, _("Finished encoding on cpu %d\n"), mycpu);
+			g_message (ginfo, _("Finished encoding on cpu %d\n"), mycpu);
 			ginfo -> all_enclast[mycpu] = 0;
 			gtk_progress_bar_update (GTK_PROGRESS_BAR (uinfo -> mp3progbar[mycpu]),
 									 0.0);
@@ -837,7 +835,7 @@ void UpdateRipProgress (GripInfo *ginfo) {
 
 static void RipIsFinished (GripInfo *ginfo, gboolean aborted) {
 	GripGUI *uinfo;
-	LogStatus (ginfo, _("Ripping is finished\n"));
+	g_message (_("Ripping is finished"));
 
 	uinfo = & (ginfo -> gui_info);
 	ginfo -> all_ripsize = 0;
@@ -1269,7 +1267,6 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
 		if (g_stat (ginfo -> ripfile, &mystat) >= 0) {
 			if (mystat.st_size > 0) {
 				g_debug (_("File %s has already been ripped. Skipping..."), ginfo -> ripfile);
-				LogStatus (ginfo, _("File %s has already been ripped. Skipping...\n"), ginfo -> ripfile);
 
 //				ginfo -> ripping = TRUE;
 //				ginfo -> all_ripdone += CalculateWavSize (ginfo, ginfo -> rip_track);
@@ -1305,7 +1302,7 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
 
 
 		g_debug (_("Ripping track %d to '%s'"), ginfo -> rip_track + 1, ginfo -> ripfile);
-		LogStatus (ginfo, _("Ripping track %d to %s\n"),
+		g_message (_("Ripping track %d to %s"),
 				   ginfo -> rip_track + 1, ripfile);
 		g_debug ("Temp file is: '%s'", ginfo -> rip_tmpfile);
 
@@ -1480,7 +1477,7 @@ static gboolean MP3Encode (GripInfo *ginfo) {
 		conv_str = strdup (ginfo -> mp3file[cpu]);
 	}
 
-	LogStatus (ginfo, _("%i: Encoding to %s\n"), cpu + 1, conv_str);
+	g_message (ginfo, _("%i: Encoding to %s\n"), cpu + 1, conv_str);
 
 	g_free (conv_str);
 

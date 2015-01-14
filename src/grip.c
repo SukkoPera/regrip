@@ -48,10 +48,8 @@
 static gboolean gripDieOnWinCloseCB (GtkWidget *widget, GdkEvent *event,
                                      gpointer data);
 static void ReallyDie (GtkDialog *dialog, gint reply, gpointer data);
-static void MakeStatusPage (GripInfo *ginfo);
-static void MakeAboutPage (GripGUI *uinfo);
+//static void MakeStatusPage (GripInfo *ginfo);
 static void MakeStyles (GripGUI *uinfo);
-static void Homepage (void);
 static void LoadImages (GripGUI *uinfo);
 static void set_initial_config (GripInfo *ginfo);
 
@@ -293,8 +291,6 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 	MakeTrackPage (ginfo);
 	MakeRipPage (ginfo);
 	MakeConfigPage (ginfo);
-	MakeStatusPage (ginfo);
-	MakeAboutPage (uinfo);
 	ginfo -> tray_icon_made = FALSE;
 	ginfo -> tray_menu_sensitive = TRUE;
 
@@ -358,7 +354,7 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 	g_signal_connect (app, "window-state-event", G_CALLBACK (AppWindowStateCB),
 	                  ginfo);
 
-	LogStatus (ginfo, _("Regrip started successfully\n"));
+	g_message (_("Regrip started successfully"));
 
 	return app;
 }
@@ -435,6 +431,7 @@ GtkWidget *MakeNewPage (GtkWidget *notebook, char *name) {
 	return page;
 }
 
+#if 0
 static void MakeStatusPage (GripInfo *ginfo) {
 	GtkWidget *status_page;
 	GtkWidget *vbox, *vbox2;
@@ -499,6 +496,7 @@ static void MakeStatusPage (GripInfo *ginfo) {
 	gtk_widget_show (vbox2);
 }
 
+
 void LogStatus (GripInfo *ginfo, char *fmt, ...) {
 	va_list args;
 	char *buf;
@@ -517,6 +515,7 @@ void LogStatus (GripInfo *ginfo, char *fmt, ...) {
 
 	g_free (buf);
 }
+#endif
 
 #define HELP_FILE "grip.xml"
 
@@ -590,82 +589,6 @@ void on_menuitem_bugs_activate (GtkMenuItem *menuitem, gpointer user_data) {
     show_help ("bugs");
 }
 
-void MakeAboutPage (GripGUI *uinfo) {
-	GtkWidget *aboutpage;
-	GtkWidget *vbox, *vbox2, *hbox;
-	GtkWidget *label;
-	GtkWidget *logo;
-	GtkWidget *ebox;
-	GtkWidget *button;
-	char versionbuf[20];
-
-	aboutpage = MakeNewPage (uinfo -> notebook, _("About"));
-
-	ebox = gtk_event_box_new();
-	gtk_widget_set_style (ebox, uinfo -> style_wb);
-
-	vbox = gtk_vbox_new (TRUE, 5);
-	gtk_container_border_width (GTK_CONTAINER (vbox), 3);
-
-#ifndef GRIPCD
-	logo = Loadxpm (GTK_WIDGET (uinfo -> app), grip_xpm);
-#else
-	logo = Loadxpm (GTK_WIDGET (uinfo -> app), gcd_xpm);
-#endif
-
-	gtk_box_pack_start (GTK_BOX (vbox), logo, FALSE, FALSE, 0);
-	gtk_widget_show (logo);
-
-	vbox2 = gtk_vbox_new (TRUE, 0);
-
-	sprintf (versionbuf, _("Version %s"), VERSION);
-	label = gtk_label_new (versionbuf);
-	gtk_widget_set_style (label, uinfo -> style_wb);
-	gtk_box_pack_start (GTK_BOX (vbox2), label, FALSE, FALSE, 0);
-	gtk_widget_show (label);
-
-	label = gtk_label_new ("Copyright 1998-2014, Mike Oliphant");
-	gtk_widget_set_style (label, uinfo -> style_wb);
-	gtk_box_pack_start (GTK_BOX (vbox2), label, FALSE, FALSE, 0);
-	gtk_widget_show (label);
-
-	label = gtk_label_new ("De-gnomization by Giorgio Moscardi");
-	gtk_widget_set_style (label, uinfo -> style_wb);
-	gtk_box_pack_start (GTK_BOX (vbox2), label, FALSE, FALSE, 0);
-	gtk_widget_show (label);
-
-#if defined(__sun__)
-	label = gtk_label_new ("Solaris Port, David Meleedy");
-	gtk_widget_set_style (label, uinfo -> style_wb);
-	gtk_box_pack_start (GTK_BOX (vbox2), label, FALSE, FALSE, 0);
-	gtk_widget_show (label);
-#endif
-
-	hbox = gtk_hbox_new (TRUE, 0);
-
-	button = gtk_button_new_with_label ("http://sourceforge.net/projects/grip/");
-	gtk_widget_set_style (button, uinfo -> style_dark_grey);
-	gtk_widget_set_style (GTK_BIN (button) -> child,
-	                      uinfo -> style_dark_grey);
-	gtk_signal_connect (GTK_OBJECT (button), "clicked",
-	                    GTK_SIGNAL_FUNC (Homepage), NULL);
-	gtk_box_pack_start (GTK_BOX (hbox), button, FALSE, FALSE, 0);
-	gtk_widget_show (button);
-
-	gtk_box_pack_start (GTK_BOX (vbox2), hbox, FALSE, FALSE, 0);
-	gtk_widget_show (hbox);
-
-
-	gtk_container_add (GTK_CONTAINER (vbox), vbox2);
-	gtk_widget_show (vbox2);
-
-	gtk_container_add (GTK_CONTAINER (ebox), vbox);
-	gtk_widget_show (vbox);
-
-	gtk_container_add (GTK_CONTAINER (aboutpage), ebox);
-	gtk_widget_show (ebox);
-}
-
 static void MakeStyles (GripGUI *uinfo) {
 	GdkColor gdkblack;
 	GdkColor gdkwhite;
@@ -681,10 +604,6 @@ static void MakeStyles (GripGUI *uinfo) {
 	uinfo -> style_wb = MakeStyle (&gdkwhite, &gdkblack, FALSE);
 	uinfo -> style_LCD = MakeStyle (color_LCD, color_LCD, FALSE);
 	uinfo -> style_dark_grey = MakeStyle (&gdkwhite, color_dark_grey, TRUE);
-}
-
-static void Homepage (void) {
-	system ("xdg-open http://sourceforge.net/projects/grip/");
 }
 
 static void LoadImages (GripGUI *uinfo) {

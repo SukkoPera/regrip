@@ -357,7 +357,6 @@ GtkWidget *GripNew (const gchar* geometry, char *device, char *scsi_device,
 void GripDie (GtkWidget *widget, gpointer data);
 void GripUpdate (GtkWidget *app);
 GtkWidget *MakeNewPage (GtkWidget *notebook, char *name);
-void LogStatus (GripInfo *ginfo, char *fmt, ...);
 void Busy (GripGUI *uinfo);
 void UnBusy (GripGUI *uinfo);
 void CloseStuff (void *user_data);
