@@ -75,9 +75,10 @@ GtkStyle *MakeStyle(GdkColor *fg,GdkColor *bg,gboolean do_grade)
 
 GtkWidget *BuildMenuItem(gchar *impath, gchar *text, gboolean stock)
 {
-  GtkWidget *item, *image;
+  GtkWidget *item;
 
   if (impath != NULL) {
+    GtkWidget *image;
     item = gtk_image_menu_item_new_with_mnemonic(text);
 	  if (!stock) {
 	    image = gtk_image_new_from_file(impath);
@@ -155,11 +156,6 @@ void CopyPixmap(GtkPixmap *src,GtkPixmap *dest)
 
   gtk_pixmap_get(src,&gdkpix,&mask);
   gtk_pixmap_set(dest,gdkpix,mask);
-}
-
-gint SizeInDubs(GdkFont *font,gint numchars)
-{
-  return gdk_string_width(font,"W")*numchars;
 }
 
 void UpdateGTK(void)

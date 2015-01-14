@@ -2,12 +2,12 @@
 <interface>
   <requires lib="gtk+" version="2.24"/>
   <!-- interface-naming-policy project-wide -->
-  <object class="GtkAboutDialog" id="aboutdialog">
+  <object class="GtkAboutDialog" id="dialog_about">
     <property name="can_focus">False</property>
     <property name="border_width">5</property>
     <property name="type_hint">dialog</property>
-    <property name="program_name">ReGrip</property>
-    <property name="copyright" translatable="yes">Copyright 1998-2014 Mike Oliphant, Giorgio Moscardi</property>
+    <property name="program_name">Regrip</property>
+    <property name="copyright" translatable="yes">Copyright 1998-2015 Mike Oliphant, Giorgio Moscardi</property>
     <child internal-child="vbox">
       <object class="GtkVBox" id="dialog-vbox1">
         <property name="visible">True</property>
@@ -31,20 +31,6 @@
         </child>
       </object>
     </child>
-  </object>
-  <object class="GtkListStore" id="liststore_cddb_results">
-    <columns>
-      <!-- column-name artist -->
-      <column type="gchararray"/>
-      <!-- column-name title -->
-      <column type="gchararray"/>
-      <!-- column-name genre -->
-      <column type="gchararray"/>
-      <!-- column-name category -->
-      <column type="gchararray"/>
-      <!-- column-name id -->
-      <column type="guint"/>
-    </columns>
   </object>
   <object class="GtkMessageDialog" id="dialog_cddb_results">
     <property name="can_focus">False</property>
@@ -161,14 +147,64 @@ Please select your CD:</property>
       <action-widget response="1">button2</action-widget>
     </action-widgets>
   </object>
-  <object class="GtkWindow" id="window1">
+  <object class="GtkImage" id="image1">
+    <property name="visible">True</property>
     <property name="can_focus">False</property>
+    <property name="stock">gtk-index</property>
+  </object>
+  <object class="GtkImage" id="image2">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-cdrom</property>
+  </object>
+  <object class="GtkImage" id="image3">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-cdrom</property>
+  </object>
+  <object class="GtkImage" id="image4">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-preferences</property>
+  </object>
+  <object class="GtkImage" id="image5">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-dialog-question</property>
+  </object>
+  <object class="GtkImage" id="image6">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-go-forward</property>
+  </object>
+  <object class="GtkImage" id="image7">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-cancel</property>
+  </object>
+  <object class="GtkListStore" id="liststore_cddb_results">
+    <columns>
+      <!-- column-name artist -->
+      <column type="gchararray"/>
+      <!-- column-name title -->
+      <column type="gchararray"/>
+      <!-- column-name genre -->
+      <column type="gchararray"/>
+      <!-- column-name category -->
+      <column type="gchararray"/>
+      <!-- column-name id -->
+      <column type="guint"/>
+    </columns>
+  </object>
+  <object class="GtkWindow" id="window_main">
+    <property name="can_focus">False</property>
+    <property name="title" translatable="yes">Regrip</property>
     <child>
-      <object class="GtkVBox" id="vbox1">
+      <object class="GtkVBox" id="vbox_main">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <child>
-          <object class="GtkMenuBar" id="menubar1">
+          <object class="GtkMenuBar" id="menubar">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>
@@ -305,12 +341,89 @@ Please select your CD:</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
+                      <object class="GtkImageMenuItem" id="menuitem_toc">
+                        <property name="label" translatable="yes">Table of Contents</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="image">image1</property>
+                        <property name="use_stock">False</property>
+                        <signal name="activate" handler="on_menuitem_help_activate" swapped="no"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkImageMenuItem" id="menuitem_playing">
+                        <property name="label" translatable="yes">Playing CDs</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="image">image2</property>
+                        <property name="use_stock">False</property>
+                        <signal name="activate" handler="on_menuitem_playing_activate" swapped="no"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkImageMenuItem" id="menuitem_ripping">
+                        <property name="label" translatable="yes">Ripping CDs</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="image">image3</property>
+                        <property name="use_stock">False</property>
+                        <signal name="activate" handler="on_menuitem_ripping_activate" swapped="no"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkImageMenuItem" id="menuitem_configure">
+                        <property name="label" translatable="yes">Configuring Regrip</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="image">image4</property>
+                        <property name="use_stock">False</property>
+                        <signal name="activate" handler="on_menuitem_configure_activate" swapped="no"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkImageMenuItem" id="menuitem_faq">
+                        <property name="label" translatable="yes">FAQ</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="image">image5</property>
+                        <property name="use_stock">False</property>
+                        <signal name="activate" handler="on_menuitem_faq_activate" swapped="no"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkImageMenuItem" id="menuitem_morehelp">
+                        <property name="label" translatable="yes">Getting More Help</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="image">image6</property>
+                        <property name="use_stock">False</property>
+                        <signal name="activate" handler="on_menuitem_morehelp_activate" swapped="no"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkImageMenuItem" id="menuitem_bugs">
+                        <property name="label" translatable="yes">Reporting Bugs</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="image">image7</property>
+                        <property name="use_stock">False</property>
+                        <signal name="activate" handler="on_menuitem_bugs_activate" swapped="no"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkSeparatorMenuItem" id="separatormenuitem2">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                      </object>
+                    </child>
+                    <child>
                       <object class="GtkImageMenuItem" id="imagemenuitem10">
                         <property name="label">gtk-about</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
+                        <signal name="activate" handler="on_menuitem_about_activate" swapped="no"/>
                       </object>
                     </child>
                   </object>
@@ -330,7 +443,7 @@ Please select your CD:</property>
             <property name="can_focus">False</property>
             <property name="toolbar_style">both</property>
             <child>
-              <object class="GtkToggleToolButton" id="toolbutton1">
+              <object class="GtkToolButton" id="toolbutton1">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">Rip Selected</property>
@@ -415,7 +528,13 @@ Please select your CD:</property>
           <placeholder/>
         </child>
         <child>
-          <object class="GtkStatusbar" id="statusbar1">
+          <placeholder/>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
+        <child>
+          <object class="GtkStatusbar" id="statusbar">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="spacing">2</property>
@@ -423,7 +542,7 @@ Please select your CD:</property>
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">3</property>
+            <property name="position">5</property>
           </packing>
         </child>
       </object>

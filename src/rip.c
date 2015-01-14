@@ -164,8 +164,6 @@ void MakeRipPage (GripInfo *ginfo) {
 	gtk_box_pack_start (GTK_BOX (vbox), hsep, TRUE, TRUE, 0);
 	gtk_widget_show (hsep);
 
-	vbox2 = gtk_vbox_new (FALSE, 0);
-
 	hbox = gtk_hbox_new (FALSE, 3);
 
 	uinfo -> rip_prog_label = gtk_label_new (_("Rip: Idle"));
@@ -364,19 +362,6 @@ char *FindRoot (char *str) {
 	return c;
 }
 
-char *MakePath (char *str) {
-	int len;
-
-	len = strlen (str) - 1;
-
-	if (str[len] != '/') {
-		str[len + 1] = '/';
-		str[len + 2] = '\0';
-	}
-
-	return str;
-}
-
 /* Make file1 relative to file2 */
 static char *MakeRelative (char *file1, char *file2) {
 	int pos, pos2 = 0, slashcnt, i;
@@ -536,11 +521,11 @@ static void ID3Add (GripInfo *ginfo, char *file, EncodeTrack *enc_track) {
 		g_assert (comment);
 
 		GError *error = NULL;
-		if (!tag_file (file, (* (enc_track -> song_name)) ? enc_track -> song_name :
+		if (!tag_file (file, (*(enc_track -> song_name)) ? enc_track -> song_name :
 					   "Unknown",
-					   (* (enc_track -> song_artist)) ? enc_track -> song_artist :
-					   (* (enc_track -> disc_artist)) ? enc_track -> disc_artist : "Unknown",
-					   (* (enc_track -> disc_name)) ? enc_track -> disc_name : "Unknown",
+					   (*(enc_track -> song_artist)) ? enc_track -> song_artist :
+					   (*(enc_track -> disc_artist)) ? enc_track -> disc_artist : "Unknown",
+					   (*(enc_track -> disc_name)) ? enc_track -> disc_name : "Unknown",
 					   enc_track -> song_year, comment -> str, enc_track -> genre,
 					   enc_track -> track_num + 1, ginfo -> id3_encoding, &error)) {
 
@@ -560,7 +545,7 @@ static void DoWavFilter (GripInfo *ginfo) {
 	strcpy (enc_track.wav_filename, ginfo -> ripfile);
 
 	TranslateAndLaunch (ginfo -> wav_filter_cmd, TranslateSwitch, &enc_track,
-						FALSE, & (ginfo -> sprefs), CloseStuff, (void *) ginfo);
+						FALSE, &(ginfo -> sprefs), CloseStuff, (void *) ginfo);
 }
 
 static void DoDiscFilter (GripInfo *ginfo) {
@@ -570,7 +555,7 @@ static void DoDiscFilter (GripInfo *ginfo) {
 	strcpy (enc_track.wav_filename, ginfo -> ripfile);
 
 	TranslateAndLaunch (ginfo -> disc_filter_cmd, TranslateSwitch, &enc_track,
-						FALSE, & (ginfo -> sprefs), CloseStuff, (void *) ginfo);
+						FALSE, &(ginfo -> sprefs), CloseStuff, (void *) ginfo);
 }
 
 void UpdateRipProgress (GripInfo *ginfo) {
@@ -926,15 +911,15 @@ char *TranslateSwitch (char switch_char, void *data, gboolean *munge) {
 		*munge = FALSE;
 		break;
 
-	case 'w':
-		g_snprintf (res, PATH_MAX, "%s", enc_track -> wav_filename);
-		*munge = FALSE;
-		break;
-
-	case 'm':
-		g_snprintf (res, PATH_MAX, "%s", enc_track -> mp3_filename);
-		*munge = FALSE;
-		break;
+//	case 'w':
+//		g_snprintf (res, PATH_MAX, "%s", enc_track -> wav_filename);
+//		*munge = FALSE;
+//		break;
+//
+//	case 'm':
+//		g_snprintf (res, PATH_MAX, "%s", enc_track -> mp3_filename);
+//		*munge = FALSE;
+//		break;
 
 	case 't':
 		g_snprintf (res, PATH_MAX, "%02d", enc_track -> track_num + 1);
@@ -1080,7 +1065,7 @@ void DoRip (GtkWidget *widget, gpointer data) {
 		return;
 	}
 
-	CDStop (& (ginfo -> disc));
+	CDStop (&(ginfo -> disc));
 	ginfo -> stopped = TRUE;
 
 	/* Close the device so as not to conflict with ripping */
@@ -1123,10 +1108,7 @@ void DoRip (GtkWidget *widget, gpointer data) {
 
 	CalculateAll (ginfo);
 
-	/*result = */RipNextTrack (ginfo);
-//	if (!result) {
-//		ginfo -> doencode = FALSE;
-//	}
+	RipNextTrack (ginfo);
 }
 
 static void RipWholeCD (GtkDialog *dialog, gint reply, gpointer data) {
@@ -1173,7 +1155,7 @@ static void gain_calc (gint16 *buffer, gsize bufsize) {
 
 	for (count = 0; count < 588; count++) {
 		l_samples[count] = (Float_t) buffer[count * 2];
-		r_samples[count] = (Float_t) buffer[ (count * 2) + 1];
+		r_samples[count] = (Float_t) buffer[(count * 2) + 1];
 	}
 
 	AnalyzeSamples (l_samples, r_samples, 588, 2);
@@ -1244,7 +1226,7 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
 
 			/* Compensate for the gap before a data track */
 			if ((ginfo -> rip_track < (ginfo -> disc.num_tracks - 1) &&
-					(ginfo -> disc).track[ginfo -> rip_track + 1].is_audio &&
+					!(ginfo -> disc).track[ginfo -> rip_track + 1].is_audio &&
 					(ginfo -> end_sector - ginfo -> start_sector) > 11399)) {
 				ginfo -> end_sector -= 11400;
 			}
@@ -1374,7 +1356,7 @@ void FillInTrackInfo (GripInfo *ginfo, int track, EncodeTrack *new_track) {
 	new_track -> ginfo = ginfo;
 
 	new_track -> wav_filename[0] = '\0';
-	new_track -> mp3_filename[0] = '\0';
+//	new_track -> mp3_filename[0] = '\0';
 
 	new_track -> track_num = track;
 	new_track -> start_frame = ginfo -> disc.track[track].start_frame;
@@ -1384,7 +1366,7 @@ void FillInTrackInfo (GripInfo *ginfo, int track, EncodeTrack *new_track) {
 
 	/* Compensate for the gap before a data track */
 	if ((track < (ginfo -> disc.num_tracks - 1) &&
-			! (ginfo -> disc).track[track + 1].is_audio &&
+			!(ginfo -> disc).track[track + 1].is_audio &&
 			(new_track -> end_frame - new_track -> start_frame) > 11399)) {
 		new_track -> end_frame -= 11400;
 	}
@@ -1392,12 +1374,12 @@ void FillInTrackInfo (GripInfo *ginfo, int track, EncodeTrack *new_track) {
 	new_track -> mins = ginfo -> disc.track[track].length.mins;
 	new_track -> secs = ginfo -> disc.track[track].length.secs;
 	new_track -> song_year = ginfo -> ddata.data_year;
-	g_snprintf (new_track -> song_name, 256, "%s",
+	g_snprintf (new_track -> song_name, MAX_STRING, "%s",
 				ginfo -> ddata.data_track[track].track_name);
-	g_snprintf (new_track -> song_artist, 256, "%s",
+	g_snprintf (new_track -> song_artist, MAX_STRING, "%s",
 				ginfo -> ddata.data_track[track].track_artist);
-	g_snprintf (new_track -> disc_name, 256, "%s", ginfo -> ddata.data_title);
-	g_snprintf (new_track -> disc_artist, 256, "%s", ginfo -> ddata.data_artist);
+	g_snprintf (new_track -> disc_name, MAX_STRING, "%s", ginfo -> ddata.data_title);
+	g_snprintf (new_track -> disc_artist, MAX_STRING, "%s", ginfo -> ddata.data_artist);
 	strcpy (new_track -> genre, ginfo -> ddata.data_genre);
 	new_track -> discid = ginfo -> ddata.data_id;
 }
@@ -1475,7 +1457,7 @@ static gboolean MP3Encode (GripInfo *ginfo) {
 		conv_str = g_strdup (str -> str);
 	}
 
-	g_snprintf (ginfo -> mp3file[cpu], 256, "%s", conv_str);
+	g_snprintf (ginfo -> mp3file[cpu], MAX_STRING, "%s", conv_str);
 
 	g_free (conv_str);
 	g_string_free (str, TRUE);
@@ -1612,7 +1594,7 @@ static size_t CalculateWavSize (GripInfo *ginfo, int track) {
 }
 
 static size_t CalculateEncSize (GripInfo *ginfo, int track) {
-	double tmp_encsize = 0.0;
+	double tmp_encsize;
 	/* It's not the best way, but i couldn't find anything better */
 	tmp_encsize = (double) ((ginfo -> disc.track[track].length.mins * 60 +
 							  ginfo -> disc.track[track].length.secs - 2));

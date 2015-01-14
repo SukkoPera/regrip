@@ -49,8 +49,6 @@ static gboolean gripDieOnWinCloseCB (GtkWidget *widget, GdkEvent *event,
                                      gpointer data);
 static void ReallyDie (GtkDialog *dialog, gint reply, gpointer data);
 static void MakeStatusPage (GripInfo *ginfo);
-static void DoHelp (GtkWidget *widget, gpointer data);
-static void MakeHelpPage (GripInfo *ginfo);
 static void MakeAboutPage (GripGUI *uinfo);
 static void MakeStyles (GripGUI *uinfo);
 static void Homepage (void);
@@ -83,7 +81,7 @@ static gboolean on_window_resize (GtkWindow *window, GdkEvent *event, gpointer u
     GdkEventConfigure *e = (GdkEventConfigure *) event;
     GripInfo *ginfo = (GripInfo *) user_data;
 
-//    g_debug ("New window size: %dx%d", e -> width, e -> height);
+    g_debug ("New window size: %dx%d", e -> width, e -> height);
 //    g_debug ("New window position: %dx%d", e -> x, e -> y);
 
     g_settings_set_uint (ginfo -> settings, "win-width", e -> width);
@@ -92,6 +90,15 @@ static gboolean on_window_resize (GtkWindow *window, GdkEvent *event, gpointer u
 
     // FALSE propagates event further
     return FALSE;
+}
+
+void on_menuitem_about_activate (GtkMenuItem *menuitem, gpointer user_data) {
+    g_debug ("about!");
+    g_debug ("about!");
+    g_debug ("about!");
+    g_debug ("about!");
+    g_debug ("about!");
+    g_debug ("about!");
 }
 
 GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
@@ -114,12 +121,6 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 
 	// Init global object
 	ginfo = g_new0 (GripInfo, 1);
-
-	app = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-	gtk_window_set_title (GTK_WINDOW (app), _("Regrip"));
-	gtk_widget_add_events(app, GDK_CONFIGURE);
-	g_signal_connect (app, "configure-event", G_CALLBACK (on_window_resize), ginfo);
-	gtk_object_set_user_data (GTK_OBJECT (app), (gpointer) ginfo);
 
     // First of all, load settings
 #ifdef MAINTAINER_MODE
@@ -144,7 +145,6 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
     ginfo -> settings_proxy = g_settings_get_child (ginfo -> settings, "proxy");
 
 	uinfo = &(ginfo -> gui_info);
-	uinfo -> app = app;
 	uinfo -> status_window = NULL;
 	uinfo -> rip_status_window = NULL;
 	uinfo -> encode_status_window = NULL;
@@ -162,7 +162,16 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
     // Load UI
 	uinfo -> builder = gtk_builder_new ();
 	gtk_builder_add_from_file (uinfo -> builder, UI_FILE, NULL);
-	//~ gtk_builder_connect_signals (gtk_builder, NULL);
+	gtk_builder_connect_signals (uinfo -> builder, NULL);
+
+	/*	app = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+	gtk_window_set_title (GTK_WINDOW (app), _("Regrip"));*/
+	app = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "window_main"));
+    g_assert (app);
+	gtk_widget_add_events(app, GDK_CONFIGURE);
+	g_signal_connect (app, "configure-event", G_CALLBACK (on_window_resize), ginfo);
+	gtk_object_set_user_data (GTK_OBJECT (app), (gpointer) ginfo);
+	uinfo -> app = app;
 
 
 	if (device) {
@@ -211,7 +220,9 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 
 	gtk_widget_realize (app);
 
-	uinfo -> winbox = gtk_vbox_new (FALSE, 3);
+//	uinfo -> winbox = gtk_vbox_new (FALSE, 3);
+    uinfo -> winbox = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "vbox_main"));
+    g_assert (uinfo -> winbox);
 
 	if (!uinfo -> minimized) {
 		gtk_container_border_width (GTK_CONTAINER (uinfo -> winbox), 3);
@@ -225,12 +236,12 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 	MakeRipPage (ginfo);
 	MakeConfigPage (ginfo);
 	MakeStatusPage (ginfo);
-	MakeHelpPage (ginfo);
 	MakeAboutPage (uinfo);
 	ginfo -> tray_icon_made = FALSE;
 	ginfo -> tray_menu_sensitive = TRUE;
 
 	gtk_box_pack_start (GTK_BOX (uinfo -> winbox), uinfo -> notebook, TRUE, TRUE, 0);
+	gtk_box_reorder_child (GTK_BOX (uinfo -> winbox), uinfo -> notebook, 2); // 0 is menubar, 1 is toolbar, 3 is statusbar
 
 	if (!uinfo -> minimized) {
 		gtk_widget_show (uinfo -> notebook);
@@ -247,6 +258,7 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 
 	uinfo -> playopts = MakePlayOpts (ginfo);
 	gtk_box_pack_start (GTK_BOX (uinfo -> winbox), uinfo -> playopts, FALSE, FALSE, 0);
+	gtk_box_reorder_child (GTK_BOX (uinfo -> winbox), uinfo -> playopts, 3);
 
 	if (uinfo -> track_prog_visible) {
 		gtk_widget_show (uinfo -> playopts);
@@ -259,11 +271,18 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 	} else {
 		gtk_box_pack_start (GTK_BOX (uinfo -> winbox), uinfo -> controls, FALSE, FALSE, 0);
 	}
+	gtk_box_reorder_child (GTK_BOX (uinfo -> winbox), uinfo -> controls, 4);
 
 	gtk_widget_show (uinfo -> controls);
 
-	gtk_container_add (GTK_CONTAINER (app), uinfo -> winbox);
+//	gtk_container_add (GTK_CONTAINER (app), uinfo -> winbox);
 	gtk_widget_show (uinfo -> winbox);
+
+	// Status bar
+	uinfo -> statusbar = GTK_STATUSBAR (gtk_builder_get_object (uinfo -> builder, "statusbar"));
+	g_assert (uinfo -> statusbar);
+	guint ctx = gtk_statusbar_get_context_id (uinfo -> statusbar, "Blah");
+	gtk_statusbar_push (uinfo -> statusbar, ctx, "Welcome to Regrip!");
 
 	CheckNewDisc (ginfo, FALSE);
 
@@ -443,12 +462,9 @@ void LogStatus (GripInfo *ginfo, char *fmt, ...) {
 
 #define HELP_FILE "grip.xml"
 
-static void DoHelp (GtkWidget *widget, gpointer data) {
-	char *section, *yelp_exe;
-
-	section = (char *)data;
-
-	yelp_exe = g_find_program_in_path ("yelp");
+// This is called by the Help menu signal handlers
+static void show_help (gchar *section) {
+	gchar *yelp_exe = g_find_program_in_path ("yelp");
 	if (g_path_is_absolute (yelp_exe)) {
 		GError *error;
 		gchar *argv[3], *cwd, *file;
@@ -488,60 +504,32 @@ static void DoHelp (GtkWidget *widget, gpointer data) {
 	}
 }
 
-static void MakeHelpPage (GripInfo *ginfo) {
-	GtkWidget *help_page;
-	GtkWidget *button;
-	GtkWidget *vbox;
+void on_menuitem_help_activate (GtkMenuItem *menuitem, gpointer user_data) {
+    show_help (NULL);
+}
 
-	help_page = MakeNewPage (ginfo -> gui_info.notebook, _("Help"));
+void on_menuitem_playing_activate (GtkMenuItem *menuitem, gpointer user_data) {
+    show_help ("cdplayer");
+}
 
-	vbox = gtk_vbox_new (FALSE, 0);
-	gtk_container_border_width (GTK_CONTAINER (vbox), 3);
+void on_menuitem_ripping_activate (GtkMenuItem *menuitem, gpointer user_data) {
+    show_help ("ripping");
+}
 
-	button = gtk_button_new_with_label (_("Table Of Contents"));
-	gtk_signal_connect (GTK_OBJECT (button), "clicked",
-	                    GTK_SIGNAL_FUNC (DoHelp), NULL);
-	gtk_box_pack_start (GTK_BOX (vbox), button, FALSE, FALSE, 0);
-	gtk_widget_show (button);
+void on_menuitem_configure_activate (GtkMenuItem *menuitem, gpointer user_data) {
+    show_help ("configure");
+}
 
-	button = gtk_button_new_with_label (_("Playing CDs"));
-	gtk_signal_connect (GTK_OBJECT (button), "clicked",
-	                    GTK_SIGNAL_FUNC (DoHelp), (gpointer) "cdplayer");
-	gtk_box_pack_start (GTK_BOX (vbox), button, FALSE, FALSE, 0);
-	gtk_widget_show (button);
+void on_menuitem_faq_activate (GtkMenuItem *menuitem, gpointer user_data) {
+    show_help ("faq");
+}
 
-	button = gtk_button_new_with_label (_("Ripping CDs"));
-	gtk_signal_connect (GTK_OBJECT (button), "clicked",
-	                    GTK_SIGNAL_FUNC (DoHelp), (gpointer) "ripping");
-	gtk_box_pack_start (GTK_BOX (vbox), button, FALSE, FALSE, 0);
-	gtk_widget_show (button);
+void on_menuitem_morehelp_activate (GtkMenuItem *menuitem, gpointer user_data) {
+    show_help ("morehelp");
+}
 
-	button = gtk_button_new_with_label (_("Configuring Grip"));
-	gtk_signal_connect (GTK_OBJECT (button), "clicked",
-	                    GTK_SIGNAL_FUNC (DoHelp), (gpointer) "configure");
-	gtk_box_pack_start (GTK_BOX (vbox), button, FALSE, FALSE, 0);
-	gtk_widget_show (button);
-
-	button = gtk_button_new_with_label (_("FAQ"));
-	gtk_signal_connect (GTK_OBJECT (button), "clicked",
-	                    GTK_SIGNAL_FUNC (DoHelp), (gpointer) "faq");
-	gtk_box_pack_start (GTK_BOX (vbox), button, FALSE, FALSE, 0);
-	gtk_widget_show (button);
-
-	button = gtk_button_new_with_label (_("Getting More Help"));
-	gtk_signal_connect (GTK_OBJECT (button), "clicked",
-	                    GTK_SIGNAL_FUNC (DoHelp), (gpointer) "morehelp");
-	gtk_box_pack_start (GTK_BOX (vbox), button, FALSE, FALSE, 0);
-	gtk_widget_show (button);
-
-	button = gtk_button_new_with_label (_("Reporting Bugs"));
-	gtk_signal_connect (GTK_OBJECT (button), "clicked",
-	                    GTK_SIGNAL_FUNC (DoHelp), (gpointer) "bugs");
-	gtk_box_pack_start (GTK_BOX (vbox), button, FALSE, FALSE, 0);
-	gtk_widget_show (button);
-
-	gtk_container_add (GTK_CONTAINER (help_page), vbox);
-	gtk_widget_show (vbox);
+void on_menuitem_bugs_activate (GtkMenuItem *menuitem, gpointer user_data) {
+    show_help ("bugs");
 }
 
 void MakeAboutPage (GripGUI *uinfo) {

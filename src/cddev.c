@@ -376,7 +376,7 @@ gboolean CDGetVolume (DiscInfo *disc, DiscVolume *vol) {
 	} else {
         cdio_audio_volume_t cdio_vol;
 
-        if ((ret = cdio_audio_get_volume (disc -> cdio, &cdio_vol) == DRIVER_OP_SUCCESS)) {
+        if ((ret = cdio_audio_get_volume (disc -> cdio, &cdio_vol)) == DRIVER_OP_SUCCESS) {
             // Not sure the level mapping is correct here
             vol -> vol_front.left = cdio_vol.level[0];
             vol -> vol_front.right = cdio_vol.level[1];

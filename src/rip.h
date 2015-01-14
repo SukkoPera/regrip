@@ -23,37 +23,38 @@
 #ifndef GRIP_RIP_H
 #define GRIP_RIP_H
 
-/* Encode list structure */
+#include "common.h"
 
+/* Encode list structure */
 typedef struct _encode_track {
-  GripInfo *ginfo;
-  int track_num;
-  int start_frame;
-  int end_frame;
-  char song_name[256];
-  char song_artist[256];
-  char disc_name[256];
-  char disc_artist[256];
-  char wav_filename[256];
-  char mp3_filename[256];
-  int song_year;
-  char genre[256];
-  int mins;
-  int secs;
-  int discid;
-  double track_gain_adjustment;
-  double disc_gain_adjustment;
+	GripInfo *ginfo;
+	int track_num;
+	int start_frame;
+	int end_frame;
+	char song_name[MAX_STRING];
+	char song_artist[MAX_STRING];
+	char disc_name[MAX_STRING];
+	char disc_artist[MAX_STRING];
+  char wav_filename[MAX_STRING];
+//  char mp3_filename[MAX_STRING];
+	int song_year;
+	char genre[MAX_STRING];
+	int mins;
+	int secs;
+	int discid;
+	double track_gain_adjustment;
+	double disc_gain_adjustment;
 } EncodeTrack;
 
 
-void MakeRipPage(GripInfo *ginfo);
-unsigned long long BytesLeftInFS(char *path);
-char *FindRoot(char *str);
-char *MakePath(char *str);
-void KillRip(GtkWidget *widget,gpointer data);
-void UpdateRipProgress(GripInfo *ginfo);
-char *TranslateSwitch(char switch_char,void *data,gboolean *munge);
-void DoRip(GtkWidget *widget,gpointer data);
-void FillInTrackInfo(GripInfo *ginfo,int track,EncodeTrack *new_track);
+void MakeRipPage (GripInfo *ginfo);
+unsigned long long BytesLeftInFS (char *path);
+char *FindRoot (char *str);
+char *MakePath (char *str);
+void KillRip (GtkWidget *widget, gpointer data);
+void UpdateRipProgress (GripInfo *ginfo);
+char *TranslateSwitch (char switch_char, void *data, gboolean *munge);
+void DoRip (GtkWidget *widget, gpointer data);
+void FillInTrackInfo (GripInfo *ginfo, int track, EncodeTrack *new_track);
 
 #endif /* ifndef GRIP_RIP_H */

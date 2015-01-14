@@ -45,6 +45,8 @@ typedef struct _grip_gui {
 	GtkWidget *app;
 	GtkWidget *winbox;
 	GtkWidget *notebook;
+	GtkStatusbar *statusbar;
+
 	gboolean minimized;
 	int win_width;
 	int win_height;
