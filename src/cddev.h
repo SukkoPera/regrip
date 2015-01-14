@@ -40,6 +40,13 @@
 #define MAX_SLOTS               100 /* For CD changers */
 
 
+typedef struct {
+    gchar device[MAX_STRING];
+    gchar vendor[MAX_STRING];
+    gchar model[MAX_STRING];
+    gchar revision[MAX_STRING];
+} cd_drive;
+
 /* Used for keeping track of times */
 typedef struct _disc_time {
 	int mins;
@@ -96,6 +103,8 @@ typedef struct _disc_volume {
    ChannelVolume vol_front;
    ChannelVolume vol_back;
 } DiscVolume;
+
+GList *get_cd_drives (void);
 
 gboolean CDInitDevice (char *device_name, DiscInfo *disc);
 gboolean CDCloseDevice (DiscInfo *disc);

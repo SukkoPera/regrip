@@ -190,6 +190,25 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 	g_assert (widget);
 	g_signal_connect (widget, "activate", G_CALLBACK (on_menuitem_about_activate), ginfo);
 
+	widget = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "menu_drive"));
+	g_assert (widget);
+
+	// Populate drive list
+	GList *cur, *next, *drives = get_cd_drives ();
+	for (cur = g_list_first (drives); cur && next; cur = next) {
+        cd_drive *drive = (cd_drive *) cur -> data;
+
+        gchar *tmp = g_strdup_printf ("%s %s %s (%s)", drive -> vendor, drive -> model, drive -> revision, drive -> device);
+        GtkWidget *mi = gtk_menu_item_new_with_label (tmp);
+        gtk_widget_show (mi);
+        gtk_menu_shell_append (GTK_MENU_SHELL (widget), mi);
+        g_free (tmp);
+
+        next = g_list_next (cur);
+        g_free (drive);
+	}
+	g_list_free (drives);
+
 	if (device) {
 		strncpy (ginfo -> cd_device, device, MAX_STRING);
 	}
@@ -236,7 +255,7 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 
 	gtk_widget_realize (app);
 
-    // Populate main window through main vbox: 0 is menubar, 1 is toolbar, 2 is track list, 3 is editor, 4 is statusbar
+    // Populate main window through main vbox: 0 is menubar, 1 is toolbar, 2 is track list, 3 is editor, 4 is cd controls, 5 is statusbar
     uinfo -> winbox = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "vbox_main"));
     g_assert (uinfo -> winbox);
 
@@ -266,6 +285,7 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 	uinfo -> track_edit_box = MakeEditBox (ginfo);
 	gtk_box_pack_start (GTK_BOX (uinfo -> winbox), uinfo -> track_edit_box,
 	                    FALSE, FALSE, 0);
+    gtk_box_reorder_child (GTK_BOX (uinfo -> winbox), uinfo -> track_edit_box, 3);
 
 	if (uinfo -> track_edit_visible) {
 		gtk_widget_show (uinfo -> track_edit_box);
@@ -274,7 +294,7 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 
 	uinfo -> playopts = MakePlayOpts (ginfo);
 	gtk_box_pack_start (GTK_BOX (uinfo -> winbox), uinfo -> playopts, FALSE, FALSE, 0);
-	gtk_box_reorder_child (GTK_BOX (uinfo -> winbox), uinfo -> playopts, 3);
+	gtk_box_reorder_child (GTK_BOX (uinfo -> winbox), uinfo -> playopts, 4);
 
 	if (uinfo -> track_prog_visible) {
 		gtk_widget_show (uinfo -> playopts);
@@ -287,7 +307,7 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 	} else {
 		gtk_box_pack_start (GTK_BOX (uinfo -> winbox), uinfo -> controls, FALSE, FALSE, 0);
 	}
-	gtk_box_reorder_child (GTK_BOX (uinfo -> winbox), uinfo -> controls, 4);
+	gtk_box_reorder_child (GTK_BOX (uinfo -> winbox), uinfo -> controls, 5);
 	gtk_widget_show (uinfo -> controls);
 
 	gtk_widget_show (uinfo -> winbox);
@@ -753,19 +773,8 @@ void UnBusy (GripGUI *uinfo) {
 }
 
 static void set_initial_config (GripInfo *ginfo) {
-	GripGUI *uinfo = & (ginfo -> gui_info);
-//	gchar *filename;
-//	char renamefile[256];
+	GripGUI *uinfo = &(ginfo -> gui_info);
 	char *proxy_env, *tok;
-//	char outputdir[256];
-//	int confret;
-//	CFGEntry cfg_entries[] = {
-//		CFG_ENTRIES
-//		{"outputdir", CFG_ENTRY_STRING, 256, outputdir},
-//		{"", CFG_ENTRY_LAST, 0, NULL}
-//	};
-
-//	outputdir[0] = '\0';
 
 	uinfo -> minimized = FALSE;
 	uinfo -> volvis = FALSE;
@@ -905,52 +914,6 @@ static void set_initial_config (GripInfo *ginfo) {
 	ginfo -> sprefs.no_underscore = FALSE;
 	*ginfo -> sprefs.allow_these_chars = '\0';
 	ginfo -> show_tray_icon = TRUE;
-
-#if 0
-	filename = g_build_filename (g_get_home_dir(), ginfo -> config_filename, NULL);
-
-	confret = LoadConfig (filename, "GRIP", 2, 2, cfg_entries);
-
-	if (confret < 0) {
-		/* Check if the config is out of date */
-		if (confret == -2) {
-			show_warning (ginfo -> gui_info.app,
-			              _("Your config file is out of date -- "
-			                 "resetting to defaults.\n"
-			                 "You will need to re-configure Grip.\n"
-			                 "Your old config file has been saved with -old appended."));
-
-			sprintf (renamefile, "%s-old", filename);
-
-			rename (filename, renamefile);
-		}
-
-		DoSaveConfig (ginfo);
-	}
-
-	LoadEncoderConfig (ginfo, ginfo -> selected_encoder);
-
-#ifndef GRIPCD
-	/* Phase out 'outputdir' variable */
-
-//	if (*outputdir) {
-//		strcpy (filename, outputdir);
-//		MakePath (filename);
-//    strcat(filename,ginfo -> mp3fileformat);
-//    strcpy(ginfo -> mp3fileformat,filename);
-
-//		strcpy (filename, outputdir);
-//    MakePath(filename);
-//    strcat(filename,ginfo -> ripfileformat);
-//    strcpy(ginfo -> ripfileformat,filename);
-
-//		*outputdir = '\0';
-//	}
-
-#endif
-
-	g_free (filename);
-#endif
 
 #if 0
 	if (!*ginfo -> user_email) {

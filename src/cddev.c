@@ -45,20 +45,42 @@
 #include <config.h>
 
 
-/* Initialize the CD-ROM for playing audio CDs */
-gboolean CDInitDevice (char *device_name, DiscInfo *disc) {
-#if 0
-    g_debug ("Autodetecting CD-ROM drivers with a CD-DA loaded")
+GList *get_cd_drives (void) {
+    GList *drives = NULL;
+
+    g_debug ("Autodetecting CD-ROM drivers with a CD-DA loaded");
 
     char **drvs = cdio_get_devices_with_cap (NULL, CDIO_FS_AUDIO, false);
     char **c;
-    for(c = drvs; *c != NULL; c++ ) {
-        g_debyg ("-- Found Drive %s\n", *c);
+    for (c = drvs; c && *c != NULL; c++) {
+        g_debug ("-- Found Drive %s\n", *c);
+
+        CdIo_t *p_cdio = cdio_open (*c, DRIVER_DEVICE);
+        if (p_cdio) {
+            cdio_hwinfo_t hwinfo;
+
+            if (cdio_get_hwinfo(p_cdio, &hwinfo)) {
+                cd_drive *d = g_new (cd_drive, 1);
+                strncpy (d -> device, *c, MAX_STRING);
+                strncpy (d -> vendor, hwinfo.psz_vendor, MAX_STRING);
+                strncpy (d -> model, hwinfo.psz_model, MAX_STRING);
+                strncpy (d -> revision, hwinfo.psz_revision, MAX_STRING);
+                drives = g_list_append (drives, d);
+            } else {
+                g_warning ("Unable to get drive hardware information for %s", *c);
+            }
+
+            cdio_destroy (p_cdio);
+        }
     }
 
     cdio_free_device_list (drvs);
-#endif
 
+    return drives;
+}
+
+/* Initialize the CD-ROM for playing audio CDs */
+gboolean CDInitDevice (char *device_name, DiscInfo *disc) {
 	memset (disc, 0x00, sizeof (DiscInfo)); // Just to make sure
 //	disc -> toc_up_to_date = FALSE;
 //	disc -> disc_present = FALSE;
