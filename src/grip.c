@@ -81,7 +81,7 @@ static gboolean on_window_resize (GtkWindow *window, GdkEvent *event, gpointer u
     GdkEventConfigure *e = (GdkEventConfigure *) event;
     GripInfo *ginfo = (GripInfo *) user_data;
 
-    g_debug ("New window size: %dx%d", e -> width, e -> height);
+//    g_debug ("New window size: %dx%d", e -> width, e -> height);
 //    g_debug ("New window position: %dx%d", e -> x, e -> y);
 
     g_settings_set_uint (ginfo -> settings, "win-width", e -> width);
@@ -93,12 +93,26 @@ static gboolean on_window_resize (GtkWindow *window, GdkEvent *event, gpointer u
 }
 
 void on_menuitem_about_activate (GtkMenuItem *menuitem, gpointer user_data) {
-    g_debug ("about!");
-    g_debug ("about!");
-    g_debug ("about!");
-    g_debug ("about!");
-    g_debug ("about!");
-    g_debug ("about!");
+   	GripInfo *ginfo = (GripInfo *) user_data;
+	GripGUI *uinfo = &(ginfo -> gui_info);
+
+    GtkAboutDialog *about = GTK_ABOUT_DIALOG (gtk_builder_get_object (uinfo -> builder, "dialog_about"));
+    g_assert (about);
+
+    // This must be done manually, since version is set in CMake
+    gtk_about_dialog_set_version (about, VERSION);
+
+    GdkPixbuf *pixbuf = gdk_pixbuf_new_from_xpm_data ((const char **)
+#ifndef GRIPCD
+        grip_xpm
+#else
+        gcd_xpm
+#endif
+    );
+    gtk_about_dialog_set_logo (about, pixbuf);
+
+    gtk_dialog_run (GTK_DIALOG (about));
+    gtk_widget_hide (GTK_WIDGET (about));
 }
 
 GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
@@ -164,8 +178,6 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 	gtk_builder_add_from_file (uinfo -> builder, UI_FILE, NULL);
 	gtk_builder_connect_signals (uinfo -> builder, NULL);
 
-	/*	app = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-	gtk_window_set_title (GTK_WINDOW (app), _("Regrip"));*/
 	app = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "window_main"));
     g_assert (app);
 	gtk_widget_add_events(app, GDK_CONFIGURE);
@@ -173,13 +185,17 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 	gtk_object_set_user_data (GTK_OBJECT (app), (gpointer) ginfo);
 	uinfo -> app = app;
 
+	// Signals with args need to be connected manually, sigh
+	GtkWidget *widget = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "menuitem_about"));
+	g_assert (widget);
+	g_signal_connect (widget, "activate", G_CALLBACK (on_menuitem_about_activate), ginfo);
 
 	if (device) {
-		g_snprintf (ginfo -> cd_device, 256, "%s", device);
+		strncpy (ginfo -> cd_device, device, MAX_STRING);
 	}
 
 	if (scsi_device) {
-		g_snprintf (ginfo -> force_scsi, 256, "%s", scsi_device);
+		strncpy (ginfo -> force_scsi, scsi_device, MAX_STRING);
 	}
 
 	uinfo -> minimized = force_small;
@@ -220,7 +236,7 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 
 	gtk_widget_realize (app);
 
-//	uinfo -> winbox = gtk_vbox_new (FALSE, 3);
+    // Populate main window through main vbox: 0 is menubar, 1 is toolbar, 2 is track list, 3 is editor, 4 is statusbar
     uinfo -> winbox = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "vbox_main"));
     g_assert (uinfo -> winbox);
 
@@ -241,7 +257,7 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 	ginfo -> tray_menu_sensitive = TRUE;
 
 	gtk_box_pack_start (GTK_BOX (uinfo -> winbox), uinfo -> notebook, TRUE, TRUE, 0);
-	gtk_box_reorder_child (GTK_BOX (uinfo -> winbox), uinfo -> notebook, 2); // 0 is menubar, 1 is toolbar, 3 is statusbar
+	gtk_box_reorder_child (GTK_BOX (uinfo -> winbox), uinfo -> notebook, 2);
 
 	if (!uinfo -> minimized) {
 		gtk_widget_show (uinfo -> notebook);
@@ -272,10 +288,8 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 		gtk_box_pack_start (GTK_BOX (uinfo -> winbox), uinfo -> controls, FALSE, FALSE, 0);
 	}
 	gtk_box_reorder_child (GTK_BOX (uinfo -> winbox), uinfo -> controls, 4);
-
 	gtk_widget_show (uinfo -> controls);
 
-//	gtk_container_add (GTK_CONTAINER (app), uinfo -> winbox);
 	gtk_widget_show (uinfo -> winbox);
 
 	// Status bar
@@ -287,6 +301,7 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 	CheckNewDisc (ginfo, FALSE);
 
 	/* Check if we're running this version for the first time */
+	// FIXME: ginfo -> version should be loaded from gsettings
 	if (strcmp (VERSION, ginfo -> version) != 0) {
 		strcpy (ginfo -> version, VERSION);
 

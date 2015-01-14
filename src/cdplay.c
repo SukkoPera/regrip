@@ -1590,7 +1590,8 @@ static void process_cddb_results (GripInfo *ginfo) {
             }
         }
 
-        gtk_widget_destroy (widget);
+        // Hide widget, don't destroy
+        gtk_widget_hide (widget);
     }
 
     // Done with results

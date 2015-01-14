@@ -23,21 +23,13 @@
 /* Message routines */
 void show_error (GtkWidget *parentWin, char *text);
 void show_warning (GtkWidget *parentWin, char *text);
-void BoolDialog (char *question, char *yes, GtkSignalFunc yesfunc,
-                 gpointer yesdata,
-                 char *no, GtkSignalFunc nofunc, gpointer nodata);
 
 /* Input routines */
-void InputDialog (char *prompt, char *default_str, int len, char *doit,
-                  GtkSignalFunc doitfunc,
-                  char *cancel, GtkSignalFunc cancelfunc);
 void ChangeStrVal (GtkWidget *widget, gpointer data);
 GtkWidget *MakeStrEntry (GtkWidget **entry, char *var, char *name,
                          int len, gboolean editable);
 GtkWidget *MakeFolderSelector (GtkWidget **entry, char *var, char *name);
 void ChangeIntVal (GtkWidget *widget, gpointer data);
 GtkWidget *MakeNumEntry (GtkWidget **entry, int *var, char *name, int len);
-void ChangeDoubleVal (GtkWidget *widget, gpointer data);
-GtkWidget *MakeDoubleEntry (GtkWidget **entry, gdouble *var, char *name);
 void ChangeBoolVal (GtkWidget *widget, gpointer data);
 GtkWidget *MakeCheckButton (GtkWidget **button, gboolean *var, char *name);
