@@ -46,6 +46,7 @@ set (
     includes
 
     ${PROJECT_BINARY_DIR}     # For config.h
+    ${GMODULE_INCLUDE_DIRS}
     ${GTK2_INCLUDE_DIRS}
     ${GTHREAD_INCLUDE_DIRS}
     ${VTE_INCLUDE_DIRS}
@@ -59,6 +60,7 @@ set (
 
     -lm			# For gain analysis
     ${GTK2_LIBRARIES}
+    ${GMODULE_LIBRARIES}
     ${GTHREAD_LIBRARIES}
     ${GTHREAD_LDFLAGS_OTHER}
     ${VTE_LIBRARIES}
@@ -97,13 +99,13 @@ if (TAGLIB_FOUND)
 endif (TAGLIB_FOUND)
 
 if (SNDFILE_FOUND)
-    set (
-        regrip_src
-        ${regrip_src}
-
-        encoder_sndfile.c
-        encoder_sndfile.h
-    )
+#    set (
+#        regrip_src
+#        ${regrip_src}
+#
+#        encoder_sndfile.c
+#        encoder_sndfile.h
+#    )
 
     set (
         includes
@@ -125,11 +127,11 @@ if (FAAC_FOUND)
         encoder_faac.h
     )
 
-    set (
-        regrip_src
-        ${regrip_src}
-        ${encoder_faac_src}
-    )
+#    set (
+#        regrip_src
+#        ${regrip_src}
+#        ${encoder_faac_src}
+#    )
 
     set (
         includes
@@ -143,27 +145,27 @@ if (FAAC_FOUND)
         ${FAAC_LIBRARIES}
     )
 
-    add_executable (
-        faactest
-        EXCLUDE_FROM_ALL
-
-        ${encoder_faac_src}
+#    add_executable (
+#        faactest
+#        EXCLUDE_FROM_ALL
+#
+#        ${encoder_faac_src}
 #        circbuf.c
 #        circbuf.h
-        codectest.c
-    )
+#        codectest.c
+#    )
 
-    target_link_libraries (
-        faactest
-        ${SNDFILE_LIBRARIES}
-        ${FAAC_LIBRARIES}
-        ${GTK2_LIBRARIES}
-    )
-
-    target_compile_definitions (
-        faactest
-        PUBLIC -DTESTENC=faac
-    )
+#    target_link_libraries (
+#        faactest
+#        ${SNDFILE_LIBRARIES}
+#        ${FAAC_LIBRARIES}
+#        ${GTK2_LIBRARIES}
+#    )
+#
+#    target_compile_definitions (
+#        faactest
+#        PUBLIC -DTESTENC=faac
+#    )
 endif (FAAC_FOUND)
 
 if (OPUS_FOUND AND OGG_FOUND AND SAMPLERATE_FOUND)
@@ -176,11 +178,11 @@ if (OPUS_FOUND AND OGG_FOUND AND SAMPLERATE_FOUND)
         opus_header.h
     )
 
-    set (
-        regrip_src
-        ${regrip_src}
-        ${encoder_opus_src}
-    )
+#    set (
+#        regrip_src
+#        ${regrip_src}
+#        ${encoder_opus_src}
+#    )
 
     set (
         includes
@@ -197,30 +199,30 @@ if (OPUS_FOUND AND OGG_FOUND AND SAMPLERATE_FOUND)
         ${OGG_LIBRARIES}
         ${SAMPLERATE_LIBRARIES}
     )
+#
+#    add_executable (
+#        opustest
+#        EXCLUDE_FROM_ALL
+#
+#        ${encoder_opus_src}
+#        circbuf.c
+#        circbuf.h
+#        codectest.c
+#    )
 
-    add_executable (
-        opustest
-        EXCLUDE_FROM_ALL
-
-        ${encoder_opus_src}
-        circbuf.c
-        circbuf.h
-        codectest.c
-    )
-
-    target_link_libraries (
-        opustest
-        ${SNDFILE_LIBRARIES}
-        ${OPUS_LIBRARIES}
-        ${OGG_LIBRARIES}
-        ${SAMPLERATE_LIBRARIES}
-        ${GTK2_LIBRARIES}
-    )
-
-    target_compile_definitions (
-        opustest
-        PUBLIC -DTESTENC=opus
-    )
+#    target_link_libraries (
+#        opustest
+#        ${SNDFILE_LIBRARIES}
+#        ${OPUS_LIBRARIES}
+#        ${OGG_LIBRARIES}
+#        ${SAMPLERATE_LIBRARIES}
+#        ${GTK2_LIBRARIES}
+#    )
+#
+#    target_compile_definitions (
+#        opustest
+#        PUBLIC -DTESTENC=opus
+#    )
 endif (OPUS_FOUND AND OGG_FOUND AND SAMPLERATE_FOUND)
 
 include_directories (

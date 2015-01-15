@@ -9,7 +9,8 @@
 #include <samplerate.h>
 #include "opus_header.h"
 #include "circbuf.h"
-#include "encoder_faac.h"
+#include <encoder.h>
+#include <config.h>
 
 static supported_format opus_formats[] = {
 	{"OPUS", "opus", NULL},
@@ -686,7 +687,7 @@ static gboolean encoder_opus_close (gpointer user_data, GError **error) {
 }
 
 // Encoder registration
-supported_encoder opus_encoder = {
+supported_encoder encoder = {
 	"Opus Encoder",
 	opus_formats,
 	encoder_opus_init,

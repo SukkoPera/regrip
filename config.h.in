@@ -30,6 +30,8 @@
 #cmakedefine MAINTAINER_MODE
 
 /* Paths */
+#define MODULE_DIR "@MODULE_DIR@"
+
 #ifdef MAINTAINER_MODE
     #define GNOME_ICONDIR "@CMAKE_SOURCE_DIR@/pixmaps"
     #define HELP_DIR "@CMAKE_SOURCE_DIR@/doc/C"

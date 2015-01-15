@@ -1,8 +1,7 @@
 #include <glib.h>
 #include <glib/gi18n.h>
 #include <sndfile.h>
-#include "encoder_sndfile.h"
-
+#include <encoder.h>
 
 typedef struct {
     int sf_format;
@@ -104,7 +103,7 @@ gboolean encoder_sndfile_callback (gint16 *buffer, gsize bufsize, gpointer user_
 }
 
 // Encoder registration
-supported_encoder sndfile_encoder = {
+supported_encoder encoder = {
     "libsndfile Encoder",
     sndfile_formats,
     encoder_sndfile_init,

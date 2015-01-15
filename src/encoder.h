@@ -44,7 +44,10 @@ typedef struct {
     encoder_callback callback;
 } supported_encoder;
 
-//extern supported_encoder supported_encoders[];
-extern supported_encoder *supported_encoders[];
+//extern supported_encoder *supported_encoders[];
+extern GList *encoder_modules;
+
+gboolean load_encoder_modules (void);
+gboolean unload_encoder_modules (void);
 
 #endif // ENCODER_H_INCLUDED

@@ -2,7 +2,8 @@
 #include <glib.h>
 #include <glib/gi18n.h>
 #include <faac.h>
-#include "encoder_faac.h"
+#include <encoder.h>
+#include <config.h>
 
 static supported_format faac_formats[] = {
     {"AAC", "aac", NULL},
@@ -163,7 +164,7 @@ gboolean encoder_faac_close (gpointer user_data, GError **error) {
 }
 
 // Encoder registration
-supported_encoder faac_encoder = {
+supported_encoder encoder = {
     "FAAC Encoder",
     faac_formats,
     encoder_faac_init,

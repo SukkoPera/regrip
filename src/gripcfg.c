@@ -388,16 +388,19 @@ void MakeConfigPage (GripInfo *ginfo) {
 	GtkListStore *store = gtk_list_store_new (3, G_TYPE_STRING, G_TYPE_POINTER, G_TYPE_POINTER);    // Name, supported_format, supported_encoder
 	GtkTreeIter iter, iter_to_select;
 	gboolean selected_found = FALSE;
-	supported_encoder **enc = supported_encoders;
-	while (*enc) {
-        g_debug ("Registering encoder: %s", (*enc) -> name);
-        supported_format *fmt = (*enc) -> supported_formats;
-        while (fmt -> name) {
-            g_debug ("Registering format: %s", fmt -> name);
-            gtk_list_store_append (store, &iter);
-            gtk_list_store_set (store, &iter, 0, fmt -> name, 1, fmt, 2, *enc, -1);
+    load_encoder_modules ();
+    GList *cur;
+    for (cur = g_list_first (encoder_modules); cur; cur = g_list_next (cur)) {
+        supported_encoder *enc = (supported_encoder *) cur -> data;
 
-            if (strcmp ((*enc) -> name, selected_encoder) == 0 && strcmp (fmt -> name, selected_format) == 0) {
+        g_debug ("Registering encoder: %s", enc -> name);
+        supported_format *fmt = enc -> supported_formats;
+        while (fmt -> name) {
+            g_debug ("- Registering format: %s", fmt -> name);
+            gtk_list_store_append (store, &iter);
+            gtk_list_store_set (store, &iter, 0, fmt -> name, 1, fmt, 2, enc, -1);
+
+            if (strcmp (enc -> name, selected_encoder) == 0 && strcmp (fmt -> name, selected_format) == 0) {
 //                g_debug ("Found selected format");
                 iter_to_select = iter;
                 selected_found = TRUE;
@@ -405,7 +408,6 @@ void MakeConfigPage (GripInfo *ginfo) {
 
             ++fmt;
         }
-        ++enc;
 	}
 
 	menu = gtk_combo_box_new_with_model (GTK_TREE_MODEL (store));
