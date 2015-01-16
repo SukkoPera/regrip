@@ -12,17 +12,12 @@
 
  > Some GSettings stuff is there, need more and GUIs.
 
-* Consider plugin architecture, maybe using libpeas
-
- > Main issue is that libpeas seems to only support GTK3 for plugin configuration GUIs.
-
 * Switch to `libcddb` for CDDB support
 
-* > Almost there.
+ > Mostly there. Submitting discs is not yet possible and there are a few round edges, but seems usable.
 
 * Add *MusicBrainz* support 
 * Add *Discogs* support
-* Use `libcdio` for CD playing functions.
 * Add *AccurateRip* support
 * Use DBus (maybe through GIO/GDrive) to autodetect CD drives and media insertion/ejection, instead of polling drives directly.
 * Make external library of the gain analysis part
@@ -32,11 +27,11 @@
 
 * Switch to GtkBuilder
 
- > Added initial stuff, already used for multiple CDDB reults dialog.
+ > Partly done.
 
 * Reorganize GUI
 
- > Preferences should have their own separate dialog, as the ripping process should, not to mention program credits. A toolbar and a status bar might also be handy.
+ > In progress. Preferences should have their own separate dialog, as the ripping process should, not to mention program credits. A toolbar and a status bar might also be handy.
  
 * Retrieve, display and save Album art
 
@@ -57,6 +52,11 @@
 * Support WAV/OGG/FLAC through `libsndfile`
 * Support AAC through `FAAC`
 * Replace `ID3Lib` with `TagLib`. This allows to put tags in OGG and FLAC files as well as MP3s.
+* Consider plugin architecture
+
+ > Done for encoders with GModule. Some more plugins might be useful.
+ 
+* Use `libcdio` for CD playing functions.
 
 
 # Original Grip TODO list
