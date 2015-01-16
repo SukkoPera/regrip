@@ -46,7 +46,7 @@ find_path(FAAC_INCLUDE_DIR faac.h
 )
 
 set(FAAC_NAMES faac)
-find_library(FAAC_LIBRARY
+find_library(FAAC_LIBRARIES
   NAMES ${FAAC_NAMES}
   PATHS
   /usr/lib
@@ -56,17 +56,16 @@ find_library(FAAC_LIBRARY
   /usr/lib/x86_64-linux-gnu
 )
 
-if (FAAC_INCLUDE_DIR AND FAAC_LIBRARY)
+if (FAAC_INCLUDE_DIR AND FAAC_LIBRARIES)
    set(FAAC_FOUND 1)
-   set(FAAC_LIBRARIES ${FAAC_LIBRARY})
-else (FAAC_INCLUDE_DIR AND FAAC_LIBRARY)
+else (FAAC_INCLUDE_DIR AND FAAC_LIBRARIES)
    set(FAAC_FOUND FALSE)
-   set(FAAC_LIBRARIES)
-endif (FAAC_INCLUDE_DIR AND FAAC_LIBRARY)
+#   set(FAAC_LIBRARIES)
+endif (FAAC_INCLUDE_DIR AND FAAC_LIBRARIES)
 
 if (FAAC_FOUND)
    if (NOT FAAC_FIND_QUIETLY)
-      message(STATUS "Found FAAC: ${FAAC_LIBRARY}")
+      message(STATUS "Found FAAC: ${FAAC_LIBRARIES}")
    endif (NOT FAAC_FIND_QUIETLY)
 else (FAAC_FOUND)
     if (NOT FAAC_FIND_QUIETLY)
@@ -76,12 +75,12 @@ else (FAAC_FOUND)
    if (FAAC_FIND_REQUIRED)
       message(STATUS "Looked for FAAC libraries named ${FAAC_NAMES}.")
       message(STATUS "Include file detected: [${FAAC_INCLUDE_DIR}].")
-      message(STATUS "Lib file detected: [${FAAC_LIBRARY}].")
+      message(STATUS "Lib file detected: [${FAAC_LIBRARIES}].")
       message(FATAL_ERROR "=========> Could NOT find FAAC library")
    endif (FAAC_FIND_REQUIRED)
 endif (FAAC_FOUND)
 
 mark_as_advanced(
-  FAAC_LIBRARY
+  FAAC_LIBRARIES
   FAAC_INCLUDE_DIR
 )

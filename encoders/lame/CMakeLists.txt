@@ -30,5 +30,5 @@ if (LAME_FOUND)
 		PROPERTY LIBRARY_OUTPUT_DIRECTORY ${MODULE_DIR}
 	)
 else (LAME_FOUND)
-	message (WARNING "LAME was not found on the system, AAC encoder module will not be built")
+	message (WARNING "LAME was not found on the system, MP3 encoder module will not be built")
 endif (LAME_FOUND)

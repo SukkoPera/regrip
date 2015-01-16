@@ -1,6 +1,6 @@
-pkg_check_modules (OPUS opus)
-pkg_check_modules (OGG ogg)
-pkg_check_modules (SAMPLERATE samplerate)
+pkg_check_modules (OPUS REQUIRED opus)
+pkg_check_modules (OGG REQUIRED ogg)
+pkg_check_modules (SAMPLERATE REQUIRED samplerate)
 
 if (OPUS_FOUND AND OGG_FOUND AND SAMPLERATE_FOUND)
 	add_library (

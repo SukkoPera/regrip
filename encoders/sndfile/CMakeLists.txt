@@ -1,4 +1,4 @@
-pkg_check_modules (SNDFILE sndfile)
+pkg_check_modules (SNDFILE REQUIRED sndfile)
 
 if (SNDFILE_FOUND)
 	add_library (
@@ -30,6 +30,6 @@ if (SNDFILE_FOUND)
 		PROPERTY LIBRARY_OUTPUT_DIRECTORY ${MODULE_DIR}
 	)
 else (SNDFILE_FOUND)
-	message (WARNING "libsndfile was not found on the system, sndfile encoder module will not be built")
+	message (WARNING "libsndfile was not found on the system, WAV/OGG/FLAC encoder module will not be built")
 endif (SNDFILE_FOUND)
 

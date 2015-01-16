@@ -402,24 +402,24 @@ gboolean rip_start (GripInfo *ginfo, cdrip_callback callback, gpointer callback_
     }
 
     if (d -> interface == GENERIC_SCSI && d -> bigbuff <= CD_FRAMESIZE_RAW) {
-        g_warning ("WARNING: You kernel does not have generic SCSI 'SG_BIG_BUFF'\n"
-                   "         set, or it is set to a very small value.  Paranoia\n"
-                   "         will only be able to perform single sector reads\n"
-                   "         making it very unlikely Paranoia can work.\n\n"
-                   "         To correct this problem, the SG_BIG_BUFF define\n"
-                   "         must be set in /usr/src/linux/include/scsi/sg.h\n"
-                   "         by placing, for example, the following line just\n"
-                   "         before the last #endif:\n\n"
-                   "         #define SG_BIG_BUFF 65536\n\n"
-                   "         and then recompiling the kernel.\n\n"
-                   "         Attempting to continue...");
+        g_warning ("You kernel does not have generic SCSI 'SG_BIG_BUFF'\n"
+                   "set, or it is set to a very small value.  Paranoia\n"
+                   "will only be able to perform single sector reads\n"
+                   "making it very unlikely Paranoia can work.\n\n"
+                   "To correct this problem, the SG_BIG_BUFF define\n"
+                   "must be set in /usr/src/linux/include/scsi/sg.h\n"
+                   "by placing, for example, the following line just\n"
+                   "before the last #endif:\n\n"
+                   "#define SG_BIG_BUFF 65536\n\n"
+                   "and then recompiling the kernel.\n\n"
+                   "Attempting to continue...");
     }
 
     if (d -> nsectors == 1) {
         g_warning ("The autosensed/selected sectors per read value is\n"
-                   "         one sector, making it very unlikely Paranoia can \n"
-                   "         work.\n\n"
-                   "         Attempting to continue...");
+                   "one sector, making it very unlikely Paranoia can \n"
+                   "work.\n\n"
+                   "Attempting to continue...");
     }
 
     if (!cdda_track_audiop (d, track)) {

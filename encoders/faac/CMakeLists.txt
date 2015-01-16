@@ -1,4 +1,4 @@
-find_package (FAAC)
+find_package (FAAC REQUIRED)
 
 if (FAAC_FOUND)
 	add_library (
