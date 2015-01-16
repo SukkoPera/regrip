@@ -2,9 +2,10 @@
  *
  * Based on code from libcdaudio 0.5.0 (Copyright (C)1998 Tony Arcieri)
  *
- * All changes Copyright (c) 1998-2004  Mike Oliphant <grip@nostatic.org>
+ * Copyright (c) 1998-2015 Mike Oliphant <contact@nostatic.org>
+ * Copyright (c) 2014-2015 SukkoPera <software@sukkology.net>
  *
- *   http://sourceforge.net/projects/grip/
+ *   https://github.com/SukkoPera/regrip
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as

@@ -4,7 +4,7 @@
  *
  * Copyright (c) 1998-2002  Mike Oliphant <oliphant@gtk.org>
  *
- *   http://sourceforge.net/projects/grip/
+ *   https://github.com/SukkoPera/regrip
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as

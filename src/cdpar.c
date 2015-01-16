@@ -3,9 +3,10 @@
  * Based on main.c from the cdparanoia distribution
  *  (C) 1998 Monty <xiphmont@mit.edu>
  *
- * All changes Copyright 1999-2004 by Mike Oliphant (grip@nostatic.org)
+ * All changes copyright (c) 1998-2015 Mike Oliphant <contact@nostatic.org>
+ * and 2014-2015 SukkoPera <software@sukkology.net>
  *
- *   http://sourceforge.net/projects/grip/
+ *   https://github.com/SukkoPera/regrip
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as

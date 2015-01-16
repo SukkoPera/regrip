@@ -1,8 +1,9 @@
 /* cdplay.h
  *
- * Copyright (c) 1998-2002  Mike Oliphant <oliphant@gtk.org>
+ * Copyright (c) 1998-2015 Mike Oliphant <contact@nostatic.org>
+ * Copyright (c) 2014-2015 SukkoPera <software@sukkology.net>
  *
- *   http://sourceforge.net/projects/grip/
+ *   https://github.com/SukkoPera/regrip
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
