@@ -669,7 +669,6 @@ static void LoadImages (GripGUI *uinfo) {
 	uinfo -> random_image = Loadxpm (uinfo -> app, random_xpm);
 	uinfo -> playlist_image = Loadxpm (uinfo -> app, playlist_xpm);
 	uinfo -> playnorm_image = Loadxpm (uinfo -> app, playnorm_xpm);
-	uinfo -> quit_image = Loadxpm (uinfo -> app, quit_xpm);
 	uinfo -> rew_image = Loadxpm (uinfo -> app, rew_xpm);
 	uinfo -> stop_image = Loadxpm (uinfo -> app, stop_xpm);
 	uinfo -> upleft_image = Loadxpm (uinfo -> app, upleft_xpm);

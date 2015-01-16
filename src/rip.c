@@ -34,7 +34,7 @@
 #endif
 #include <sys/types.h>
 #include <glib.h>
-//#include <glib/gstdio.h>
+#include <glib/gstdio.h>
 #include <glib/gi18n.h>
 #include "rip.h"
 #include "dialog.h"
