@@ -35,7 +35,6 @@
 #include "tray.h"
 
 
-static void ShutDownCB (GtkWidget *widget, gpointer data);
 static void DiscDBToggle (GtkWidget *widget, gpointer data);
 static void SetCurrentTrack (GripInfo *ginfo, int track);
 static void ToggleChecked (GripGUI *uinfo, int track);
@@ -62,14 +61,6 @@ static void PrevTrack (GripInfo *ginfo);
 static void InitProgram (GripInfo *ginfo);
 static void ShuffleTracks (GripInfo *ginfo);
 static gboolean CheckTracks (DiscInfo *disc);
-
-static void ShutDownCB (GtkWidget *widget, gpointer data) {
-	GripInfo *ginfo;
-
-	ginfo = (GripInfo *) data;
-
-	GripDie (ginfo -> gui_info.app, ginfo);
-}
 
 // DiscDB lookup button clicked
 static void DiscDBToggle (GtkWidget *widget, gpointer data) {
@@ -182,8 +173,7 @@ void ResizeTrackList (GripInfo *ginfo) {
 	}
 }
 
-void MakeTrackPage (GripInfo *ginfo) {
-	GtkWidget *trackpage;
+GtkWidget *MakeTrackPage (GripInfo *ginfo) {
 	GtkWidget *vbox;
 	GripGUI *uinfo;
 	GtkRequisition sizereq;
@@ -193,8 +183,6 @@ void MakeTrackPage (GripInfo *ginfo) {
 	GtkTreeSelection *select;
 
 	uinfo = &(ginfo -> gui_info);
-
-	trackpage = MakeNewPage (uinfo -> notebook, _("Tracks"));
 
 	vbox = gtk_vbox_new (FALSE, 0);
 	gtk_container_border_width (GTK_CONTAINER (vbox), 3);
@@ -296,10 +284,11 @@ void MakeTrackPage (GripInfo *ginfo) {
 
 	gtk_widget_size_request (uinfo -> track_list, &sizereq);
 	//  gtk_widget_set_usize(trackpage,sizereq.width+30,-1);
-	gtk_widget_set_usize (trackpage, 500, -1);
+//	gtk_widget_set_usize (trackpage, 500, -1);
 
-	gtk_container_add (GTK_CONTAINER (trackpage), vbox);
 	gtk_widget_show (vbox);
+
+	return vbox;
 }
 
 void SetCurrentTrackIndex (GripInfo *ginfo, int track) {
@@ -877,16 +866,6 @@ GtkWidget *MakeControls (GripInfo *ginfo) {
 	gtk_tooltips_set_tip (MakeToolTip (), button,
 	                      _("Toggle track display"), NULL);
 	gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
-	gtk_widget_show (button);
-
-	button = ImageButton (GTK_WIDGET (uinfo -> app), uinfo -> quit_image);
-	gtk_widget_set_style (button, uinfo -> style_dark_grey);
-	gtk_tooltips_set_tip (MakeToolTip (), button,
-	                      _("Exit Grip"), NULL);
-
-	gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
-	g_signal_connect (G_OBJECT (button), "clicked",
-	                  G_CALLBACK (ShutDownCB), (gpointer) ginfo);
 	gtk_widget_show (button);
 
 	gtk_box_pack_start (GTK_BOX (uinfo -> control_button_box), hbox, TRUE, TRUE, 0);
@@ -1480,7 +1459,7 @@ static gboolean CheckTracks (DiscInfo *disc) {
 void ScanDisc (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 
-	ginfo = (GripInfo *)data;
+	ginfo = (GripInfo *) data;
 
 	ginfo -> update_required = TRUE;
 

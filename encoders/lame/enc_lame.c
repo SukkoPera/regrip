@@ -6,12 +6,6 @@
 #include <encoder.h>
 #include <config.h>
 
-static supported_format lame_formats[] = {
-    {"MP3", "mp3", NULL},
-    {NULL}
-};
-
-
 // GError stuff
 #define GRIP_LAMEENC_ERROR lame_encoder_error_quark ()
 
@@ -53,73 +47,72 @@ static void lame_msg (const char *msg, va_list args) {
 	g_logv (LOG_DOMAIN, G_LOG_LEVEL_MESSAGE, msg, args);
 }
 
-/*
-
 typedef struct {
 	GtkBuilder *builder;
 	GSettings *settings;
-} encoder_private;
+} encoder_handle;
 
 typedef struct {
 	FILE *fout;
 	lame_t codec;
 	gulong outbufsize;
 	guint8 *outbuf;
-} encoder_file_private;
+} file_handle;
+
 
 #define REGRIP_GSCHEMA_BASE "net.sukkology.software.regrip"
-#define REGRIP_ENCODER_GSCHEMA_BASE (REGRIP_GSCHEMA_BASE ".encoder")
-#define ENCODER_SCHEMA (REGRIP_ENCODER_GSCHEMA_BASE ".lame")
+#define REGRIP_ENCODER_GSCHEMA_BASE REGRIP_GSCHEMA_BASE ".encoder"
+#define ENCODER_SCHEMA REGRIP_ENCODER_GSCHEMA_BASE ".lame"
 
-G_MODULE_EXPORT gpointer encoder_init (GError **error) {
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
-
-#ifdef MAINTAINER_MODE
-    GSettingsSchemaSource *schema_source = g_settings_schema_source_new_from_directory (GSCHEMA_DIR, g_settings_schema_source_get_default (), FALSE, error);
-    if (schema_source != NULL) {
-		GSettingsSchema *schema = g_settings_schema_source_lookup (schema_source, ENCODER_GSETTINGS_SCHEMA, TRUE);
-		g_assert (schema);
-
-		encoder_private *data = g_new0 (encoder_private, 1);
-
-		data -> settings = g_settings_new_full (schema, NULL, NULL);
-		g_assert (data -> settings);
-#else
-		data -> settings = g_settings_new (ENCODER_GSETTINGS_SCHEMA);
-#endif
-
-		// Load UI
-		data -> builder = gtk_builder_new ();
-		gtk_builder_add_from_file (data -> builder, UI_FILE, NULL);
-		//gtk_builder_connect_signals (data -> builder, NULL);
-
-		ret = data;
-	} else {
-		ret = NULL;
-	}
-
-	return ret;
+G_MODULE_EXPORT gchar *enc_get_name (void) {
+	return "LAME Encoder Module";
 }
 
-G_MODULE_EXPORT gboolean encoder_close (gpointer enc_data, GError **error) {
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-	return TRUE;
-}
-
-G_MODULE_EXPORT gchar *encoder_get_version (void) {
+G_MODULE_EXPORT gchar *enc_get_version (void) {
     static gchar version[MAX_STRING] = "";
 
 	if (version[0] == '\0') {
-		char lamever[MAX_STRING];
-		get_lame_version (lamever, MAX_STRING, NULL);
-		snprintf (version, MAX_STRING, "LAME Encoder Module - Using LAME %s", lamever);
+		snprintf (version, MAX_STRING, "LAME Encoder Module - Using LAME %s", get_lame_version ());
 	}
 
 	return version;
 }
 
-G_MODULE_EXPORT supported_format *get_formats (void) {
+G_MODULE_EXPORT gpointer enc_init (GError **error) {
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	encoder_handle *handle = NULL;
+
+#ifdef MAINTAINER_MODE
+    GSettingsSchemaSource *schema_source = g_settings_schema_source_new_from_directory (GSCHEMA_DIR, g_settings_schema_source_get_default (), FALSE, error);
+    if (schema_source != NULL) {
+//		GSettingsSchema *schema = g_settings_schema_source_lookup (schema_source, ENCODER_SCHEMA, TRUE);
+//		g_assert (schema);
+
+		handle = g_new0 (encoder_handle, 1);
+
+//		handle -> settings = g_settings_new_full (schema, NULL, NULL);
+//		g_assert (handle -> settings);
+#else
+//		handle -> settings = g_settings_new (ENCODER_SCHEMA);
+#endif
+
+		// Load UI
+		handle -> builder = gtk_builder_new ();
+//		gtk_builder_add_from_file (handle -> builder, UI_FILE, NULL);
+		//gtk_builder_connect_signals (handle -> builder, NULL);
+	}
+
+	return handle;
+}
+
+G_MODULE_EXPORT gboolean enc_close (gpointer enc_data, GError **error) {
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	return TRUE;
+}
+
+G_MODULE_EXPORT supported_format *enc_get_formats (void) {
 	static supported_format fmts[] = {
 		{"MP3", "mp3", NULL},
 		{NULL}
@@ -128,37 +121,36 @@ G_MODULE_EXPORT supported_format *get_formats (void) {
 	return fmts;
 }
 
-G_MODULE_EXPORT gboolean encoder_start_batch (gpointer enc_data, supported_format *fmt, GError **error) {
+G_MODULE_EXPORT gboolean enc_start_batch (gpointer enc_data, supported_format *fmt, GError **error) {
+    return TRUE;
 }
 
-G_MODULE_EXPORT gboolean encoder_finish_batch (gpointer enc_data, GError **error) {
+G_MODULE_EXPORT gboolean enc_finish_batch (gpointer enc_data, GError **error) {
+    return TRUE;
 }
 
-
-G_MODULE_EXPORT GtkDialog *encoder_about (gpointer enc_data) {
-	encoder_private *data = (encoder_private *) enc_data;
+G_MODULE_EXPORT GtkDialog *enc_about (gpointer enc_data) {
+	encoder_handle *data = (encoder_handle *) enc_data;
 
 	GtkAboutDialog *about = GTK_ABOUT_DIALOG (gtk_builder_get_object (data -> builder, "dialog_about"));
     g_assert (about);
 
     // This must be done manually, since version is set in CMake
     //gtk_about_dialog_set_version (about, VERSION);
+
+    return GTK_DIALOG (about);
 }
 
-G_MODULE_EXPORT GtkWidget *encoder_get_prefs_widget (gpointer enc_data) {
-	encoder_private *data = (encoder_private *) enc_data;
+G_MODULE_EXPORT GtkWidget *enc_get_prefs_widget (gpointer enc_data) {
+	encoder_handle *data = (encoder_handle *) enc_data;
 
 	return NULL;
 }
 
-*/
-
-//G_MODULE_EXPORT gpointer encoder_start (gpointer enc_data, supported_format *fmt, FILE *fp, GError **error) {
-G_MODULE_EXPORT gpointer encoder_lame_init (supported_format *fmt, FILE *fp, gpointer user_data, GError **error) {
+G_MODULE_EXPORT gpointer enc_start (gpointer enc_data, supported_format *fmt, FILE *fp, GError **error) {
     g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+    g_return_val_if_fail (enc_data != NULL, FALSE);
 
-//    gchar version[MAX_STRING];
-//	get_lame_version (version, MAX_STRING, NULL);
     g_debug ("LAME Encoder Module - Using LAME %s", get_lame_version ());
 
 	encoder_lame_data *eld = g_new0 (encoder_lame_data, 1);
@@ -186,9 +178,9 @@ G_MODULE_EXPORT gpointer encoder_lame_init (supported_format *fmt, FILE *fp, gpo
 	lame_set_in_samplerate (eld -> codec, CD_SAMPLE_RATE);
 	lame_set_num_channels (eld -> codec, CD_CHANNELS);
     lame_set_VBR (eld -> codec, vbr_default);
-/*	lame_set_brate (eld -> codec, 128);
-	lame_set_mode (eld -> codec, 1);
-	lame_set_quality (eld -> codec, 2);   /* 2=high  5 = medium  7=low */
+//	lame_set_brate (eld -> codec, 128);
+//	lame_set_mode (eld -> codec, 1);
+//	lame_set_quality (eld -> codec, 2);   /* 2=high  5 = medium  7=low */
 	if (lame_init_params (eld -> codec) < 0) {
         g_set_error_literal (error, GRIP_LAMEENC_ERROR, GRIP_LAMEENC_ERROR_INVALIDFORMAT, _("Invalid encoder parameters"));
         lame_close (eld -> codec);
@@ -220,15 +212,11 @@ G_MODULE_EXPORT gpointer encoder_lame_init (supported_format *fmt, FILE *fp, gpo
 	return eld;
 }
 
-//G_MODULE_EXPORT gboolean encoder_callback (gpointer enc_data, gpointer file_data, gint16 *buffer, gsize bufsize, GError **error) {
-G_MODULE_EXPORT gboolean encoder_lame_callback (gint16 *buffer, gsize bufsize, gpointer user_data /*, GError **error */) {
-	//g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+G_MODULE_EXPORT gboolean enc_callback (gpointer enc_data, gpointer file_data, gint16 *buffer, gsize bufsize, GError **error) {
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
-	encoder_lame_data *eld = (encoder_lame_data *) user_data;
+	encoder_lame_data *eld = (encoder_lame_data *) file_data;
 	g_assert (eld);
-
-	// FIXME
-	GError **error = NULL;
 
 	/* num_samples = number of samples in the L (or R) channel, not the total
 	 * number of samples in pcm[]
@@ -263,25 +251,26 @@ G_MODULE_EXPORT gboolean encoder_lame_callback (gint16 *buffer, gsize bufsize, g
 	return TRUE;
 }
 
-//G_MODULE_EXPORT gboolean encoder_finish (gpointer enc_data, gpointer file_data, GError **error) {
-G_MODULE_EXPORT gboolean encoder_lame_close (gpointer user_data, GError **error) {
+G_MODULE_EXPORT gboolean enc_finish (gpointer enc_data, gpointer file_data, GError **error) {
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-	//g_return_val_if_fail (enc_data != NULL && file_data != NULL, FALSE);
+	g_return_val_if_fail (enc_data != NULL && file_data != NULL, FALSE);
 
 	gboolean ret = TRUE;
 
-	encoder_lame_data *eld = (encoder_lame_data *) user_data;
+	encoder_lame_data *eld = (encoder_lame_data *) file_data;
 	g_assert (eld);
 
-//    g_debug ("encoder_lame_close()");
+    g_debug ("encoder_lame_close()");
 
     // Flush LAME output
 	// FIXME: Test lame_encode_flush_nogap
-	gint outsize = lame_encode_flush (eld -> codec, eld -> outbuf, eld -> outbufsize);
-	size_t n = fwrite (eld -> outbuf, sizeof (guint8), outsize, eld -> fout);
-	if (n != outsize) {
-		g_warning (_("Unable to write to output file"));
-		ret = FALSE;
+	int outsize;
+	while ((outsize = lame_encode_flush (eld -> codec, eld -> outbuf, eld -> outbufsize)) > 0) {
+        size_t n = fwrite (eld -> outbuf, sizeof (guint8), outsize, eld -> fout);
+        if (n != outsize) {
+            g_warning (_("Unable to write to output file"));
+            ret = FALSE;
+        }
 	}
 
 	//fclose (eld -> fout);
@@ -292,12 +281,3 @@ G_MODULE_EXPORT gboolean encoder_lame_close (gpointer user_data, GError **error)
 
 	return ret;
 }
-
-// Encoder registration
-G_MODULE_EXPORT supported_encoder encoder = {
-    "LAME Encoder",
-    lame_formats,
-    encoder_lame_init,
-    encoder_lame_close,
-    encoder_lame_callback
-};

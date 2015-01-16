@@ -56,7 +56,6 @@
 
 static void RipPartialChanged (GtkWidget *widget, gpointer data);
 static void PlaySegmentCB (GtkWidget *widget, gpointer data);
-static GtkWidget *MakeRangeSelects (GripInfo *ginfo);
 static char *MakeRelative (char *file1, char *file2);
 static gboolean AddM3U (GripInfo *ginfo);
 static void ID3Add (GripInfo *ginfo, char *file, EncodeTrack *enc_track);
@@ -71,6 +70,7 @@ static void CalculateAll (GripInfo *ginfo);
 static size_t CalculateEncSize (GripInfo *ginfo, int track);
 static size_t CalculateWavSize (GripInfo *ginfo, int track);
 
+#if 0
 void MakeRipPage (GripInfo *ginfo) {
 	GripGUI *uinfo;
 	GtkWidget *rippage;
@@ -267,6 +267,7 @@ static void RipPartialChanged (GtkWidget *widget, gpointer data) {
 
 	gtk_widget_set_sensitive (ginfo -> gui_info.partial_rip_box, ginfo -> rip_partial);
 }
+#endif
 
 static void PlaySegmentCB (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
@@ -276,6 +277,7 @@ static void PlaySegmentCB (GtkWidget *widget, gpointer data) {
 	PlaySegment (ginfo, CURRENT_TRACK);
 }
 
+#if 0
 static GtkWidget *MakeRangeSelects (GripInfo *ginfo) {
 	GtkWidget *vbox;
 	GtkWidget *numentry;
@@ -294,6 +296,7 @@ static GtkWidget *MakeRangeSelects (GripInfo *ginfo) {
 
 	return vbox;
 }
+#endif
 
 unsigned long long BytesLeftInFS (char *path) {
 	unsigned long long bytesleft;
@@ -1172,7 +1175,19 @@ static gboolean rip_callback (gint16 *buffer, gsize bufsize, gfloat progress, in
 
 	// We shall return FALSE to abort the rip, TRUE to continue
 	g_assert (ginfo -> encoder != NULL);
-	return ginfo -> encoder -> callback (buffer, bufsize, ginfo -> encoder_data) && ! (ginfo -> stop_rip);
+	GError *error = NULL;
+	if (!ginfo -> encoder -> callback (ginfo -> encoder -> handle, ginfo -> encoder_data, buffer, bufsize, &error) && ! (ginfo -> stop_rip)) {
+        if (error) {
+            g_warning ("Encoder callback failed: %s", error -> message);
+            g_error_free (error);
+        } else {
+            g_warning ("Encoder callback failed");
+        }
+
+        return FALSE;
+	}
+
+	return TRUE;
 }
 
 static gboolean RipNextTrack (GripInfo *ginfo) {
@@ -1249,6 +1264,7 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
 		// Make ripfile relative to output folder (which should already be in filename encoding)
 		ripfilefull = g_build_filename (ginfo -> output_folder, ripfile, NULL);
 		g_free (ripfile);
+		ripfile = NULL;
 		g_snprintf (ginfo -> ripfile, PATH_MAX, "%s", ripfilefull);
 		g_free (ripfilefull);
 
@@ -1301,9 +1317,7 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
 		}
 
 
-		g_debug (_("Ripping track %d to '%s'"), ginfo -> rip_track + 1, ginfo -> ripfile);
-		g_message (_("Ripping track %d to %s"),
-				   ginfo -> rip_track + 1, ripfile);
+		g_message (_("Ripping track %d to '%s'"), ginfo -> rip_track + 1, ginfo -> ripfile);
 		g_debug ("Temp file is: '%s'", ginfo -> rip_tmpfile);
 
 		// Init encoder
@@ -1311,9 +1325,9 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
 		FILE *fp = fdopen (ginfo -> riptmpfd, "wb");
 		g_assert (fp);
 		error = NULL;
-		gpointer encoder = ginfo -> encoder -> init (ginfo -> format, fp, NULL, &error);
+		gpointer encoder = ginfo -> encoder -> start (ginfo -> encoder -> handle, ginfo -> format, fp, &error);
 		if (!encoder) {
-			gchar *warn = g_strdup_printf (_("Cannot init encoder: %s"), error -> message);
+			gchar *warn = g_strdup_printf (_("Cannot start encoder: %s"), error -> message);
 			show_error (ginfo -> gui_info.app, warn);
 			g_free (warn);
 			g_error_free (error);

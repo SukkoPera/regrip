@@ -63,7 +63,7 @@ GtkWidget *MakePlayOpts (GripInfo *ginfo);
 GtkWidget *MakeControls (GripInfo *ginfo);
 int GetLengthRipWidth (GripInfo *ginfo);
 void ResizeTrackList (GripInfo *ginfo);
-void MakeTrackPage (GripInfo *ginfo);
+GtkWidget *MakeTrackPage (GripInfo *ginfo);
 void NextTrack (GripInfo *ginfo);
 void CheckNewDisc (GripInfo *ginfo, gboolean force);
 void ScanDisc (GtkWidget *widget, gpointer data);

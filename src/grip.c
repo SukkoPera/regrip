@@ -90,6 +90,33 @@ static gboolean on_window_resize (GtkWindow *window, GdkEvent *event, gpointer u
     return FALSE;
 }
 
+static void on_menuitem_rip_partial_activate (GtkMenuItem *menuitem, gpointer user_data) {
+    GripInfo *ginfo = (GripInfo *) user_data;
+	GripGUI *uinfo = &(ginfo -> gui_info);
+
+    GtkDialog *dialog = GTK_DIALOG (gtk_builder_get_object (uinfo -> builder, "dialog_partial_rip"));
+    g_assert (dialog);
+
+    gtk_dialog_run (dialog);
+    gtk_widget_hide (GTK_WIDGET (dialog));
+}
+
+static void on_menuitem_preferences_activate (GtkMenuItem *menuitem, gpointer user_data) {
+    GripInfo *ginfo = (GripInfo *) user_data;
+	GripGUI *uinfo = &(ginfo -> gui_info);
+
+    GtkDialog *dialog = GTK_DIALOG (gtk_builder_get_object (uinfo -> builder, "dialog_preferences"));
+    g_assert (dialog);
+
+    GtkVBox *vbox = GTK_VBOX (gtk_builder_get_object (uinfo -> builder, "vbox_dialog_prefs"));
+    g_assert (vbox);
+    if (!gtk_widget_get_parent (GTK_WIDGET (uinfo -> preferences)))
+        gtk_box_pack_start (GTK_BOX (vbox), uinfo -> preferences, TRUE, TRUE, 0);
+
+    gtk_dialog_run (dialog);
+    gtk_widget_hide (GTK_WIDGET (dialog));
+}
+
 void on_menuitem_about_activate (GtkMenuItem *menuitem, gpointer user_data) {
    	GripInfo *ginfo = (GripInfo *) user_data;
 	GripGUI *uinfo = &(ginfo -> gui_info);
@@ -111,6 +138,12 @@ void on_menuitem_about_activate (GtkMenuItem *menuitem, gpointer user_data) {
 
     gtk_dialog_run (GTK_DIALOG (about));
     gtk_widget_hide (GTK_WIDGET (about));
+}
+
+void on_rip_selected_tracks_clicked (GtkButton *button, gpointer user_data) {
+}
+
+void on_rip_whole_disc_clicked (GtkButton *button, gpointer user_data) {
 }
 
 GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
@@ -171,6 +204,13 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
     // Set default parameters values, excluding stuff handled by GSettings
 	set_initial_config (ginfo);
 
+	// Load modules
+	GError *error = NULL;
+	if (!load_encoder_modules (&error)) {
+        g_warning ("Unable to load modules: %s", error -> message);
+        g_error_free (error);
+	}
+
     // Load UI
 	uinfo -> builder = gtk_builder_new ();
 	gtk_builder_add_from_file (uinfo -> builder, UI_FILE, NULL);
@@ -184,10 +224,33 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 	uinfo -> app = app;
 
 	// Signals with args need to be connected manually, sigh
-	GtkWidget *widget = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "menuitem_about"));
-	g_assert (widget);
-	g_signal_connect (widget, "activate", G_CALLBACK (on_menuitem_about_activate), ginfo);
+	{
+	    GtkWidget *widget;
 
+	    // File menu
+        widget = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "menuitem_partial_rip"));
+        g_assert (widget);
+        g_signal_connect (widget, "activate", G_CALLBACK (on_menuitem_rip_partial_activate), ginfo);
+
+        widget = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "menuitem_quit"));
+        g_assert (widget);
+        g_signal_connect (widget, "activate", G_CALLBACK (GripDie), ginfo);
+
+        // Window menu
+        widget = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "menuitem_preferences"));
+        g_assert (widget);
+        g_signal_connect (widget, "activate", G_CALLBACK (on_menuitem_preferences_activate), ginfo);
+
+        // Help menu
+        widget = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "menuitem_about"));
+        g_assert (widget);
+        g_signal_connect (widget, "activate", G_CALLBACK (on_menuitem_about_activate), ginfo);
+
+        // Toolbars
+        widget = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "toolbutton_rip_selected"));
+        g_assert (widget);
+        g_signal_connect (widget, "clicked", G_CALLBACK (DoRip), ginfo);
+	}
 
 	if (device) {
 		strncpy (ginfo -> cd_device, device, MAX_STRING);
@@ -196,7 +259,6 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 	if (scsi_device) {
 		strncpy (ginfo -> force_scsi, scsi_device, MAX_STRING);
 	}
-
 
 	// Populate drive list
 	{
@@ -276,7 +338,10 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 
 	gtk_widget_realize (app);
 
-    // Populate main window through main vbox: 0 is menubar, 1 is toolbar, 2 is track list, 3 is editor, 4 is cd controls, 5 is statusbar
+    ginfo -> tray_icon_made = FALSE;
+	ginfo -> tray_menu_sensitive = TRUE;
+
+    // Populate main window through main vbox: 0 is menubar, 1/2 is toolbar, 3 is track list, 4 is editor, 5 is cd controls, 6 is statusbar
     uinfo -> winbox = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "vbox_main"));
     g_assert (uinfo -> winbox);
 
@@ -284,27 +349,21 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 		gtk_container_border_width (GTK_CONTAINER (uinfo -> winbox), 3);
 	}
 
-	uinfo -> notebook = gtk_notebook_new ();
-
 	LoadImages (uinfo);
 	MakeStyles (uinfo);
-	MakeTrackPage (ginfo);
-	MakeRipPage (ginfo);
-	MakeConfigPage (ginfo);
-	ginfo -> tray_icon_made = FALSE;
-	ginfo -> tray_menu_sensitive = TRUE;
 
-	gtk_box_pack_start (GTK_BOX (uinfo -> winbox), uinfo -> notebook, TRUE, TRUE, 0);
-	gtk_box_reorder_child (GTK_BOX (uinfo -> winbox), uinfo -> notebook, 2);
+	// This actually also loads prefs from GSettings
+	uinfo -> preferences = MakeConfigPage (ginfo);
 
-	if (!uinfo -> minimized) {
-		gtk_widget_show (uinfo -> notebook);
-	}
+
+	GtkWidget *tracks_widget = MakeTrackPage (ginfo);
+	gtk_box_pack_start (GTK_BOX (uinfo -> winbox), tracks_widget, TRUE, TRUE, 0);
+	gtk_box_reorder_child (GTK_BOX (uinfo -> winbox), tracks_widget, 3);
 
 	uinfo -> track_edit_box = MakeEditBox (ginfo);
 	gtk_box_pack_start (GTK_BOX (uinfo -> winbox), uinfo -> track_edit_box,
 	                    FALSE, FALSE, 0);
-    gtk_box_reorder_child (GTK_BOX (uinfo -> winbox), uinfo -> track_edit_box, 3);
+    gtk_box_reorder_child (GTK_BOX (uinfo -> winbox), uinfo -> track_edit_box, 4);
 
 	if (uinfo -> track_edit_visible) {
 		gtk_widget_show (uinfo -> track_edit_box);
@@ -313,7 +372,7 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 
 	uinfo -> playopts = MakePlayOpts (ginfo);
 	gtk_box_pack_start (GTK_BOX (uinfo -> winbox), uinfo -> playopts, FALSE, FALSE, 0);
-	gtk_box_reorder_child (GTK_BOX (uinfo -> winbox), uinfo -> playopts, 4);
+	gtk_box_reorder_child (GTK_BOX (uinfo -> winbox), uinfo -> playopts, 5);
 
 	if (uinfo -> track_prog_visible) {
 		gtk_widget_show (uinfo -> playopts);
@@ -326,7 +385,7 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 	} else {
 		gtk_box_pack_start (GTK_BOX (uinfo -> winbox), uinfo -> controls, FALSE, FALSE, 0);
 	}
-	gtk_box_reorder_child (GTK_BOX (uinfo -> winbox), uinfo -> controls, 5);
+	gtk_box_reorder_child (GTK_BOX (uinfo -> winbox), uinfo -> controls, 6);
 	gtk_widget_show (uinfo -> controls);
 
 	gtk_widget_show (uinfo -> winbox);
@@ -354,7 +413,7 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 	g_signal_connect (app, "window-state-event", G_CALLBACK (AppWindowStateCB),
 	                  ginfo);
 
-	g_message (_("Regrip started successfully"));
+	g_message (_("Regrip started"));
 
 	return app;
 }
@@ -416,19 +475,6 @@ static void ReallyDie (GtkDialog *dialog, gint reply, gpointer data) {
     g_object_unref (G_OBJECT ((ginfo -> gui_info).builder));
 
 	gtk_main_quit ();
-}
-
-GtkWidget *MakeNewPage (GtkWidget *notebook, char *name) {
-	GtkWidget *page;
-	GtkWidget *label;
-
-	page = gtk_frame_new (NULL);
-	gtk_widget_show (page);
-
-	label = gtk_label_new (name);
-	gtk_notebook_append_page (GTK_NOTEBOOK (notebook), page, label);
-
-	return page;
 }
 
 #if 0

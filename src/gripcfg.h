@@ -20,4 +20,4 @@
  * USA
  */
 
-void MakeConfigPage (GripInfo *ginfo);
+GtkWidget *MakeConfigPage (GripInfo *ginfo);

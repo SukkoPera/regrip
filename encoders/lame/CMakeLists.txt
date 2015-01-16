@@ -13,6 +13,7 @@ if (LAME_FOUND)
 		${PROJECT_BINARY_DIR}		# For config.h
 		${HEADER_DIR}				# For encoder.h
 		${GLIB_INCLUDE_DIRS}
+		${GTK2_INCLUDE_DIRS}
 		${GMODULE_INCLUDE_DIRS}
 		${LAME_INCLUDE_DIR}
 	)
@@ -21,6 +22,7 @@ if (LAME_FOUND)
 		enc_lame
 
 		${GLIB_LIBRARIES}
+		${GTK2_LIBRARIES}
 		${GMODULE_LIBRARIES}
 		${LAME_LIBRARIES}
 	)

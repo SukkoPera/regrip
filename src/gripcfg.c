@@ -128,7 +128,7 @@ static void on_encoder_selected (GtkComboBox *widget, gpointer user_data) {
         g_debug ("Selected format: %s", format_name);
 
         // Save selection
-        g_settings_set_string (ginfo -> settings_encoder, "selected-encoder", ginfo -> encoder -> name);
+        g_settings_set_string (ginfo -> settings_encoder, "selected-encoder", ginfo -> encoder -> get_name ());
         g_settings_set_string (ginfo -> settings_encoder, "selected-format", format_name);
     }
 }
@@ -150,22 +150,20 @@ static void on_output_folder_changed (GtkFileChooserButton *widget, gpointer use
 }
 
 
-void MakeConfigPage (GripInfo *ginfo) {
-	GripGUI *uinfo;
+GtkWidget *MakeConfigPage (GripInfo *ginfo) {
 	GtkWidget *vbox;
 	GtkWidget *entry;
 	GtkWidget *label;
 	GtkWidget *check;
-	GtkWidget *config_notebook;
-	GtkWidget *configpage;
 #ifndef GRIPCD
 	GtkWidget *hbox;
 	GtkWidget *menu;
 #endif
 
-	uinfo = &(ginfo -> gui_info);
+	GripGUI *uinfo = &(ginfo -> gui_info);
 
-	config_notebook = gtk_notebook_new ();
+	GtkWidget *top_widget = gtk_notebook_new ();
+
 
     /*************************************************************************/
 	/* CD PAGE                                                               */
@@ -173,7 +171,7 @@ void MakeConfigPage (GripInfo *ginfo) {
 
 	vbox = gtk_vbox_new (FALSE, 2);
 
-	hbox = MakeStrEntry (&entry, ginfo -> cd_device, _("CD-Rom device"), 255, TRUE);
+	hbox = MakeStrEntry (&entry, ginfo -> cd_device, _("CD-ROM device"), 255, TRUE);
 	gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
 	gtk_widget_show (hbox);
 	g_settings_bind (ginfo -> settings, "cd-device", entry, "text", G_SETTINGS_BIND_DEFAULT);
@@ -228,7 +226,7 @@ void MakeConfigPage (GripInfo *ginfo) {
 	g_settings_bind_with_mapping (ginfo -> settings_cdplay, "poll-interval", entry, "text", G_SETTINGS_BIND_DEFAULT, gsettings_map_int_to_string, gsettings_map_string_to_int, NULL, NULL);
 
 	label = gtk_label_new (_("CD"));
-	gtk_notebook_append_page (GTK_NOTEBOOK (config_notebook), vbox, label);
+	gtk_notebook_append_page (GTK_NOTEBOOK (top_widget), vbox, label);
 	gtk_widget_show (vbox);
 
 
@@ -344,7 +342,7 @@ void MakeConfigPage (GripInfo *ginfo) {
 	g_settings_bind (ginfo -> settings_rip, "disc-filter-cmd", entry, "text", G_SETTINGS_BIND_DEFAULT);
 
 	label = gtk_label_new (_("Rip"));
-	gtk_notebook_append_page (GTK_NOTEBOOK (config_notebook), vbox, label);
+	gtk_notebook_append_page (GTK_NOTEBOOK (top_widget), vbox, label);
 	gtk_widget_show (vbox);
 
 
@@ -388,19 +386,18 @@ void MakeConfigPage (GripInfo *ginfo) {
 	GtkListStore *store = gtk_list_store_new (3, G_TYPE_STRING, G_TYPE_POINTER, G_TYPE_POINTER);    // Name, supported_format, supported_encoder
 	GtkTreeIter iter, iter_to_select;
 	gboolean selected_found = FALSE;
-    load_encoder_modules ();
     GList *cur;
     for (cur = g_list_first (encoder_modules); cur; cur = g_list_next (cur)) {
         supported_encoder *enc = (supported_encoder *) cur -> data;
 
-        g_debug ("Registering encoder: %s", enc -> name);
-        supported_format *fmt = enc -> supported_formats;
+//        g_debug ("Registering encoder: %s", enc -> name);
+        supported_format *fmt = enc -> get_formats ();
         while (fmt -> name) {
             g_debug ("- Registering format: %s", fmt -> name);
             gtk_list_store_append (store, &iter);
             gtk_list_store_set (store, &iter, 0, fmt -> name, 1, fmt, 2, enc, -1);
 
-            if (strcmp (enc -> name, selected_encoder) == 0 && strcmp (fmt -> name, selected_format) == 0) {
+            if (strcmp (enc -> get_name (), selected_encoder) == 0 && strcmp (fmt -> name, selected_format) == 0) {
 //                g_debug ("Found selected format");
                 iter_to_select = iter;
                 selected_found = TRUE;
@@ -441,7 +438,6 @@ void MakeConfigPage (GripInfo *ginfo) {
 	g_free (selected_encoder);
 	g_free (selected_format);
 	/* *** Encoders menu END *** */
-
 
 	gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
 	gtk_widget_show (hbox);
@@ -496,7 +492,7 @@ void MakeConfigPage (GripInfo *ginfo) {
 	g_settings_bind (ginfo -> settings_encoder, "encode-filter-cmd", entry, "text", G_SETTINGS_BIND_DEFAULT);
 
 	label = gtk_label_new (_("Encode"));
-	gtk_notebook_append_page (GTK_NOTEBOOK (config_notebook), vbox, label);
+	gtk_notebook_append_page (GTK_NOTEBOOK (top_widget), vbox, label);
 	gtk_widget_show (vbox);
 
 
@@ -549,7 +545,7 @@ void MakeConfigPage (GripInfo *ginfo) {
     */
 
 	label = gtk_label_new (_("Tag"));
-	gtk_notebook_append_page (GTK_NOTEBOOK (config_notebook), vbox, label);
+	gtk_notebook_append_page (GTK_NOTEBOOK (top_widget), vbox, label);
 	gtk_widget_show (vbox);
 #endif
 
@@ -604,7 +600,7 @@ void MakeConfigPage (GripInfo *ginfo) {
 
 
 	label = gtk_label_new (_("DiscDB"));
-	gtk_notebook_append_page (GTK_NOTEBOOK (config_notebook), vbox, label);
+	gtk_notebook_append_page (GTK_NOTEBOOK (top_widget), vbox, label);
 	gtk_widget_show (vbox);
 
 
@@ -664,7 +660,7 @@ void MakeConfigPage (GripInfo *ginfo) {
 
 
 	label = gtk_label_new (_("Proxy"));
-	gtk_notebook_append_page (GTK_NOTEBOOK (config_notebook), vbox, label);
+	gtk_notebook_append_page (GTK_NOTEBOOK (top_widget), vbox, label);
 	gtk_widget_show (vbox);
 
 
@@ -716,12 +712,11 @@ void MakeConfigPage (GripInfo *ginfo) {
 
 
 	label = gtk_label_new (_("Misc"));
-	gtk_notebook_append_page (GTK_NOTEBOOK (config_notebook), vbox, label);
+	gtk_notebook_append_page (GTK_NOTEBOOK (top_widget), vbox, label);
 	gtk_widget_show (vbox);
 
 
-    // All done!
-    configpage = MakeNewPage (uinfo -> notebook, _("Config"));
-	gtk_container_add (GTK_CONTAINER (configpage), config_notebook);
-	gtk_widget_show (config_notebook);
+	gtk_widget_show (top_widget);
+
+	return top_widget;
 }
