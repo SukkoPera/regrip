@@ -43,13 +43,6 @@
 #define CURRENT_TRACK (ginfo->tracks_prog[ginfo->current_track_index])
 #define NEXT_TRACK (ginfo->tracks_prog[ginfo->current_track_index + 1])
 
-enum {
-	TRACKLIST_TRACK_COL,
-	TRACKLIST_LENGTH_COL,
-	TRACKLIST_RIP_COL,
-	TRACKLIST_NUM_COL,
-	TRACKLIST_N_COLUMNS
-};
 
 void MinMax (GtkWidget *widget, gpointer data);
 void SetCurrentTrackIndex (GripInfo *ginfo, int track);
@@ -66,7 +59,7 @@ int GetLengthRipWidth (GripInfo *ginfo);
 void ResizeTrackList (GripInfo *ginfo);
 GtkWidget *MakeTrackPage (GripInfo *ginfo);
 void NextTrack (GripInfo *ginfo);
-void CheckNewDisc (GripInfo *ginfo, gboolean force);
+void CheckForNewDisc (GripInfo *ginfo, gboolean force);
 void ScanDisc (GtkWidget *widget, gpointer data);
 void UpdateDisplay (GripInfo *ginfo);
 void UpdateTracks (GripInfo *ginfo);

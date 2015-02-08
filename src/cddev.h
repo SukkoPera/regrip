@@ -63,7 +63,7 @@ typedef struct _track_info {
     int num;                // Actual track number
 	DiscTime length;
 	DiscTime start_pos;
-	int num_frames;
+//	int num_frames;
 	gint32 start_frame;
 	gboolean is_audio;
 //	unsigned char flags;
@@ -113,6 +113,7 @@ GList *get_cd_drives (void);
 
 gboolean CDInitDevice (char *device_name, DiscInfo *disc);
 gboolean CDCloseDevice (DiscInfo *disc);
+gboolean is_cd_inserted (DiscInfo *disc, const gchar **disc_type);
 gboolean CDStat (DiscInfo *disc, gboolean force_read_toc);
 gboolean CDPlayFrames (DiscInfo *disc, int startframe, int endframe);
 gboolean CDPlayTrackPos (DiscInfo *disc, int starttrack,

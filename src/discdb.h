@@ -44,7 +44,7 @@ typedef struct _track_data {
 typedef struct _disc_data {
     // The first two fields uniquely identify a CDDB entry
 	unsigned int data_id;                 /* CD id */
-	char data_category[MAX_STRING];                 /* Disc title */
+	char data_category[MAX_STRING];
 
 	char data_title[MAX_STRING];                 /* Disc title */
 	char data_artist[MAX_STRING];        /* Disc artist */

@@ -109,8 +109,8 @@ typedef struct _grip_gui {
 	GtkWidget *ripprogbar;
 	GtkWidget *smile_indicator;
 
-	GtkWidget *start_sector_entry;
-	GtkWidget *end_sector_entry;
+//	GtkWidget *start_sector_entry;
+//	GtkWidget *end_sector_entry;
 
 	/* Overall progress */
 	GtkWidget *all_label;
@@ -358,7 +358,6 @@ GtkWidget *GripNew (const gchar* geometry, char *device, char *scsi_device,
 					gboolean local_mode, gboolean no_redirect);
 void GripDie (GtkWidget *widget, gpointer data);
 void GripUpdate (GtkWidget *app);
-GtkWidget *MakeNewPage (GtkWidget *notebook, char *name);
 void Busy (GripGUI *uinfo);
 void UnBusy (GripGUI *uinfo);
 void CloseStuff (void *user_data);

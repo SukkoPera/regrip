@@ -667,8 +667,9 @@ void TrackEditChanged (GtkWidget *widget, gpointer data) {
 		gtk_tree_model_iter_next (GTK_TREE_MODEL (ginfo -> gui_info.track_list_store),
 		                          &iter);
 
-	gtk_list_store_set (ginfo -> gui_info.track_list_store, &iter,
-	                    TRACKLIST_TRACK_COL, newname, -1);
+// FIXME
+//	gtk_list_store_set (ginfo -> gui_info.track_list_store, &iter,
+//	                    TRACKLIST_TRACK_COL, newname, -1);
 	/*  gtk_clist_set_text(GTK_CLIST(ginfo -> gui_info.trackclist),
 	    CURRENT_TRACK,0,newname);*/
 }

@@ -84,7 +84,7 @@ GList *get_cd_drives (void) {
 
 /* Initialize the CD-ROM for playing audio CDs */
 gboolean CDInitDevice (char *device_name, DiscInfo *disc) {
-	memset (disc, 0x00, sizeof (DiscInfo)); // Just to make sure
+//	memset (disc, 0x00, sizeof (DiscInfo)); // Just to make sure
 //	disc -> toc_up_to_date = FALSE;
 //	disc -> disc_present = FALSE;
 
@@ -109,6 +109,10 @@ gboolean CDInitDevice (char *device_name, DiscInfo *disc) {
 }
 
 gboolean CDCloseDevice (DiscInfo *disc) {
+    if (disc -> devname) {
+		free (disc -> devname);
+	}
+
     if (disc -> cdio)
         cdio_destroy (disc -> cdio);
     disc -> cdio = NULL;
@@ -116,102 +120,108 @@ gboolean CDCloseDevice (DiscInfo *disc) {
 	return TRUE;
 }
 
-/* Update a CD status structure... God bless libcdio! */
-// FIXME: Separate read TOC functionality. We don't need to do it that often!
-gboolean CDStat (DiscInfo *disc, gboolean force_read_toc) {
+/* disc_type is an output parameter, only valid if TRUE is returned. Don't free() it! */
+gboolean is_cd_inserted (DiscInfo *disc, const gchar **disc_type) {
+    gboolean have_disc;
+
 	if (!disc -> cdio) {
 		CDInitDevice (disc -> devname, disc);
 	}
 
     discmode_t discmode = cdio_get_discmode (disc -> cdio);
     if (discmode == CDIO_DISC_MODE_NO_INFO || discmode == CDIO_DISC_MODE_ERROR) {
-            // Assume no disc inserted
-            g_debug ("No disc");
-            disc -> disc_present = FALSE;
+        // Assume no disc inserted
+        have_disc = FALSE;
+//        g_debug ("No disc");
     } else {
-            g_debug ("A %s disc is inserted", discmode2str[discmode]);
-            disc -> disc_present = TRUE;
+        have_disc = TRUE;
+        if (disc_type)
+            *disc_type = discmode2str[discmode];
+    }
 
-        if (!disc -> toc_up_to_date || force_read_toc) {
-            /* Read the Table Of Contents */
-            g_debug ("Reading disc TOC");
+    return have_disc;
+}
 
-            disc -> first_track = cdio_get_first_track_num (disc -> cdio);
-            disc -> last_track = cdio_get_last_track_num (disc -> cdio);
-            disc -> num_tracks  = cdio_get_num_tracks (disc -> cdio);
-            disc -> first_audio_track = disc -> first_track;
-            disc -> last_audio_track  = disc -> last_track;
+/* Read TOC... God bless libcdio! */
+gboolean CDStat (DiscInfo *disc, gboolean force_read_toc) {
+    /* Read the Table Of Contents */
+    g_debug ("Reading disc TOC");
 
-            if (disc -> first_track == CDIO_INVALID_TRACK || disc -> last_track == CDIO_INVALID_TRACK) {
-                g_error ("read toc header");
-            } else {
-                // Disc length (CDDB needs LBA, so use those)
-                msf_t msf;          // Minutes/Seconds/Frames
-                lba_t last_lba = cdio_lsn_to_lba (cdio_get_disc_last_lsn (disc -> cdio));
-                disc -> length.frames = last_lba;
-                cdio_lba_to_msf (last_lba, &msf);
-                disc -> length.mins = cdio_from_bcd8 (msf.m);
-                disc -> length.secs = cdio_from_bcd8 (msf.s);
-                g_debug ("Disc len = %02d:%02d", disc -> length.mins, disc -> length.secs);
+    // libcdio caches the TOC, so we must reinit
+    CDInitDevice (disc -> devname, disc);
 
-                disc -> num_data_tracks = 0;
-                track_t i;
-                int j = 0;
-                for (i = disc -> first_track; i <= disc -> last_track; i++) {
-                    if (cdio_get_track_format (disc -> cdio, i) != TRACK_FORMAT_AUDIO) {
-                        ++(disc -> num_data_tracks);
-                        if (i == disc -> first_track) {
-                            if (i == disc -> last_track)
-                                disc -> first_audio_track = CDIO_CDROM_LEADOUT_TRACK;
-                            else
-                                ++(disc -> first_audio_track);
-                        }
+    disc -> first_track = cdio_get_first_track_num (disc -> cdio);
+    disc -> last_track = cdio_get_last_track_num (disc -> cdio);
+    disc -> num_tracks  = cdio_get_num_tracks (disc -> cdio);
+    disc -> first_audio_track = disc -> first_track;
+    disc -> last_audio_track  = disc -> last_track;
 
-                        disc -> track[j].is_audio = FALSE;
-                    } else {
-                        disc -> track[j].is_audio = TRUE;
-                    }
+    if (disc -> first_track == CDIO_INVALID_TRACK || disc -> last_track == CDIO_INVALID_TRACK) {
+        g_error ("Cannot read TOC");
+    } else {
+        // Disc length (CDDB needs LBA, so use those)
+        msf_t msf;          // Minutes/Seconds/Frames
+        lba_t last_lba = cdio_lsn_to_lba (cdio_get_disc_last_lsn (disc -> cdio));
+        disc -> length.frames = last_lba;
+        cdio_lba_to_msf (last_lba, &msf);
+        disc -> length.mins = cdio_from_bcd8 (msf.m);
+        disc -> length.secs = cdio_from_bcd8 (msf.s);
+        g_debug ("Disc len = %02d:%02d", disc -> length.mins, disc -> length.secs);
 
-                    // Get actual track number
-                    disc -> track[j].num = i;
-
-                    // Get track start frame (Again, LBA)
-                    disc -> track[j].start_frame = cdio_get_track_lba (disc -> cdio, i);
-                    if (disc -> track[j].start_frame == CDIO_INVALID_LBA) {
-                        g_error ("track %d has invalid LBA", i);
-                        return FALSE;
-                    }
-
-                    // Convert to time
-                    if (!cdio_get_track_msf (disc -> cdio, i, &msf)) {
-                        g_error ("track %d has invalid MSF", i);
-                        return FALSE;
-                    }
-                    disc -> track[j].start_pos.mins = cdio_from_bcd8 (msf.m);
-                    disc -> track[j].start_pos.secs = cdio_from_bcd8 (msf.s);
-
-                    // Get track length - What about pre-gap? Should we consider it? See cdio_get_track_pregap_lba()
-                    disc -> track[j].length.frames = cdio_get_track_sec_count (disc -> cdio, i);
-                    if (disc -> track[j].length.frames == 0) {
-                        g_error ("track %d has invalid length", i);
-                        return FALSE;
-                    }
-                    int len = disc -> track[j].length.frames / CDIO_CD_FRAMES_PER_SEC;
-                    disc -> track[j].length.mins = len / 60;
-                    disc -> track[j].length.secs = len % 60;
-                    g_debug ("-- Track %d: start frame: %d [MS(F): %02d:%02d], length: %02d:%02d", i, disc -> track[j].start_frame, disc -> track[j].start_pos.mins, disc -> track[j].start_pos.secs, disc -> track[j].length.mins, disc -> track[j].length.secs);
-
-                    ++j;
+        disc -> num_data_tracks = 0;
+        track_t i;
+        int j = 0;
+        for (i = disc -> first_track; i <= disc -> last_track; i++) {
+            if (cdio_get_track_format (disc -> cdio, i) != TRACK_FORMAT_AUDIO) {
+                ++(disc -> num_data_tracks);
+                if (i == disc -> first_track) {
+                    if (i == disc -> last_track)
+                        disc -> first_audio_track = CDIO_CDROM_LEADOUT_TRACK;
+                    else
+                        ++(disc -> first_audio_track);
                 }
 
-                disc -> toc_up_to_date = TRUE;
+                disc -> track[j].is_audio = FALSE;
+            } else {
+                disc -> track[j].is_audio = TRUE;
             }
+
+            // Get actual track number
+            disc -> track[j].num = i;
+
+            // Get track start frame (Again, LBA)
+            disc -> track[j].start_frame = cdio_get_track_lba (disc -> cdio, i);
+            if (disc -> track[j].start_frame == CDIO_INVALID_LBA) {
+                g_error ("Track %d has invalid LBA", i);
+                return FALSE;
+            }
+
+            // Convert to time
+            if (!cdio_get_track_msf (disc -> cdio, i, &msf)) {
+                g_error ("Track %d has invalid MSF", i);
+                return FALSE;
+            }
+            disc -> track[j].start_pos.mins = cdio_from_bcd8 (msf.m);
+            disc -> track[j].start_pos.secs = cdio_from_bcd8 (msf.s);
+
+            // Get track length - What about pre-gap? Should we consider it? See cdio_get_track_pregap_lba()
+            disc -> track[j].length.frames = cdio_get_track_sec_count (disc -> cdio, i);
+            if (disc -> track[j].length.frames == 0) {
+                g_error ("Track %d has invalid length", i);
+                return FALSE;
+            }
+            int len = disc -> track[j].length.frames / CDIO_CD_FRAMES_PER_SEC;
+            disc -> track[j].length.mins = len / 60;
+            disc -> track[j].length.secs = len % 60;
+            g_debug ("-- Track %d: start frame: %d [MS(F): %02d:%02d], length: %02d:%02d", i, disc -> track[j].start_frame, disc -> track[j].start_pos.mins, disc -> track[j].start_pos.secs, disc -> track[j].length.mins, disc -> track[j].length.secs);
+
+            ++j;
         }
 
         // Read subchannel data (i.e.: status of playing)
         cdio_subchannel_t sub;
         if (cdio_audio_read_subchannel (disc -> cdio, &sub) == DRIVER_OP_SUCCESS) {
-            g_debug ("CD drive says it's playing track %d (%d)", sub.track, sub.index);
+//            g_debug ("CD drive says it's playing track %d (%d)", sub.track, sub.index);
             disc -> curr_track = sub.track;
 //            disc -> curr_frame = cdio_msf_to_lba (&sub.abs_addr);
             disc -> track_time.mins = cdio_from_bcd8 (sub.rel_addr.m);
@@ -243,7 +253,7 @@ gboolean CDStat (DiscInfo *disc, gboolean force_read_toc) {
         }
     }
 
-	return disc -> disc_present;;
+	return disc -> disc_present;
 }
 
 /* Play frames from CD */

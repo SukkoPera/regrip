@@ -294,11 +294,11 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 
 	// Init drive (and disc structure)
 	if (!CDInitDevice (ginfo -> cd_device, &(ginfo -> disc))) {
-		gchar *msg = g_strdup_printf(_("Error: Unable to initialize CD-ROM drive %s"), ginfo -> cd_device);
+		gchar *msg = g_strdup_printf (_("Error: Unable to initialize CD-ROM drive %s"), ginfo -> cd_device);
 		show_error (ginfo -> gui_info.app, msg);
 		g_free (msg);
 	}
-	CDStat (&(ginfo -> disc), TRUE);
+//	CDStat (&(ginfo -> disc), TRUE);
 
 	gtk_window_set_policy (GTK_WINDOW (app), FALSE, TRUE, FALSE);
 	gtk_window_set_wmclass (GTK_WINDOW (app), "regrip", "Regrip");
@@ -344,9 +344,7 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 	uinfo -> preferences = MakeConfigPage (ginfo);
 
 
-	GtkWidget *tracks_widget = MakeTrackPage (ginfo);
-	gtk_box_pack_start (GTK_BOX (uinfo -> winbox), tracks_widget, TRUE, TRUE, 0);
-	gtk_box_reorder_child (GTK_BOX (uinfo -> winbox), tracks_widget, 3);
+	MakeTrackPage (ginfo);
 
 	uinfo -> track_edit_box = MakeEditBox (ginfo);
 	gtk_box_pack_start (GTK_BOX (uinfo -> winbox), uinfo -> track_edit_box,
@@ -384,7 +382,7 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 	guint ctx = gtk_statusbar_get_context_id (uinfo -> statusbar, "Blah");
 	gtk_statusbar_push (uinfo -> statusbar, ctx, "Welcome to Regrip!");
 
-	CheckNewDisc (ginfo, FALSE);
+	CheckForNewDisc (ginfo, FALSE);
 
 	/* Check if we're running this version for the first time */
 	// FIXME: ginfo -> version should be loaded from gsettings
@@ -392,7 +390,7 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 		strcpy (ginfo -> version, VERSION);
 
 		/* Check if we have a dev release */
-		if (strlen (VERSION) >= 3 && strcmp (VERSION + strlen (VERSION) - 3, "svn") == 0) {
+		if (strlen (VERSION) >= 3 && strcmp (VERSION + strlen (VERSION) - 3, "git") == 0) {
 			show_warning (ginfo -> gui_info.app,
 			              _("This is a development version of Regrip. If you encounter problems, you are encouraged to revert to the latest stable version."));
 		}
@@ -699,40 +697,45 @@ static void LoadImages (GripGUI *uinfo) {
 #endif
 }
 
+// Called every second
 void GripUpdate (GtkWidget *app) {
-	GripInfo *ginfo;
-	time_t secs;
+    static gboolean in_progress = FALSE;
 
-	ginfo = (GripInfo *) gtk_object_get_user_data (GTK_OBJECT (app));
+    // Just make sure we don't run twice
+    if (!in_progress) {
+        in_progress = TRUE;
 
-	if (ginfo -> ffwding) {
-		FastFwd (ginfo);
-	}
+        GripInfo *ginfo = (GripInfo *) gtk_object_get_user_data (GTK_OBJECT (app));
 
-	if (ginfo -> rewinding) {
-		Rewind (ginfo);
-	}
+        if (ginfo -> ffwding) {
+            FastFwd (ginfo);
+        }
 
-	secs = time (NULL);
+        if (ginfo -> rewinding) {
+            Rewind (ginfo);
+        }
 
-	/* Make sure we don't mod by zero */
-	if (!ginfo -> poll_interval) {
-		ginfo -> poll_interval = 1;
-	}
+        time_t secs  = time (NULL);
 
-	if (ginfo -> ripping) {
-		UpdateRipProgress (ginfo);
-	} else {
-		if (ginfo -> poll_drive && ! (secs % ginfo -> poll_interval)) {
-			if (!ginfo -> have_disc) {
-				CheckNewDisc (ginfo, FALSE);
-			}
-		}
+        /* Make sure we don't mod by zero */
+        if (!ginfo -> poll_interval) {
+            ginfo -> poll_interval = 1;
+        }
 
-		UpdateDisplay (ginfo);
-	}
+        if (ginfo -> ripping) {
+            UpdateRipProgress (ginfo);
+        } else {
+            if (ginfo -> poll_drive && (secs % ginfo -> poll_interval) == 0) {
+                CheckForNewDisc (ginfo, FALSE);
+            }
 
-	UpdateTray (ginfo);
+            UpdateDisplay (ginfo);
+        }
+
+        UpdateTray (ginfo);
+
+        in_progress = FALSE;
+    }
 }
 
 void Busy (GripGUI *uinfo) {

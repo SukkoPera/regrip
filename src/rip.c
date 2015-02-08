@@ -51,7 +51,6 @@
 #include "encoder.h"
 
 
-static void RipPartialChanged (GtkWidget *widget, gpointer data);
 static void PlaySegmentCB (GtkWidget *widget, gpointer data);
 static char *MakeRelative (char *file1, char *file2);
 static gboolean AddM3U (GripInfo *ginfo);
@@ -1619,7 +1618,7 @@ void on_menuitem_rip_partial_activate (GtkMenuItem *menuitem, gpointer user_data
 	TrackInfo *first_track = &(disc -> track[0]);
 	TrackInfo *last_track = &(disc -> track[disc -> num_tracks - 1]);
 	gdouble first_sector = first_track -> start_frame;
-	gdouble last_sector = last_track -> start_frame + last_track -> num_frames;
+	gdouble last_sector = last_track -> start_frame + (last_track -> length).frames - 1;
 
 	GtkSpinButton *spin_start = GTK_SPIN_BUTTON (gtk_builder_get_object (uinfo -> builder, "spinbutton_rip_partial_start"));
 	g_assert (spin_start);
