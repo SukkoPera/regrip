@@ -21,6 +21,7 @@
  * USA
  */
 
+ #include <stdlib.h>
 #include "grip.h"
 #include <sys/stat.h>
 #ifdef HAVE_SYS_STATVFS_H
@@ -191,22 +192,22 @@ void MakeRipPage (GripInfo *ginfo) {
 	gtk_widget_show (hbox);
 
 	/*
-	    hbox = gtk_hbox_new (FALSE, 3);
+		hbox = gtk_hbox_new (FALSE, 3);
 
-	    uinfo -> mp3_prog_label = gtk_label_new (_("Enc: Idle"));
-	    gtk_widget_set_usize (uinfo -> mp3_prog_label, label_width, 0);
+		uinfo -> mp3_prog_label = gtk_label_new (_("Enc: Idle"));
+		gtk_widget_set_usize (uinfo -> mp3_prog_label, label_width, 0);
 
-	    gtk_box_pack_start (GTK_BOX (hbox), uinfo -> mp3_prog_label,
-	                        FALSE, FALSE, 0);
-	    gtk_widget_show (uinfo -> mp3_prog_label);
+		gtk_box_pack_start (GTK_BOX (hbox), uinfo -> mp3_prog_label,
+							FALSE, FALSE, 0);
+		gtk_widget_show (uinfo -> mp3_prog_label);
 
-	    uinfo -> mp3progbar = gtk_progress_bar_new();
+		uinfo -> mp3progbar = gtk_progress_bar_new();
 
-	    gtk_box_pack_start (GTK_BOX (hbox), uinfo -> mp3progbar, FALSE, FALSE, 0);
-	    gtk_widget_show (uinfo -> mp3progbar);
+		gtk_box_pack_start (GTK_BOX (hbox), uinfo -> mp3progbar, FALSE, FALSE, 0);
+		gtk_widget_show (uinfo -> mp3progbar);
 
-	    gtk_box_pack_start (GTK_BOX (vbox2), hbox, FALSE, FALSE, 0);
-	    gtk_widget_show (hbox);
+		gtk_box_pack_start (GTK_BOX (vbox2), hbox, FALSE, FALSE, 0);
+		gtk_widget_show (hbox);
 
 		gtk_box_pack_start (GTK_BOX (vbox), vbox2, TRUE, TRUE, 0);
 		gtk_widget_show (vbox2);
@@ -262,35 +263,6 @@ static void RipPartialChanged (GtkWidget *widget, gpointer data) {
 	ginfo = (GripInfo *) data;
 
 	gtk_widget_set_sensitive (ginfo -> gui_info.partial_rip_box, ginfo -> rip_partial);
-}
-#endif
-
-static void PlaySegmentCB (GtkWidget *widget, gpointer data) {
-	GripInfo *ginfo;
-
-	ginfo = (GripInfo *) data;
-
-	PlaySegment (ginfo, CURRENT_TRACK);
-}
-
-#if 0
-static GtkWidget *MakeRangeSelects (GripInfo *ginfo) {
-	GtkWidget *vbox;
-	GtkWidget *numentry;
-
-	vbox = gtk_vbox_new (FALSE, 0);
-
-	numentry = MakeNumEntry (& (ginfo -> gui_info.start_sector_entry),
-							 &ginfo -> start_sector, _("Start sector"), 10);
-	gtk_box_pack_start (GTK_BOX (vbox), numentry, FALSE, FALSE, 0);
-	gtk_widget_show (numentry);
-
-	numentry = MakeNumEntry (& (ginfo -> gui_info.end_sector_entry),
-							 &ginfo -> end_sector, _("End sector"), 10);
-	gtk_box_pack_start (GTK_BOX (vbox), numentry, FALSE, FALSE, 0);
-	gtk_widget_show (numentry);
-
-	return vbox;
 }
 #endif
 
@@ -1011,7 +983,6 @@ char *TranslateSwitch (char switch_char, void *data, gboolean *munge) {
 	return res;
 }
 
-
 static void CheckDupNames (GripInfo *ginfo) {
 	int track, track2;
 	int numdups[MAX_TRACKS];
@@ -1124,11 +1095,7 @@ static void RipWholeCD (GtkDialog *dialog, gint reply, gpointer data) {
 		SetChecked (& (ginfo -> gui_info), track, TRUE);
 	}
 
-//	if (ginfo -> doencode) {
 	DoRip (NULL, (gpointer) ginfo);
-//	} else {
-//		DoRip ((GtkWidget *)1, (gpointer)ginfo);
-//	}
 }
 
 static int NextTrackToRip (GripInfo *ginfo) {
@@ -1173,14 +1140,14 @@ static gboolean rip_callback (gint16 *buffer, gsize bufsize, gfloat progress, in
 	g_assert (ginfo -> encoder != NULL);
 	GError *error = NULL;
 	if (!ginfo -> encoder -> callback (ginfo -> encoder -> handle, ginfo -> encoder_data, buffer, bufsize, &error) && ! (ginfo -> stop_rip)) {
-        if (error) {
-            g_warning ("Encoder callback failed: %s", error -> message);
-            g_error_free (error);
-        } else {
-            g_warning ("Encoder callback failed");
-        }
+		if (error) {
+			g_warning ("Encoder callback failed: %s", error -> message);
+			g_error_free (error);
+		} else {
+			g_warning ("Encoder callback failed");
+		}
 
-        return FALSE;
+		return FALSE;
 	}
 
 	return TRUE;
@@ -1356,8 +1323,6 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
 		return FALSE;
 	}
 }
-
-
 
 void FillInTrackInfo (GripInfo *ginfo, int track, EncodeTrack *new_track) {
 	new_track -> ginfo = ginfo;
@@ -1612,4 +1577,67 @@ static size_t CalculateEncSize (GripInfo *ginfo, int track) {
 	}
 
 	return (size_t) tmp_encsize;
+}
+
+
+/********************** PARTIAL RIP **********************/
+
+static void on_rip_partial_sector_changed (GtkSpinButton *spinbutton, gpointer user_data) {
+	*((int *) user_data) = gtk_spin_button_get_value_as_int (spinbutton);
+}
+
+
+#define STOCK_BTN_PLAY "gtk-media-play"
+#define STOCK_BTN_STOP "gtk-media-stop"
+
+static void PlaySegmentCB (GtkWidget *widget, gpointer data) {
+	GripInfo *ginfo = (GripInfo *) data;
+
+	// Toggle button between Play/Stop
+	if (strcmp (gtk_button_get_label (GTK_BUTTON (widget)), STOCK_BTN_PLAY) == 0) {
+        gtk_button_set_label (GTK_BUTTON (widget), STOCK_BTN_STOP);
+        PlaySegment (ginfo, CURRENT_TRACK);
+    } else {
+        gtk_button_set_label (GTK_BUTTON (widget), STOCK_BTN_PLAY);
+        CDStop (&(ginfo -> disc));
+    }
+}
+
+// Gets called when the "Partial Rip..." menu option is selected
+void on_menuitem_rip_partial_activate (GtkMenuItem *menuitem, gpointer user_data) {
+	GripInfo *ginfo = (GripInfo *) user_data;
+	GripGUI *uinfo = &(ginfo -> gui_info);
+
+	GtkDialog *dialog = GTK_DIALOG (gtk_builder_get_object (uinfo -> builder, "dialog_partial_rip"));
+	g_assert (dialog);
+
+    uinfo -> play_sector_label = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "entry_rip_partial_current"));
+    g_assert (uinfo -> play_sector_label);
+
+	// Useful aliases for setting SpinButton ranges
+	DiscInfo *disc = &(ginfo -> disc);
+	TrackInfo *first_track = &(disc -> track[0]);
+	TrackInfo *last_track = &(disc -> track[disc -> num_tracks - 1]);
+	gdouble first_sector = first_track -> start_frame;
+	gdouble last_sector = last_track -> start_frame + last_track -> num_frames;
+
+	GtkSpinButton *spin_start = GTK_SPIN_BUTTON (gtk_builder_get_object (uinfo -> builder, "spinbutton_rip_partial_start"));
+	g_assert (spin_start);
+	gtk_spin_button_set_increments (spin_start, 1, 75);
+	g_signal_connect (spin_start, "value-changed", G_CALLBACK (on_rip_partial_sector_changed), &(ginfo -> start_sector));
+	gtk_spin_button_set_range (spin_start, first_sector, last_sector);      	// Set range after handler is connected
+
+	GtkSpinButton *spin_end = GTK_SPIN_BUTTON (gtk_builder_get_object (uinfo -> builder, "spinbutton_rip_partial_end"));
+	g_assert (spin_end);
+	gtk_spin_button_set_increments (spin_end, 1, 75);
+	g_signal_connect (spin_end, "value-changed", G_CALLBACK (on_rip_partial_sector_changed), &(ginfo -> end_sector));
+    gtk_spin_button_set_range (spin_end, first_sector, last_sector);
+	gtk_spin_button_set_value (spin_end, last_sector);
+
+	GtkButton *button_partial_rip_play = GTK_BUTTON (gtk_builder_get_object (uinfo -> builder, "button_partial_rip_play"));
+	g_assert (button_partial_rip_play);
+	g_signal_connect (button_partial_rip_play, "clicked", G_CALLBACK (PlaySegmentCB), ginfo);
+
+	gtk_dialog_run (dialog);
+	gtk_widget_hide (GTK_WIDGET (dialog));
 }

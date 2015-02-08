@@ -35,6 +35,12 @@
 #include "rip.h"
 #include "tray.h"
 
+/* When "Previous Track" is clicked, play will jump to the previous track if
+ * less than this many frames have elapsed, or to the beginning of the current
+ * track otherwise.
+ */
+#define SKIP_TO_PREV_FRAMES (75 * 2)
+
 
 static void DiscDBToggle (GtkWidget *widget, gpointer data);
 static void SetCurrentTrack (GripInfo *ginfo, int track);
@@ -1091,7 +1097,7 @@ void EjectDisc (GtkWidget *widget, gpointer data) {
 
 	if (ginfo -> ripping) {
 		show_warning (ginfo -> gui_info.app,
-		              _("Cannot eject while ripping."));
+		              _("Cannot eject while ripping"));
 
 		return;
 	}
@@ -1174,7 +1180,7 @@ void PlayTrackCB (GtkWidget *widget, gpointer data) {
 
 	if (ginfo -> ripping) {
 		show_warning (ginfo -> gui_info.app,
-		              _("Cannot play while ripping."));
+		              _("Cannot play while ripping"));
 
 		return;
 	}
@@ -1183,7 +1189,7 @@ void PlayTrackCB (GtkWidget *widget, gpointer data) {
 
 	if (ginfo -> play_mode != PM_NORMAL &&! ((disc -> disc_mode == CDAUDIO_PLAYING) ||
 	                                        disc -> disc_mode == CDAUDIO_PAUSED)) {
-		if (ginfo -> play_mode == PM_SHUFFLE &&ginfo -> automatic_reshuffle) {
+		if (ginfo -> play_mode == PM_SHUFFLE && ginfo -> automatic_reshuffle) {
 			ShuffleTracks (ginfo);
 		}
 
@@ -1272,15 +1278,16 @@ void PrevTrackCB (GtkWidget *widget, gpointer data) {
 static void PrevTrack (GripInfo *ginfo) {
 	if (ginfo -> ripping) {
 		show_warning (ginfo -> gui_info.app,
-		              _("Cannot switch tracks while ripping."));
+		              _("Cannot switch tracks while ripping"));
 		return;
 	}
 
 	CDStat (&(ginfo -> disc), FALSE);
 
 	if ((ginfo -> disc.disc_mode == CDAUDIO_PLAYING) &&
-	        ((ginfo -> disc.curr_frame -
-	          ginfo -> disc.track[ginfo -> disc.curr_track - 1].start_frame) > 100)) {
+	        /*((ginfo -> disc.curr_frame -
+	          ginfo -> disc.track[ginfo -> disc.curr_track - 1].start_frame) > 100)) {*/
+            ginfo -> disc.track_time.frames > SKIP_TO_PREV_FRAMES) {
 		PlayTrack (ginfo, CURRENT_TRACK);
 	} else {
 		if (ginfo -> current_track_index) {
@@ -1670,8 +1677,6 @@ void UpdateDisplay (GripInfo *ginfo) {
 						SelectRow (ginfo, disc -> curr_track - 1);
 					}
 
-					frames = disc -> curr_frame - disc -> track[disc -> curr_track - 1].start_frame;
-
 					switch (uinfo -> time_display_mode) {
 						case TIME_MODE_TRACK:
 							mins = disc -> track_time.mins;
@@ -1705,8 +1710,14 @@ void UpdateDisplay (GripInfo *ginfo) {
 							break;
 					}
 
-					g_snprintf (buf, 80, _("Current sector: %6d"), frames);
-					gtk_label_set (GTK_LABEL (uinfo -> play_sector_label), buf);
+					// Update partial rip current sector
+//					frames = disc -> curr_frame - disc -> track[disc -> curr_track - 1].start_frame;
+//					g_snprintf (buf, 80, _("Current sector: %6d"), frames);
+//					gtk_label_set (GTK_LABEL (uinfo -> play_sector_label), buf);
+                    if (uinfo -> play_sector_label && gtk_widget_get_visible (uinfo -> play_sector_label)) {
+                        g_snprintf (buf, 80, "%ld", disc -> disc_time.frames);
+                        gtk_entry_set_text (GTK_ENTRY (uinfo -> play_sector_label), buf);
+                    }
 
 					if (uinfo -> time_display_mode == TIME_MODE_LEFT_TRACK ||
 					        uinfo -> time_display_mode == TIME_MODE_LEFT_DISC) {

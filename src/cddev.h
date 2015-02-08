@@ -51,6 +51,11 @@ typedef struct {
 typedef struct _disc_time {
 	int mins;
 	int secs;
+
+	/* These are total frames (i.e.: the equivalent of the above), *not* the
+	 * frames part of mins:secs:frames!
+	 */
+	long frames;
 } DiscTime;
 
 /* Track specific information */
@@ -79,7 +84,7 @@ typedef struct _disc_info {
 	DiscTime track_time;                  /* Current track time */
 	DiscTime disc_time;                   /* Current disc time */
 	DiscTime length;                  /* Total disc length */
-	int curr_frame;               /* Current frame */
+//	int curr_frame;               /* Current frame */
 	int curr_track;                   /* Current track */
 
 	int first_track;

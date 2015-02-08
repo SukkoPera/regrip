@@ -56,5 +56,6 @@ void UpdateRipProgress (GripInfo *ginfo);
 char *TranslateSwitch (char switch_char, void *data, gboolean *munge);
 void DoRip (GtkWidget *widget, gpointer data);
 void FillInTrackInfo (GripInfo *ginfo, int track, EncodeTrack *new_track);
+void on_menuitem_rip_partial_activate (GtkMenuItem *menuitem, gpointer user_data);
 
 #endif /* ifndef GRIP_RIP_H */

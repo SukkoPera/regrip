@@ -30,8 +30,6 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/param.h>
-//#include <gdk/gdkx.h>
-//#include <X11/Xlib.h>
 #include <time.h>
 #include "grip.h"
 #include <glib.h>
@@ -89,17 +87,6 @@ static gboolean on_window_resize (GtkWindow *window, GdkEvent *event, gpointer u
 
     // FALSE propagates event further
     return FALSE;
-}
-
-static void on_menuitem_rip_partial_activate (GtkMenuItem *menuitem, gpointer user_data) {
-    GripInfo *ginfo = (GripInfo *) user_data;
-	GripGUI *uinfo = &(ginfo -> gui_info);
-
-    GtkDialog *dialog = GTK_DIALOG (gtk_builder_get_object (uinfo -> builder, "dialog_partial_rip"));
-    g_assert (dialog);
-
-    gtk_dialog_run (dialog);
-    gtk_widget_hide (GTK_WIDGET (dialog));
 }
 
 static void on_menuitem_preferences_activate (GtkMenuItem *menuitem, gpointer user_data) {

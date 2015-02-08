@@ -145,10 +145,11 @@ gboolean CDStat (DiscInfo *disc, gboolean force_read_toc) {
             if (disc -> first_track == CDIO_INVALID_TRACK || disc -> last_track == CDIO_INVALID_TRACK) {
                 g_error ("read toc header");
             } else {
+                // Disc length (CDDB needs LBA, so use those)
                 msf_t msf;          // Minutes/Seconds/Frames
-                lsn_t last_lsn = cdio_get_disc_last_lsn (disc -> cdio);
-    //                lba_t last_lba = cdio_lsn_to_lba (last_lsn);
-                cdio_lsn_to_msf (last_lsn, &msf);
+                lba_t last_lba = cdio_lsn_to_lba (cdio_get_disc_last_lsn (disc -> cdio));
+                disc -> length.frames = last_lba;
+                cdio_lba_to_msf (last_lba, &msf);
                 disc -> length.mins = cdio_from_bcd8 (msf.m);
                 disc -> length.secs = cdio_from_bcd8 (msf.s);
                 g_debug ("Disc len = %02d:%02d", disc -> length.mins, disc -> length.secs);
@@ -174,7 +175,7 @@ gboolean CDStat (DiscInfo *disc, gboolean force_read_toc) {
                     // Get actual track number
                     disc -> track[j].num = i;
 
-                    // Get track start frame (CDDB needs LBA, so use those)
+                    // Get track start frame (Again, LBA)
                     disc -> track[j].start_frame = cdio_get_track_lba (disc -> cdio, i);
                     if (disc -> track[j].start_frame == CDIO_INVALID_LBA) {
                         g_error ("track %d has invalid LBA", i);
@@ -189,22 +190,15 @@ gboolean CDStat (DiscInfo *disc, gboolean force_read_toc) {
                     disc -> track[j].start_pos.mins = cdio_from_bcd8 (msf.m);
                     disc -> track[j].start_pos.secs = cdio_from_bcd8 (msf.s);
 
-                    // Get track length - Both methods seem to work, but what about pre-gap? Should we consider it? See cdio_get_track_pregap_lba()
-    #if 0
-                    lba_t next_lba = cdio_get_track_lba (disc -> cdio, i + 1);          // i + 1 is always valid because we have leadout
-                    lba_t len = next_lba - disc -> track[j].start_frame;
-                    cdio_lba_to_msf (len, &msf);
-                    disc -> track[j].length.mins = cdio_from_bcd8 (msf.m);
-                    disc -> track[j].length.secs = cdio_from_bcd8 (msf.s);
-    #else
-                    int len = cdio_get_track_sec_count (disc -> cdio, i) / CDIO_CD_FRAMES_PER_SEC;
-                    if (len == 0) {
+                    // Get track length - What about pre-gap? Should we consider it? See cdio_get_track_pregap_lba()
+                    disc -> track[j].length.frames = cdio_get_track_sec_count (disc -> cdio, i);
+                    if (disc -> track[j].length.frames == 0) {
                         g_error ("track %d has invalid length", i);
                         return FALSE;
                     }
+                    int len = disc -> track[j].length.frames / CDIO_CD_FRAMES_PER_SEC;
                     disc -> track[j].length.mins = len / 60;
                     disc -> track[j].length.secs = len % 60;
-    #endif
                     g_debug ("-- Track %d: start frame: %d [MS(F): %02d:%02d], length: %02d:%02d", i, disc -> track[j].start_frame, disc -> track[j].start_pos.mins, disc -> track[j].start_pos.secs, disc -> track[j].length.mins, disc -> track[j].length.secs);
 
                     ++j;
@@ -219,11 +213,13 @@ gboolean CDStat (DiscInfo *disc, gboolean force_read_toc) {
         if (cdio_audio_read_subchannel (disc -> cdio, &sub) == DRIVER_OP_SUCCESS) {
             g_debug ("CD drive says it's playing track %d (%d)", sub.track, sub.index);
             disc -> curr_track = sub.track;
-            disc -> curr_frame = cdio_msf_to_lba (&sub.abs_addr);
+//            disc -> curr_frame = cdio_msf_to_lba (&sub.abs_addr);
             disc -> track_time.mins = cdio_from_bcd8 (sub.rel_addr.m);
             disc -> track_time.secs = cdio_from_bcd8 (sub.rel_addr.s);
+            disc -> track_time.frames = cdio_msf_to_lba (&sub.rel_addr);
             disc -> disc_time.mins = cdio_from_bcd8 (sub.abs_addr.m);
             disc -> disc_time.secs = cdio_from_bcd8 (sub.abs_addr.s);
+            disc -> disc_time.frames = cdio_msf_to_lba (&sub.abs_addr);
 
             switch (sub.audio_status) {
                 case CDIO_MMC_READ_SUB_ST_PLAY:
