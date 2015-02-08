@@ -51,6 +51,7 @@ enum {
 	TRACKLIST_START_FRAME_COL = 5,
 	TRACKLIST_END_FRAME_COL = 6,
     TRACKLIST_RIP_COL = 7,
+    TRACKLIST_TRACKPTR_COL = 8,
 	TRACKLIST_N_COLUMNS
 };
 
@@ -216,6 +217,26 @@ static void on_track_rip_toggled (GtkCellRendererToggle *cell_renderer, gchar *p
 	                    TRACKLIST_RIP_COL, !checked, -1);
 }
 
+/* Called when a track title is edited. It is the responsibility of the
+ * application to update the model and store new_text at the position indicated
+ * by path.
+ */
+static void on_track_title_edited (GtkCellRendererText *renderer, gchar *path, gchar *new_title, gpointer user_data) {
+    GtkTreeIter iter;
+
+    GripInfo *ginfo = (GripInfo *) user_data;
+    GripGUI *uinfo = &(ginfo -> gui_info);
+
+    gtk_tree_model_get_iter_from_string (GTK_TREE_MODEL (uinfo -> track_list_store), &iter, path);
+
+    /* Just update track data, treeview will be updated by UpdateTracks() */
+    TrackData *td;
+    gtk_tree_model_get (GTK_TREE_MODEL (uinfo -> track_list_store),
+                        &iter, TRACKLIST_TRACKPTR_COL, &td, -1);
+    snprintf (td -> track_name, MAX_STRING, "%s", new_title);
+    ginfo -> update_required = TRUE;
+}
+
 GtkWidget *MakeTrackPage (GripInfo *ginfo) {
 	GtkWidget *vbox;
 	GripGUI *uinfo;
@@ -241,16 +262,26 @@ GtkWidget *MakeTrackPage (GripInfo *ginfo) {
     g_assert (uinfo -> track_list);
 
     // Setup columns
+    GList *renderers, *cur;
+
     column = gtk_tree_view_get_column (GTK_TREE_VIEW (uinfo -> track_list), 0);
-    GList *renderers = gtk_cell_layout_get_cells (GTK_CELL_LAYOUT (column));
-    GList *cur = g_list_first (renderers);      // We expect to have a single renderer here
+    renderers = gtk_cell_layout_get_cells (GTK_CELL_LAYOUT (column));
+    cur = g_list_first (renderers);      // We expect to have a single renderer here
     g_assert (cur && cur -> data);
-    GtkCellRendererToggle *renderer = GTK_CELL_RENDERER_TOGGLE (cur -> data);
-    g_signal_connect (G_OBJECT (renderer), "toggled", G_CALLBACK (on_track_rip_toggled), ginfo);
+    GtkCellRendererToggle *renderer_toggle = GTK_CELL_RENDERER_TOGGLE (cur -> data);
+    g_signal_connect (G_OBJECT (renderer_toggle), "toggled", G_CALLBACK (on_track_rip_toggled), ginfo);
     g_list_free (renderers);
 
     // Allow to select/deselect all tracks clicking on the column header
     g_signal_connect (G_OBJECT (column), "clicked", G_CALLBACK (ClickColumn), ginfo);
+
+    column = gtk_tree_view_get_column (GTK_TREE_VIEW (uinfo -> track_list), 2);
+    renderers = gtk_cell_layout_get_cells (GTK_CELL_LAYOUT (column));
+    cur = g_list_first (renderers);      // We expect to have a single renderer here
+    g_assert (cur && cur -> data);
+    GtkCellRendererText *renderer_text = GTK_CELL_RENDERER_TEXT (cur -> data);
+    g_signal_connect (G_OBJECT (renderer_text), "edited", G_CALLBACK (on_track_title_edited), ginfo);
+    g_list_free (renderers);
 
 //    column = gtk_tree_view_get_column (GTK_TREE_VIEW (uinfo -> track_list), TRACKLIST_START_FRAME_COL);
 //    gtk_tree_view_column_set_visible (column, FALSE);
@@ -1878,7 +1909,9 @@ void UpdateTracks (GripInfo *ginfo) {
 			                    TRACKLIST_START_FRAME_COL, ti -> start_frame,
 			                    TRACKLIST_END_FRAME_COL, ti -> start_frame + (ti -> length).frames - 1,
 			                    TRACKLIST_RIP_COL, FALSE,
-			                    TRACKLIST_NUM_COL, track + 1, -1);
+			                    TRACKLIST_NUM_COL, track + 1,
+			                    TRACKLIST_TRACKPTR_COL, td,
+			                    -1);
 
 //            g_free (track_col);
             g_free (len_col);

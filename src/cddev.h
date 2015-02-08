@@ -78,7 +78,6 @@ typedef struct _disc_info {
 	int cd_desc;                              /* CD device file desc. */
 	char *devname;                            /* CD device file pathname */
 
-	gboolean toc_up_to_date;
 	gboolean disc_present;                /* Is disc present? */
 	int disc_mode;                    /* Current disc mode */
 	DiscTime track_time;                  /* Current track time */
