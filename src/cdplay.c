@@ -237,6 +237,22 @@ static void on_track_title_edited (GtkCellRendererText *renderer, gchar *path, g
     ginfo -> update_required = TRUE;
 }
 
+/* Called when a track artist is edited, See #on_track_title_edited(). */
+static void on_track_artist_edited (GtkCellRendererText *renderer, gchar *path, gchar *new_artist, gpointer user_data) {
+    GtkTreeIter iter;
+
+    GripInfo *ginfo = (GripInfo *) user_data;
+    GripGUI *uinfo = &(ginfo -> gui_info);
+
+    gtk_tree_model_get_iter_from_string (GTK_TREE_MODEL (uinfo -> track_list_store), &iter, path);
+
+    TrackData *td;
+    gtk_tree_model_get (GTK_TREE_MODEL (uinfo -> track_list_store),
+                        &iter, TRACKLIST_TRACKPTR_COL, &td, -1);
+    snprintf (td -> track_artist, MAX_STRING, "%s", new_artist);
+    ginfo -> update_required = TRUE;
+}
+
 GtkWidget *MakeTrackPage (GripInfo *ginfo) {
 	GtkWidget *vbox;
 	GripGUI *uinfo;
@@ -281,6 +297,14 @@ GtkWidget *MakeTrackPage (GripInfo *ginfo) {
     g_assert (cur && cur -> data);
     GtkCellRendererText *renderer_text = GTK_CELL_RENDERER_TEXT (cur -> data);
     g_signal_connect (G_OBJECT (renderer_text), "edited", G_CALLBACK (on_track_title_edited), ginfo);
+    g_list_free (renderers);
+
+    column = gtk_tree_view_get_column (GTK_TREE_VIEW (uinfo -> track_list), 3);
+    renderers = gtk_cell_layout_get_cells (GTK_CELL_LAYOUT (column));
+    cur = g_list_first (renderers);      // We expect to have a single renderer here
+    g_assert (cur && cur -> data);
+    renderer_text = GTK_CELL_RENDERER_TEXT (cur -> data);
+    g_signal_connect (G_OBJECT (renderer_text), "edited", G_CALLBACK (on_track_artist_edited), ginfo);
     g_list_free (renderers);
 
 //    column = gtk_tree_view_get_column (GTK_TREE_VIEW (uinfo -> track_list), TRACKLIST_START_FRAME_COL);
@@ -501,14 +525,10 @@ static gboolean TracklistButtonPressed (GtkWidget *widget,
 #endif
 
 static void SelectRow (GripInfo *ginfo, int track) {
-	GtkTreePath *path;
-	GtkTreeSelection *select;
+	GtkTreePath *path = gtk_tree_path_new_from_indices (track - 1, -1);
+	g_assert (path);
 
-	path = gtk_tree_path_new_from_indices (track, -1);
-
-	select =
-	    gtk_tree_view_get_selection (GTK_TREE_VIEW (ginfo -> gui_info.track_list));
-
+	GtkTreeSelection *select = gtk_tree_view_get_selection (GTK_TREE_VIEW (ginfo -> gui_info.track_list));
 	gtk_tree_selection_select_path (select, path);
 
 	gtk_tree_path_free (path);
@@ -518,10 +538,8 @@ static void SelectionChanged (GtkTreeSelection *selection, gpointer data) {
 	GtkTreeIter iter;
 	GtkTreeModel *model;
 	int row = -1;
-	GripInfo *ginfo;
-//  GripGUI *uinfo;
 
-	ginfo = (GripInfo *) data;
+	GripInfo *ginfo = (GripInfo *) data;
 //  uinfo=&(ginfo -> gui_info);
 
 	if (gtk_tree_selection_get_selected (selection, &model, &iter)) {
@@ -540,9 +558,8 @@ static void SelectionChanged (GtkTreeSelection *selection, gpointer data) {
 
 static void PlaylistChanged (GtkWindow *window, GtkWidget *widget,
                              gpointer data) {
-	GripInfo *ginfo;
 
-	ginfo = (GripInfo *) data;
+	GripInfo *ginfo = (GripInfo *) data;
 
 	strcpy (ginfo -> ddata.data_playlist,
 	        gtk_entry_get_text (GTK_ENTRY (ginfo -> gui_info.playlist_entry)));
@@ -1834,15 +1851,12 @@ void UpdateDisplay (GripInfo *ginfo) {
 void UpdateTracks (GripInfo *ginfo) {
 	int track;
 	gboolean multi_artist_backup;
-	GripGUI *uinfo;
-	DiscInfo *disc;
-	DiscData *ddata;
 	EncodeTrack enc_track;
 	GtkTreeIter iter;
 
-	uinfo = &(ginfo -> gui_info);
-	disc = &(ginfo -> disc);
-	ddata = &(ginfo -> ddata);
+	GripGUI *uinfo = &(ginfo -> gui_info);
+	DiscInfo *disc = &(ginfo -> disc);
+	DiscData *ddata = &(ginfo -> ddata);
 
 	if (ginfo -> have_disc) {
 		/* Reset to make sure we don't eject twice */
@@ -1876,6 +1890,12 @@ void UpdateTracks (GripInfo *ginfo) {
 
 	gtk_entry_set_text (GTK_ENTRY (uinfo -> playlist_entry),
 	                    ddata -> data_playlist);
+
+    // Save selected item, if any
+    gint selected_track = -1;
+    GtkTreeSelection *selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (uinfo -> track_list));
+    if (gtk_tree_selection_get_selected (selection, NULL, &iter))
+        gtk_tree_model_get (GTK_TREE_MODEL (uinfo -> track_list_store), &iter, TRACKLIST_NUM_COL, &selected_track, -1);
 
 	gtk_list_store_clear (uinfo -> track_list_store);
 
@@ -1917,7 +1937,11 @@ void UpdateTracks (GripInfo *ginfo) {
             g_free (len_col);
 		}
 
-		SelectRow (ginfo, CURRENT_TRACK);
+		// Restore selection
+		if (selected_track > 0)
+            SelectRow (ginfo, selected_track);
+        else
+            SelectRow (ginfo, CURRENT_TRACK);
 	}
 
 #if 0
