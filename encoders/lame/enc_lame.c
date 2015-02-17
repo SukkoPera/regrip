@@ -93,15 +93,17 @@ G_MODULE_EXPORT gpointer enc_init (GError **error) {
 
 //		handle -> settings = g_settings_new_full (schema, NULL, NULL);
 //		g_assert (handle -> settings);
-#else
-//		handle -> settings = g_settings_new (ENCODER_SCHEMA);
-#endif
 
 		// Load UI
 		handle -> builder = gtk_builder_new ();
 //		gtk_builder_add_from_file (handle -> builder, UI_FILE, NULL);
 		//gtk_builder_connect_signals (handle -> builder, NULL);
 	}
+#else
+        handle = g_new0 (encoder_handle, 1);
+//		handle -> settings = g_settings_new (ENCODER_SCHEMA);
+        handle -> builder = gtk_builder_new ();
+#endif
 
 	return handle;
 }
