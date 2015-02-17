@@ -157,6 +157,7 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 
     // First of all, load settings
 #ifdef MAINTAINER_MODE
+    g_debug ("Loading gschemas from %s", GSCHEMA_DIR);
     err = NULL;
     GSettingsSchemaSource *schema_source = g_settings_schema_source_new_from_directory (GSCHEMA_DIR, g_settings_schema_source_get_default (), FALSE, &err);
     if (schema_source == NULL) {
@@ -170,6 +171,7 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
     ginfo -> settings = g_settings_new ("net.sukkology.software.regrip");
 #endif
     ginfo -> settings_cdplay = g_settings_get_child (ginfo -> settings, "cdplay");
+    ginfo -> settings_gui = g_settings_get_child (ginfo -> settings, "gui");
     ginfo -> settings_cdparanoia = g_settings_get_child (ginfo -> settings, "cdparanoia");
     ginfo -> settings_rip = g_settings_get_child (ginfo -> settings, "rip");
     ginfo -> settings_encoder = g_settings_get_child (ginfo -> settings, "encoder");

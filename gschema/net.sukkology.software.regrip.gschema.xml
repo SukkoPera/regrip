@@ -30,6 +30,7 @@
     </key>
 
     <child name="cdplay" schema="net.sukkology.software.regrip.cdplay" />
+    <child name="gui" schema="net.sukkology.software.regrip.gui" />
     <child name="cdparanoia" schema="net.sukkology.software.regrip.cdparanoia" />
     <child name="rip" schema="net.sukkology.software.regrip.rip" />
     <child name="encoder" schema="net.sukkology.software.regrip.encoder" />
@@ -79,6 +80,21 @@
       <default>1</default>
       <summary>Poll interval (seconds)</summary>
       <description></description>
+    </key>
+  </schema>
+
+  <schema id="net.sukkology.software.regrip.gui" path="/net/sukkology/software/regrip/gui/">
+	<key type="b" name="show-track-artist">
+      <default>false</default>
+      <summary>Show track artist column in track view</summary>
+    </key>
+	<key type="b" name="show-frame-range">
+      <default>false</default>
+      <summary>Show track frame range column in track view</summary>
+    </key>
+	<key type="b" name="show-track-extended-data">
+      <default>false</default>
+      <summary>Show track extended data column in track view</summary>
     </key>
   </schema>
 

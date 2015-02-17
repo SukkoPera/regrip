@@ -50,9 +50,20 @@ enum {
 	TRACKLIST_LENGTH_COL = 4,
 	TRACKLIST_START_FRAME_COL = 5,
 	TRACKLIST_END_FRAME_COL = 6,
-    TRACKLIST_RIP_COL = 7,
-    TRACKLIST_TRACKPTR_COL = 8,
+	TRACKLIST_RIP_COL = 7,
+	TRACKLIST_TRACKPTR_COL = 8,
 	TRACKLIST_N_COLUMNS
+};
+
+/* Column numbers of treeview_tracks */
+enum {
+	TRACKVIEW_RIP_COL = 0,
+	TRACKVIEW_TRACKNO_COL = 1,
+	TRACKVIEW_TITLE_COL = 2,
+	TRACKVIEW_ARTIST_COL = 3,
+	TRACKVIEW_LENGTH_COL = 4,
+	TRACKVIEW_FRAMES_COL = 5,
+	TRACKVIEW_EXTDATA_COL = 6
 };
 
 
@@ -66,13 +77,13 @@ static void ClickColumn (GtkTreeViewColumn *column, gpointer data);
 static void SelectRow (GripInfo *ginfo, int track);
 static void SelectionChanged (GtkTreeSelection *selection, gpointer data);
 static void PlaylistChanged (GtkWindow *window, GtkWidget *widget,
-                             gpointer data);
+							 gpointer data);
 static void ToggleLoop (GtkWidget *widget, gpointer data);
 static void ChangePlayMode (GtkWidget *widget, gpointer data);
 static void ChangeTimeMode (GtkWidget *widget, gpointer data);
 static void ToggleProg (GtkWidget *widget, gpointer data);
 static void ToggleControlButtons (GtkWidget *widget, GdkEventButton *event,
-                                  gpointer data);
+								  gpointer data);
 static void ToggleVol (GtkWidget *widget, gpointer data);
 static void SetVolume (GtkWidget *widget, gpointer data);
 static void FastFwdCB (GtkWidget *widget, gpointer data);
@@ -93,13 +104,13 @@ static void DiscDBToggle (GtkWidget *widget, gpointer data) {
 	if (ginfo -> looking_up != DISCDB_IDLE || ginfo -> ripping) {
 //        show_warning (ginfo -> gui_info.app,
 //                      _("Cannot do lookup while ripping."));
-    } else if (ginfo -> have_disc) {
-        LookupDisc (ginfo);
+	} else if (ginfo -> have_disc) {
+		LookupDisc (ginfo);
 	}
 }
 
 static gpointer cddb_lookup_thread_func (gpointer data) {
-    gpointer ret;
+	gpointer ret;
 
 	GripInfo *ginfo = (GripInfo *) data;
 
@@ -107,20 +118,20 @@ static gpointer cddb_lookup_thread_func (gpointer data) {
 
 	ginfo -> looking_up = DISCDB_QUERYING;
 
-    g_assert (CheckTracks (&(ginfo -> disc)));
+	g_assert (CheckTracks (&(ginfo -> disc)));
 
-    GError *error = NULL;
-    GList *results = cddb_lookup (ginfo -> use_freedb ? NULL : &(ginfo -> dbserver), ginfo -> local_mode, &(ginfo -> disc), &error);
-    if (results == NULL && error != NULL) {
-        // Query failed
-        g_warning ("CDDB lookup failed: %s", error -> message);
-        g_error_free (error);
-        ret = GINT_TO_POINTER (FALSE);
-    } else {
-        // Query OK
-        ginfo -> cddb_results = results;
-        ret = GINT_TO_POINTER (TRUE);
-    }
+	GError *error = NULL;
+	GList *results = cddb_lookup (ginfo -> use_freedb ? NULL : &(ginfo -> dbserver), ginfo -> local_mode, &(ginfo -> disc), &error);
+	if (results == NULL && error != NULL) {
+		// Query failed
+		g_warning ("CDDB lookup failed: %s", error -> message);
+		g_error_free (error);
+		ret = GINT_TO_POINTER (FALSE);
+	} else {
+		// Query OK
+		ginfo -> cddb_results = results;
+		ret = GINT_TO_POINTER (TRUE);
+	}
 
 	ginfo -> looking_up = DISCDB_RESULTS_READY;
 
@@ -130,16 +141,16 @@ static gpointer cddb_lookup_thread_func (gpointer data) {
 }
 
 void LookupDisc (GripInfo *ginfo) {
-    if (ginfo -> looking_up == DISCDB_IDLE && !ginfo -> ripping) {
-        g_debug ("Starting DiscDB lookup thread");
+	if (ginfo -> looking_up == DISCDB_IDLE && !ginfo -> ripping) {
+		g_debug ("Starting DiscDB lookup thread");
 
 		GError *error = NULL;
-        ginfo -> discdb_thread = g_thread_try_new ("Regrip DiscDB Lookup Thread", cddb_lookup_thread_func, ginfo, &error);
-        if (ginfo -> discdb_thread) {
-            g_debug ("DiscDB lookup thread started");
-        } else {
-            g_warning ("Cannot start DiscDB lookup thread: %s", error -> message);
-        }
+		ginfo -> discdb_thread = g_thread_try_new ("Regrip DiscDB Lookup Thread", cddb_lookup_thread_func, ginfo, &error);
+		if (ginfo -> discdb_thread) {
+			g_debug ("DiscDB lookup thread started");
+		} else {
+			g_warning ("Cannot start DiscDB lookup thread: %s", error -> message);
+		}
 	}
 }
 
@@ -153,7 +164,7 @@ int GetLengthRipWidth (GripInfo *ginfo) {
 
 	if (track_list) {
 		layout = gtk_widget_create_pango_layout (GTK_WIDGET (track_list),
-		         _("Length"));
+				 _("Length"));
 
 		pango_layout_get_size (layout, &width, NULL);
 
@@ -162,7 +173,7 @@ int GetLengthRipWidth (GripInfo *ginfo) {
 		tot_width += width;
 
 		layout = gtk_widget_create_pango_layout (GTK_WIDGET (track_list),
-		         _("Rip"));
+				 _("Rip"));
 
 		pango_layout_get_size (layout, &width, NULL);
 
@@ -188,9 +199,9 @@ void ResizeTrackList (GripInfo *ginfo) {
 		tot_width = GetLengthRipWidth (ginfo);
 
 		column = gtk_tree_view_get_column (GTK_TREE_VIEW (track_list),
-		                                   TRACKLIST_TRACK_COL);
+										   TRACKLIST_TRACK_COL);
 		gtk_tree_view_column_set_fixed_width (column, track_list ->
-		                                      allocation.width - tot_width);
+											  allocation.width - tot_width);
 	}
 }
 
@@ -202,19 +213,19 @@ void ResizeTrackList (GripInfo *ginfo) {
  * renderer.
  */
 static void on_track_rip_toggled (GtkCellRendererToggle *cell_renderer, gchar *path, gpointer user_data) {
-    gboolean checked;
-    GtkTreeIter iter;
+	gboolean checked;
+	GtkTreeIter iter;
 
-    GripInfo *ginfo = (GripInfo *) user_data;
-    GripGUI *uinfo = &(ginfo -> gui_info);
+	GripInfo *ginfo = (GripInfo *) user_data;
+	GripGUI *uinfo = &(ginfo -> gui_info);
 
-    gtk_tree_model_get_iter_from_string (GTK_TREE_MODEL (uinfo -> track_list_store), &iter, path);
+	gtk_tree_model_get_iter_from_string (GTK_TREE_MODEL (uinfo -> track_list_store), &iter, path);
 
-    gtk_tree_model_get (GTK_TREE_MODEL (uinfo -> track_list_store),
-                        &iter, TRACKLIST_RIP_COL, &checked, -1);
+	gtk_tree_model_get (GTK_TREE_MODEL (uinfo -> track_list_store),
+						&iter, TRACKLIST_RIP_COL, &checked, -1);
 
 	gtk_list_store_set (uinfo -> track_list_store, &iter,
-	                    TRACKLIST_RIP_COL, !checked, -1);
+						TRACKLIST_RIP_COL, !checked, -1);
 }
 
 /* Called when a track title is edited. It is the responsibility of the
@@ -222,41 +233,65 @@ static void on_track_rip_toggled (GtkCellRendererToggle *cell_renderer, gchar *p
  * by path.
  */
 static void on_track_title_edited (GtkCellRendererText *renderer, gchar *path, gchar *new_title, gpointer user_data) {
-    GtkTreeIter iter;
+	GtkTreeIter iter;
 
-    GripInfo *ginfo = (GripInfo *) user_data;
-    GripGUI *uinfo = &(ginfo -> gui_info);
+	GripInfo *ginfo = (GripInfo *) user_data;
+	GripGUI *uinfo = &(ginfo -> gui_info);
 
-    gtk_tree_model_get_iter_from_string (GTK_TREE_MODEL (uinfo -> track_list_store), &iter, path);
+	gtk_tree_model_get_iter_from_string (GTK_TREE_MODEL (uinfo -> track_list_store), &iter, path);
 
-    /* Just update track data, treeview will be updated by UpdateTracks() */
-    TrackData *td;
-    gtk_tree_model_get (GTK_TREE_MODEL (uinfo -> track_list_store),
-                        &iter, TRACKLIST_TRACKPTR_COL, &td, -1);
-    snprintf (td -> track_name, MAX_STRING, "%s", new_title);
-    ginfo -> update_required = TRUE;
+	/* Just update track data, treeview will be updated by UpdateTracks() */
+	TrackData *td;
+	gtk_tree_model_get (GTK_TREE_MODEL (uinfo -> track_list_store),
+						&iter, TRACKLIST_TRACKPTR_COL, &td, -1);
+	snprintf (td -> track_name, MAX_STRING, "%s", new_title);
+	ginfo -> update_required = TRUE;
 }
 
 /* Called when a track artist is edited, See #on_track_title_edited(). */
 static void on_track_artist_edited (GtkCellRendererText *renderer, gchar *path, gchar *new_artist, gpointer user_data) {
-    GtkTreeIter iter;
+	GtkTreeIter iter;
 
-    GripInfo *ginfo = (GripInfo *) user_data;
-    GripGUI *uinfo = &(ginfo -> gui_info);
+	GripInfo *ginfo = (GripInfo *) user_data;
+	GripGUI *uinfo = &(ginfo -> gui_info);
 
-    gtk_tree_model_get_iter_from_string (GTK_TREE_MODEL (uinfo -> track_list_store), &iter, path);
+	gtk_tree_model_get_iter_from_string (GTK_TREE_MODEL (uinfo -> track_list_store), &iter, path);
 
-    TrackData *td;
-    gtk_tree_model_get (GTK_TREE_MODEL (uinfo -> track_list_store),
-                        &iter, TRACKLIST_TRACKPTR_COL, &td, -1);
-    snprintf (td -> track_artist, MAX_STRING, "%s", new_artist);
-    ginfo -> update_required = TRUE;
+	TrackData *td;
+	gtk_tree_model_get (GTK_TREE_MODEL (uinfo -> track_list_store),
+						&iter, TRACKLIST_TRACKPTR_COL, &td, -1);
+	snprintf (td -> track_artist, MAX_STRING, "%s", new_artist);
+	ginfo -> update_required = TRUE;
+}
+
+static void on_menuitem_frames_toggled (GtkCheckMenuItem *checkmenuitem, gpointer user_data) {
+	GripInfo *ginfo = (GripInfo *) user_data;
+	GripGUI *uinfo = &(ginfo -> gui_info);
+
+	GtkTreeViewColumn *column = gtk_tree_view_get_column (GTK_TREE_VIEW (uinfo -> track_list), TRACKVIEW_FRAMES_COL);
+	gtk_tree_view_column_set_visible (column, gtk_check_menu_item_get_active (checkmenuitem));
+}
+
+static void on_menuitem_artist_toggled (GtkCheckMenuItem *checkmenuitem, gpointer user_data) {
+	GripInfo *ginfo = (GripInfo *) user_data;
+	GripGUI *uinfo = &(ginfo -> gui_info);
+
+	GtkTreeViewColumn *column = gtk_tree_view_get_column (GTK_TREE_VIEW (uinfo -> track_list), TRACKVIEW_ARTIST_COL);
+	gtk_tree_view_column_set_visible (column, gtk_check_menu_item_get_active (checkmenuitem));
+}
+
+static void on_menuitem_extdata_toggled (GtkCheckMenuItem *checkmenuitem, gpointer user_data) {
+	GripInfo *ginfo = (GripInfo *) user_data;
+	GripGUI *uinfo = &(ginfo -> gui_info);
+
+	GtkTreeViewColumn *column = gtk_tree_view_get_column (GTK_TREE_VIEW (uinfo -> track_list), TRACKVIEW_EXTDATA_COL);
+	gtk_tree_view_column_set_visible (column, gtk_check_menu_item_get_active (checkmenuitem));
 }
 
 GtkWidget *MakeTrackPage (GripInfo *ginfo) {
 	GtkWidget *vbox;
 	GripGUI *uinfo;
-    GtkTreeViewColumn *column;
+	GtkTreeViewColumn *column;
 
 	uinfo = &(ginfo -> gui_info);
 
@@ -272,63 +307,78 @@ GtkWidget *MakeTrackPage (GripInfo *ginfo) {
 	gtk_widget_show (uinfo -> disc_artist_label);
 
 	uinfo -> track_list_store = GTK_LIST_STORE (gtk_builder_get_object (uinfo -> builder, "liststore_tracks"));
-    g_assert (uinfo -> track_list_store);
+	g_assert (uinfo -> track_list_store);
 
-    uinfo -> track_list = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "treeview_tracks"));
-    g_assert (uinfo -> track_list);
+	uinfo -> track_list = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "treeview_tracks"));
+	g_assert (uinfo -> track_list);
 
-    // Setup columns
-    GList *renderers, *cur;
+	// Setup columns
+	GList *renderers, *cur;
 
-    column = gtk_tree_view_get_column (GTK_TREE_VIEW (uinfo -> track_list), 0);
-    renderers = gtk_cell_layout_get_cells (GTK_CELL_LAYOUT (column));
-    cur = g_list_first (renderers);      // We expect to have a single renderer here
-    g_assert (cur && cur -> data);
-    GtkCellRendererToggle *renderer_toggle = GTK_CELL_RENDERER_TOGGLE (cur -> data);
-    g_signal_connect (G_OBJECT (renderer_toggle), "toggled", G_CALLBACK (on_track_rip_toggled), ginfo);
-    g_list_free (renderers);
+	column = gtk_tree_view_get_column (GTK_TREE_VIEW (uinfo -> track_list), TRACKVIEW_RIP_COL);
+	renderers = gtk_cell_layout_get_cells (GTK_CELL_LAYOUT (column));
+	cur = g_list_first (renderers);      // We expect to have a single renderer here
+	g_assert (cur && cur -> data);
+	GtkCellRendererToggle *renderer_toggle = GTK_CELL_RENDERER_TOGGLE (cur -> data);
+	g_signal_connect (G_OBJECT (renderer_toggle), "toggled", G_CALLBACK (on_track_rip_toggled), ginfo);
+	g_list_free (renderers);
 
-    // Allow to select/deselect all tracks clicking on the column header
-    g_signal_connect (G_OBJECT (column), "clicked", G_CALLBACK (ClickColumn), ginfo);
+	// Allow to select/deselect all tracks clicking on the column header
+	g_signal_connect (G_OBJECT (column), "clicked", G_CALLBACK (ClickColumn), ginfo);
 
-    column = gtk_tree_view_get_column (GTK_TREE_VIEW (uinfo -> track_list), 2);
-    renderers = gtk_cell_layout_get_cells (GTK_CELL_LAYOUT (column));
-    cur = g_list_first (renderers);      // We expect to have a single renderer here
-    g_assert (cur && cur -> data);
-    GtkCellRendererText *renderer_text = GTK_CELL_RENDERER_TEXT (cur -> data);
-    g_signal_connect (G_OBJECT (renderer_text), "edited", G_CALLBACK (on_track_title_edited), ginfo);
-    g_list_free (renderers);
+	column = gtk_tree_view_get_column (GTK_TREE_VIEW (uinfo -> track_list), TRACKVIEW_TITLE_COL);
+	renderers = gtk_cell_layout_get_cells (GTK_CELL_LAYOUT (column));
+	cur = g_list_first (renderers);      // We expect to have a single renderer here
+	g_assert (cur && cur -> data);
+	GtkCellRendererText *renderer_text = GTK_CELL_RENDERER_TEXT (cur -> data);
+	g_signal_connect (G_OBJECT (renderer_text), "edited", G_CALLBACK (on_track_title_edited), ginfo);
+	g_list_free (renderers);
 
-    column = gtk_tree_view_get_column (GTK_TREE_VIEW (uinfo -> track_list), 3);
-    renderers = gtk_cell_layout_get_cells (GTK_CELL_LAYOUT (column));
-    cur = g_list_first (renderers);      // We expect to have a single renderer here
-    g_assert (cur && cur -> data);
-    renderer_text = GTK_CELL_RENDERER_TEXT (cur -> data);
-    g_signal_connect (G_OBJECT (renderer_text), "edited", G_CALLBACK (on_track_artist_edited), ginfo);
-    g_list_free (renderers);
+	column = gtk_tree_view_get_column (GTK_TREE_VIEW (uinfo -> track_list), TRACKVIEW_ARTIST_COL);
+	renderers = gtk_cell_layout_get_cells (GTK_CELL_LAYOUT (column));
+	cur = g_list_first (renderers);      // We expect to have a single renderer here
+	g_assert (cur && cur -> data);
+	renderer_text = GTK_CELL_RENDERER_TEXT (cur -> data);
+	g_signal_connect (G_OBJECT (renderer_text), "edited", G_CALLBACK (on_track_artist_edited), ginfo);
+	g_list_free (renderers);
 
-//    column = gtk_tree_view_get_column (GTK_TREE_VIEW (uinfo -> track_list), TRACKLIST_START_FRAME_COL);
-//    gtk_tree_view_column_set_visible (column, FALSE);
-
-
-    // Setup selection
+	// Setup selection
 	GtkTreeSelection *select = gtk_tree_view_get_selection (GTK_TREE_VIEW (uinfo -> track_list));
 	gtk_tree_selection_set_mode (select, GTK_SELECTION_SINGLE);
 	g_signal_connect (G_OBJECT (select), "changed", G_CALLBACK (SelectionChanged), ginfo);
 //	g_signal_connect (G_OBJECT (uinfo -> track_list), "button_press_event", G_CALLBACK (TracklistButtonPressed), ginfo);
 
+	// Menu items
+	GtkCheckMenuItem *menuitem;
 
+	menuitem = GTK_CHECK_MENU_ITEM (gtk_builder_get_object (uinfo -> builder, "menuitem_toggle_artist"));
+	g_assert (menuitem);
+	g_signal_connect (G_OBJECT (menuitem), "toggled", G_CALLBACK (on_menuitem_artist_toggled), ginfo);
+	g_settings_bind (ginfo -> settings_gui, "show-track-artist", menuitem, "active", G_SETTINGS_BIND_DEFAULT);
+	on_menuitem_artist_toggled (menuitem, ginfo);		// Set initial state
+
+	menuitem = GTK_CHECK_MENU_ITEM (gtk_builder_get_object (uinfo -> builder, "menuitem_toggle_frange"));
+	g_assert (menuitem);
+	g_signal_connect (G_OBJECT (menuitem), "toggled", G_CALLBACK (on_menuitem_frames_toggled), ginfo);
+	g_settings_bind (ginfo -> settings_gui, "show-frame-range", menuitem, "active", G_SETTINGS_BIND_DEFAULT);
+	on_menuitem_frames_toggled (menuitem, ginfo);
+
+	menuitem = GTK_CHECK_MENU_ITEM (gtk_builder_get_object (uinfo -> builder, "menuitem_toggle_extdata"));
+	g_assert (menuitem);
+	g_signal_connect (G_OBJECT (menuitem), "toggled", G_CALLBACK (on_menuitem_extdata_toggled), ginfo);
+	g_settings_bind (ginfo -> settings_gui, "show-track-extended-data", menuitem, "active", G_SETTINGS_BIND_DEFAULT);
+	on_menuitem_extdata_toggled (menuitem, ginfo);
 
 	/*  g_signal_connect(G_OBJECT(uinfo -> track_list),"cursor_changed",
-	     G_CALLBACK(SelectRow),
-	     (gpointer)ginfo);
+		 G_CALLBACK(SelectRow),
+		 (gpointer)ginfo);
 
 	g_signal_connect(G_OBJECT(uinfo -> track_list),"unselect_row",
-	     G_CALLBACK(UnSelectRow),
-	     (gpointer)uinfo);
+		 G_CALLBACK(UnSelectRow),
+		 (gpointer)uinfo);
 
 	g_signal_connect(G_OBJECT(uinfo -> track_list),"button_press_event",
-	     G_CALLBACK(CListButtonPressed),(gpointer)uinfo);
+		 G_CALLBACK(CListButtonPressed),(gpointer)uinfo);
 
 	g_signal_connect(G_OBJECT(uinfo -> track_list),"click_column",
 	G_CALLBACK(ClickColumn),(gpointer)ginfo);*/
@@ -357,10 +407,10 @@ GtkWidget *MakeTrackPage (GripInfo *ginfo) {
 void SetCurrentTrackIndex (GripInfo *ginfo, int track) {
 	/* Looks up the track of index track in the program */
 	for (ginfo -> current_track_index = 0;
-	        (ginfo -> current_track_index < MAX_TRACKS)
-	        && (ginfo -> current_track_index < ginfo -> prog_totaltracks)
-	        && (CURRENT_TRACK != track);
-	        ginfo -> current_track_index++) {
+			(ginfo -> current_track_index < MAX_TRACKS)
+			&& (ginfo -> current_track_index < ginfo -> prog_totaltracks)
+			&& (CURRENT_TRACK != track);
+			ginfo -> current_track_index++) {
 		continue;
 	}
 }
@@ -378,40 +428,40 @@ static void SetCurrentTrack (GripInfo *ginfo, int track) {
 //		gtk_entry_set_text (GTK_ENTRY (uinfo -> end_sector_entry), "0");
 
 		g_signal_handlers_block_by_func (G_OBJECT (uinfo -> track_edit_entry),
-		                                 TrackEditChanged, (gpointer)ginfo);
+										 TrackEditChanged, (gpointer)ginfo);
 		gtk_entry_set_text (GTK_ENTRY (uinfo -> track_edit_entry), "");
 
 		g_signal_handlers_unblock_by_func (G_OBJECT (uinfo -> track_edit_entry),
-		                                   TrackEditChanged, (gpointer)ginfo);
+										   TrackEditChanged, (gpointer)ginfo);
 
 		g_signal_handlers_block_by_func (G_OBJECT (uinfo ->
-		                                 track_artist_edit_entry),
-		                                 TrackEditChanged, (gpointer)ginfo);
+										 track_artist_edit_entry),
+										 TrackEditChanged, (gpointer)ginfo);
 
 		gtk_entry_set_text (GTK_ENTRY (uinfo -> track_artist_edit_entry), "");
 
 		g_signal_handlers_unblock_by_func (G_OBJECT (uinfo ->
-		                                   track_artist_edit_entry),
-		                                   TrackEditChanged, (gpointer)ginfo);
+										   track_artist_edit_entry),
+										   TrackEditChanged, (gpointer)ginfo);
 	} else {
 		g_signal_handlers_block_by_func (G_OBJECT (uinfo -> track_edit_entry),
-		                                 TrackEditChanged, (gpointer)ginfo);
+										 TrackEditChanged, (gpointer)ginfo);
 		gtk_entry_set_text (GTK_ENTRY (uinfo -> track_edit_entry),
-		                    ginfo -> ddata.data_track[track].track_name);
+							ginfo -> ddata.data_track[track].track_name);
 
 		g_signal_handlers_unblock_by_func (G_OBJECT (uinfo -> track_edit_entry),
-		                                   TrackEditChanged, (gpointer)ginfo);
+										   TrackEditChanged, (gpointer)ginfo);
 
 		g_signal_handlers_block_by_func (G_OBJECT (uinfo ->
-		                                 track_artist_edit_entry),
-		                                 TrackEditChanged, (gpointer)ginfo);
+										 track_artist_edit_entry),
+										 TrackEditChanged, (gpointer)ginfo);
 
 		gtk_entry_set_text (GTK_ENTRY (uinfo -> track_artist_edit_entry),
-		                    ginfo -> ddata.data_track[track].track_artist);
+							ginfo -> ddata.data_track[track].track_artist);
 
 		g_signal_handlers_unblock_by_func (G_OBJECT (uinfo ->
-		                                   track_artist_edit_entry),
-		                                   TrackEditChanged, (gpointer)ginfo);
+										   track_artist_edit_entry),
+										   TrackEditChanged, (gpointer)ginfo);
 		g_snprintf (buf, 80, "%02d", track + 1);
 		gtk_label_set (GTK_LABEL (uinfo -> current_track_label), buf);
 
@@ -436,7 +486,7 @@ gboolean TrackIsChecked (GripGUI *uinfo, int track) {
 	gtk_tree_model_get_iter (GTK_TREE_MODEL (uinfo -> track_list_store), &iter, path);
 
 	gtk_tree_model_get (GTK_TREE_MODEL (uinfo -> track_list_store),
-	                    &iter, TRACKLIST_RIP_COL, &checked, -1);
+						&iter, TRACKLIST_RIP_COL, &checked, -1);
 
 	return checked;
 }
@@ -454,7 +504,7 @@ void SetChecked (GripGUI *uinfo, int track, gboolean checked) {
 	gtk_tree_model_get_iter (GTK_TREE_MODEL (uinfo -> track_list_store), &iter, path);
 
 	gtk_list_store_set (uinfo -> track_list_store, &iter,
-	                    TRACKLIST_RIP_COL, checked, -1);
+						TRACKLIST_RIP_COL, checked, -1);
 
 	gtk_tree_path_free (path);
 }
@@ -487,8 +537,8 @@ static void ClickColumn (GtkTreeViewColumn *column, gpointer data) {
 
 #if 0
 static gboolean TracklistButtonPressed (GtkWidget *widget,
-                                        GdkEventButton *event,
-                                        gpointer data) {
+										GdkEventButton *event,
+										gpointer data) {
 	GripInfo *ginfo;
 	GripGUI *uinfo;
 	GtkTreeViewColumn *column;
@@ -501,8 +551,8 @@ static gboolean TracklistButtonPressed (GtkWidget *widget,
 	uinfo = &(ginfo -> gui_info);
 
 	if (gtk_tree_view_get_path_at_pos (GTK_TREE_VIEW (uinfo -> track_list),
-	                                   event -> x, event -> y,
-	                                   &path, &column, NULL, NULL)) {
+									   event -> x, event -> y,
+									   &path, &column, NULL, NULL)) {
 		indices = gtk_tree_path_get_indices (path);
 
 		row = indices[0];
@@ -551,18 +601,18 @@ static void SelectionChanged (GtkTreeSelection *selection, gpointer data) {
 	}
 
 	if ((ginfo -> disc.disc_mode == CDAUDIO_PLAYING) &&
-	        (ginfo -> disc.curr_track != row)) {
+			(ginfo -> disc.curr_track != row)) {
 		PlayTrack (ginfo, row - 1);
 	}
 }
 
 static void PlaylistChanged (GtkWindow *window, GtkWidget *widget,
-                             gpointer data) {
+							 gpointer data) {
 
 	GripInfo *ginfo = (GripInfo *) data;
 
 	strcpy (ginfo -> ddata.data_playlist,
-	        gtk_entry_get_text (GTK_ENTRY (ginfo -> gui_info.playlist_entry)));
+			gtk_entry_get_text (GTK_ENTRY (ginfo -> gui_info.playlist_entry)));
 
 	InitProgram (ginfo);
 
@@ -582,10 +632,10 @@ static void ToggleLoop (GtkWidget *widget, gpointer data) {
 
 	if (ginfo -> playloop)
 		CopyPixmap (GTK_PIXMAP (ginfo -> gui_info.loop_image),
-		            GTK_PIXMAP (ginfo -> gui_info.loop_indicator));
+					GTK_PIXMAP (ginfo -> gui_info.loop_indicator));
 	else
 		CopyPixmap (GTK_PIXMAP (ginfo -> gui_info.noloop_image),
-		            GTK_PIXMAP (ginfo -> gui_info.loop_indicator));
+					GTK_PIXMAP (ginfo -> gui_info.loop_indicator));
 
 }
 
@@ -597,10 +647,10 @@ static void ChangePlayMode (GtkWidget *widget, gpointer data) {
 	ginfo -> play_mode = (ginfo -> play_mode + 1) % PM_LASTMODE;
 
 	CopyPixmap (GTK_PIXMAP (ginfo -> gui_info.play_pix[ginfo -> play_mode]),
-	            GTK_PIXMAP (ginfo -> gui_info.play_indicator));
+				GTK_PIXMAP (ginfo -> gui_info.play_indicator));
 
 	gtk_widget_set_sensitive (GTK_WIDGET (ginfo -> gui_info.playlist_entry),
-	                          ginfo -> play_mode == PM_PLAYLIST);
+							  ginfo -> play_mode == PM_PLAYLIST);
 
 	InitProgram (ginfo);
 }
@@ -620,15 +670,15 @@ GtkWidget *MakePlayOpts (GripInfo *ginfo) {
 
 	uinfo -> playlist_entry = gtk_entry_new_with_max_length (256);
 	g_signal_connect (G_OBJECT (uinfo -> playlist_entry), "focus_out_event",
-	                  G_CALLBACK (PlaylistChanged), (gpointer)ginfo);
+					  G_CALLBACK (PlaylistChanged), (gpointer)ginfo);
 	gtk_widget_set_sensitive (GTK_WIDGET (uinfo -> playlist_entry),
-	                          ginfo -> play_mode == PM_PLAYLIST);
+							  ginfo -> play_mode == PM_PLAYLIST);
 	gtk_box_pack_start (GTK_BOX (hbox), uinfo -> playlist_entry, TRUE, TRUE, 0);
 	gtk_widget_show (uinfo -> playlist_entry);
 
 	uinfo -> play_indicator = NewBlankPixmap (uinfo -> app);
 	CopyPixmap (GTK_PIXMAP (uinfo -> play_pix[ginfo -> play_mode]),
-	            GTK_PIXMAP (uinfo -> play_indicator));
+				GTK_PIXMAP (uinfo -> play_indicator));
 
 	button = gtk_button_new ();
 	gtk_container_add (GTK_CONTAINER (button), uinfo -> play_indicator);
@@ -636,19 +686,19 @@ GtkWidget *MakePlayOpts (GripInfo *ginfo) {
 	gtk_widget_set_style (button, uinfo -> style_dark_grey);
 	gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
 	g_signal_connect (G_OBJECT (button), "clicked",
-	                  G_CALLBACK (ChangePlayMode), (gpointer) ginfo);
+					  G_CALLBACK (ChangePlayMode), (gpointer) ginfo);
 	gtk_tooltips_set_tip (MakeToolTip(), button,
-	                      _("Rotate play mode"), NULL);
+						  _("Rotate play mode"), NULL);
 	gtk_widget_show (button);
 
 	uinfo -> loop_indicator = NewBlankPixmap (uinfo -> app);
 
 	if (ginfo -> playloop)
 		CopyPixmap (GTK_PIXMAP (uinfo -> loop_image),
-		            GTK_PIXMAP (uinfo -> loop_indicator));
+					GTK_PIXMAP (uinfo -> loop_indicator));
 	else
 		CopyPixmap (GTK_PIXMAP (uinfo -> noloop_image),
-		            GTK_PIXMAP (uinfo -> loop_indicator));
+					GTK_PIXMAP (uinfo -> loop_indicator));
 
 	button = gtk_button_new ();
 	gtk_container_add (GTK_CONTAINER (button), uinfo -> loop_indicator);
@@ -656,9 +706,9 @@ GtkWidget *MakePlayOpts (GripInfo *ginfo) {
 	gtk_widget_set_style (button, uinfo -> style_dark_grey);
 	gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
 	g_signal_connect (G_OBJECT (button), "clicked",
-	                  G_CALLBACK (ToggleLoop), (gpointer) ginfo);
+					  G_CALLBACK (ToggleLoop), (gpointer) ginfo);
 	gtk_tooltips_set_tip (MakeToolTip(), button,
-	                      _("Toggle loop play"), NULL);
+						  _("Toggle loop play"), NULL);
 	gtk_widget_show (button);
 
 	gtk_container_add (GTK_CONTAINER (ebox), hbox);
@@ -688,7 +738,7 @@ GtkWidget *MakeControls (GripInfo *ginfo) {
 
 	lcdbox = gtk_event_box_new ();
 	g_signal_connect (G_OBJECT (lcdbox), "button_press_event",
-	                  G_CALLBACK (ToggleControlButtons), (gpointer) ginfo);
+					  G_CALLBACK (ToggleControlButtons), (gpointer) ginfo);
 	gtk_widget_set_style (lcdbox, uinfo -> style_LCD);
 
 	hbox2 = gtk_hbox_new (FALSE, 0);
@@ -709,7 +759,7 @@ GtkWidget *MakeControls (GripInfo *ginfo) {
 
 	uinfo -> current_track_label = gtk_label_new ("--");
 	gtk_box_pack_start (GTK_BOX (hbox), uinfo -> current_track_label, FALSE, FALSE,
-	                    0);
+						0);
 	gtk_widget_show (uinfo -> current_track_label);
 
 	button = gtk_button_new ();
@@ -718,7 +768,7 @@ GtkWidget *MakeControls (GripInfo *ginfo) {
 	gtk_button_set_relief (GTK_BUTTON (button), GTK_RELIEF_NONE);
 
 	g_signal_connect (G_OBJECT (button), "clicked",
-	                  G_CALLBACK (ChangeTimeMode), (gpointer)ginfo);
+					  G_CALLBACK (ChangeTimeMode), (gpointer)ginfo);
 
 	uinfo -> play_time_label = gtk_label_new ("--:--");
 	gtk_container_add (GTK_CONTAINER (button), uinfo -> play_time_label);
@@ -731,24 +781,24 @@ GtkWidget *MakeControls (GripInfo *ginfo) {
 
 	uinfo -> rip_indicator = NewBlankPixmap (GTK_WIDGET (uinfo -> app));
 	gtk_box_pack_start (GTK_BOX (indicator_box), uinfo -> rip_indicator, TRUE, TRUE,
-	                    0);
+						0);
 	gtk_widget_show (uinfo -> rip_indicator);
 
 	uinfo -> lcd_smile_indicator = NewBlankPixmap (GTK_WIDGET (uinfo -> app));
 	gtk_tooltips_set_tip (MakeToolTip(), uinfo -> lcd_smile_indicator,
-	                      _("Rip status"), NULL);
+						  _("Rip status"), NULL);
 	gtk_box_pack_start (GTK_BOX (indicator_box), uinfo -> lcd_smile_indicator,
-	                    TRUE, TRUE, 0);
+						TRUE, TRUE, 0);
 	gtk_widget_show (uinfo -> lcd_smile_indicator);
 
 	uinfo -> mp3_indicator = NewBlankPixmap (GTK_WIDGET (uinfo -> app));
 	gtk_box_pack_start (GTK_BOX (indicator_box),
-	                    uinfo -> mp3_indicator, TRUE, TRUE, 0);
+						uinfo -> mp3_indicator, TRUE, TRUE, 0);
 	gtk_widget_show (uinfo -> mp3_indicator);
 
 	uinfo -> discdb_indicator = NewBlankPixmap (GTK_WIDGET (uinfo -> app));
 	gtk_box_pack_start (GTK_BOX (indicator_box), uinfo -> discdb_indicator,
-	                    TRUE, TRUE, 0);
+						TRUE, TRUE, 0);
 	gtk_widget_show (uinfo -> discdb_indicator);
 
 	gtk_box_pack_start (GTK_BOX (hbox), indicator_box, TRUE, TRUE, 0);
@@ -779,7 +829,7 @@ GtkWidget *MakeControls (GripInfo *ginfo) {
 
 	adj = gtk_adjustment_new ((gfloat) ginfo -> volume, 0.0, 255.0, 1.0, 1.0, 0.0);
 	g_signal_connect (adj, "value_changed",
-	                  G_CALLBACK (SetVolume), (gpointer) ginfo);
+					  G_CALLBACK (SetVolume), (gpointer) ginfo);
 	uinfo -> volume_control = gtk_hscale_new (GTK_ADJUSTMENT (adj));
 
 	gtk_scale_set_draw_value (GTK_SCALE (uinfo -> volume_control), FALSE);
@@ -801,31 +851,31 @@ GtkWidget *MakeControls (GripInfo *ginfo) {
 	button = ImageButton (GTK_WIDGET (uinfo -> app), uinfo -> playpaus_image);
 	gtk_widget_set_style (button, uinfo -> style_dark_grey);
 	g_signal_connect (G_OBJECT (button), "clicked",
-	                  G_CALLBACK (PlayTrackCB), (gpointer) ginfo);
+					  G_CALLBACK (PlayTrackCB), (gpointer) ginfo);
 	gtk_tooltips_set_tip (MakeToolTip(), button,
-	                      _("Play track / Pause play"), NULL);
+						  _("Play track / Pause play"), NULL);
 	gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
 	gtk_widget_show (button);
 
 	button = ImageButton (GTK_WIDGET (uinfo -> app), uinfo -> rew_image);
 	gtk_widget_set_style (button, uinfo -> style_dark_grey);
 	g_signal_connect (G_OBJECT (button), "pressed",
-	                  G_CALLBACK (RewindCB), (gpointer) ginfo);
+					  G_CALLBACK (RewindCB), (gpointer) ginfo);
 	g_signal_connect (G_OBJECT (button), "released",
-	                  G_CALLBACK (RewindCB), (gpointer) ginfo);
+					  G_CALLBACK (RewindCB), (gpointer) ginfo);
 	gtk_tooltips_set_tip (MakeToolTip(), button,
-	                      _("Rewind"), NULL);
+						  _("Rewind"), NULL);
 	gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
 	gtk_widget_show (button);
 
 	button = ImageButton (GTK_WIDGET (uinfo -> app), uinfo -> ff_image);
 	gtk_widget_set_style (button, uinfo -> style_dark_grey);
 	g_signal_connect (G_OBJECT (button), "pressed",
-	                  G_CALLBACK (FastFwdCB), (gpointer) ginfo);
+					  G_CALLBACK (FastFwdCB), (gpointer) ginfo);
 	g_signal_connect (G_OBJECT (button), "released",
-	                  G_CALLBACK (FastFwdCB), (gpointer) ginfo);
+					  G_CALLBACK (FastFwdCB), (gpointer) ginfo);
 	gtk_tooltips_set_tip (MakeToolTip (), button,
-	                      _("FastForward"), NULL);
+						  _("FastForward"), NULL);
 	gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
 	gtk_widget_show (button);
 
@@ -833,27 +883,27 @@ GtkWidget *MakeControls (GripInfo *ginfo) {
 	gtk_widget_set_style (button, uinfo -> style_dark_grey);
 	gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
 	g_signal_connect (G_OBJECT (button), "clicked",
-	                  G_CALLBACK (PrevTrackCB), (gpointer) ginfo);
+					  G_CALLBACK (PrevTrackCB), (gpointer) ginfo);
 	gtk_tooltips_set_tip (MakeToolTip (), button,
-	                      _("Go to previous track"), NULL);
+						  _("Go to previous track"), NULL);
 	gtk_widget_show (button);
 
 	button = ImageButton (GTK_WIDGET (uinfo -> app), uinfo -> nexttrk_image);
 	gtk_widget_set_style (button, uinfo -> style_dark_grey);
 	gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
 	g_signal_connect (G_OBJECT (button), "clicked",
-	                  G_CALLBACK (NextTrackCB), (gpointer) ginfo);
+					  G_CALLBACK (NextTrackCB), (gpointer) ginfo);
 	gtk_tooltips_set_tip (MakeToolTip (), button,
-	                      _("Go to next track"), NULL);
+						  _("Go to next track"), NULL);
 	gtk_widget_show (button);
 
 	button = ImageButton (GTK_WIDGET (uinfo -> app), uinfo -> progtrack_image);
 	gtk_widget_set_style (button, uinfo -> style_dark_grey);
 	gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
 	g_signal_connect (G_OBJECT (button), "clicked",
-	                  G_CALLBACK (ToggleProg), (gpointer) ginfo);
+					  G_CALLBACK (ToggleProg), (gpointer) ginfo);
 	gtk_tooltips_set_tip (MakeToolTip (), button,
-	                      _("Toggle play mode options"), NULL);
+						  _("Toggle play mode options"), NULL);
 	gtk_widget_show (button);
 
 	gtk_box_pack_start (GTK_BOX (uinfo -> control_button_box), hbox, TRUE, TRUE, 0);
@@ -864,9 +914,9 @@ GtkWidget *MakeControls (GripInfo *ginfo) {
 	button = ImageButton (GTK_WIDGET (uinfo -> app), uinfo -> stop_image);
 	gtk_widget_set_style (button, uinfo -> style_dark_grey);
 	g_signal_connect (G_OBJECT (button), "clicked",
-	                  G_CALLBACK (StopPlayCB), (gpointer) ginfo);
+					  G_CALLBACK (StopPlayCB), (gpointer) ginfo);
 	gtk_tooltips_set_tip (MakeToolTip (), button,
-	                      _("Stop play"), NULL);
+						  _("Stop play"), NULL);
 	gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
 	gtk_widget_show (button);
 
@@ -874,35 +924,35 @@ GtkWidget *MakeControls (GripInfo *ginfo) {
 	gtk_widget_set_style (button, uinfo -> style_dark_grey);
 	gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
 	g_signal_connect (G_OBJECT (button), "clicked",
-	                  G_CALLBACK (EjectDisc), (gpointer) ginfo);
+					  G_CALLBACK (EjectDisc), (gpointer) ginfo);
 	gtk_tooltips_set_tip (MakeToolTip (), button,
-	                      _("Eject disc"), NULL);
+						  _("Eject disc"), NULL);
 	gtk_widget_show (button);
 
 	button = ImageButton (GTK_WIDGET (uinfo -> app), uinfo -> cdscan_image);
 	gtk_widget_set_style (button, uinfo -> style_dark_grey);
 	gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
 	g_signal_connect (G_OBJECT (button), "clicked",
-	                  G_CALLBACK (ScanDisc), (gpointer)ginfo);
+					  G_CALLBACK (ScanDisc), (gpointer)ginfo);
 	gtk_tooltips_set_tip (MakeToolTip (), button,
-	                      _("Scan Disc Contents"), NULL);
+						  _("Scan Disc Contents"), NULL);
 	gtk_widget_show (button);
 
 	button = ImageButton (GTK_WIDGET (uinfo -> app), uinfo -> vol_image);
 	gtk_widget_set_style (button, uinfo -> style_dark_grey);
 	g_signal_connect (G_OBJECT (button), "clicked",
-	                  G_CALLBACK (ToggleVol), (gpointer) ginfo);
+					  G_CALLBACK (ToggleVol), (gpointer) ginfo);
 	gtk_tooltips_set_tip (MakeToolTip (), button,
-	                      _("Toggle Volume Control"), NULL);
+						  _("Toggle Volume Control"), NULL);
 	gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
 	gtk_widget_show (button);
 
 	button = ImageButton (GTK_WIDGET (uinfo -> app), uinfo -> edit_image);
 	gtk_widget_set_style (button, uinfo -> style_dark_grey);
 	g_signal_connect (G_OBJECT (button), "clicked",
-	                  G_CALLBACK (ToggleTrackEdit), (gpointer) ginfo);
+					  G_CALLBACK (ToggleTrackEdit), (gpointer) ginfo);
 	gtk_tooltips_set_tip (MakeToolTip (), button,
-	                      _("Toggle disc editor"), NULL);
+						  _("Toggle disc editor"), NULL);
 	gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
 	gtk_widget_show (button);
 
@@ -910,9 +960,9 @@ GtkWidget *MakeControls (GripInfo *ginfo) {
 		button = ImageButton (GTK_WIDGET (uinfo -> app), uinfo -> discdbwht_image);
 		gtk_widget_set_style (button, uinfo -> style_dark_grey);
 		g_signal_connect (G_OBJECT (button), "clicked",
-		                  G_CALLBACK (DiscDBToggle), (gpointer) ginfo);
+						  G_CALLBACK (DiscDBToggle), (gpointer) ginfo);
 		gtk_tooltips_set_tip (MakeToolTip (), button,
-		                      _("Initiate/abort DiscDB lookup"), NULL);
+							  _("Initiate/abort DiscDB lookup"), NULL);
 		gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
 		gtk_widget_show (button);
 	}
@@ -920,9 +970,9 @@ GtkWidget *MakeControls (GripInfo *ginfo) {
 	button = ImageButton (GTK_WIDGET (uinfo -> app), uinfo -> minmax_image);
 	gtk_widget_set_style (button, uinfo -> style_dark_grey);
 	g_signal_connect (G_OBJECT (button), "clicked",
-	                  G_CALLBACK (MinMax), (gpointer) ginfo);
+					  G_CALLBACK (MinMax), (gpointer) ginfo);
 	gtk_tooltips_set_tip (MakeToolTip (), button,
-	                      _("Toggle track display"), NULL);
+						  _("Toggle track display"), NULL);
 	gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
 	gtk_widget_show (button);
 
@@ -958,29 +1008,29 @@ void MinMax (GtkWidget *widget, gpointer data) {
 	if (uinfo -> minimized) {
 		gtk_container_border_width (GTK_CONTAINER (uinfo -> winbox), 3);
 		gtk_box_set_child_packing (GTK_BOX (uinfo -> winbox),
-		                           uinfo -> controls, FALSE, FALSE, 0, GTK_PACK_START);
+								   uinfo -> controls, FALSE, FALSE, 0, GTK_PACK_START);
 		gtk_widget_show (uinfo -> notebook);
 
 		CopyPixmap (GTK_PIXMAP (uinfo -> lcd_smile_indicator),
-		            GTK_PIXMAP (uinfo -> smile_indicator));
+					GTK_PIXMAP (uinfo -> smile_indicator));
 		CopyPixmap (GTK_PIXMAP (uinfo -> empty_image),
-		            GTK_PIXMAP (uinfo -> lcd_smile_indicator));
+					GTK_PIXMAP (uinfo -> lcd_smile_indicator));
 
 //    gtk_widget_set_size_request(GTK_WIDGET(uinfo -> app),
 //                                WINWIDTH,WINHEIGHT);
 
 		gtk_window_resize (GTK_WINDOW (uinfo -> app),
-		                   uinfo -> win_width,
-		                   uinfo -> win_height);
+						   uinfo -> win_width,
+						   uinfo -> win_height);
 	} else {
 		gtk_container_border_width (GTK_CONTAINER (uinfo -> winbox), 0);
 		gtk_box_set_child_packing (GTK_BOX (uinfo -> winbox), uinfo -> controls,
-		                           TRUE, TRUE, 0, GTK_PACK_START);
+								   TRUE, TRUE, 0, GTK_PACK_START);
 
 		gtk_widget_hide (uinfo -> notebook);
 
 		CopyPixmap (GTK_PIXMAP (uinfo -> smile_indicator),
-		            GTK_PIXMAP (uinfo -> lcd_smile_indicator));
+					GTK_PIXMAP (uinfo -> lcd_smile_indicator));
 
 		if (uinfo -> track_edit_visible) {
 			ToggleTrackEdit (NULL, (gpointer)ginfo);
@@ -998,8 +1048,8 @@ void MinMax (GtkWidget *widget, gpointer data) {
 //                                MIN_WINWIDTH,MIN_WINHEIGHT);
 
 		gtk_window_resize (GTK_WINDOW (uinfo -> app),
-		                   uinfo -> win_width_min,
-		                   uinfo -> win_height_min);
+						   uinfo -> win_width_min,
+						   uinfo -> win_height_min);
 
 		UpdateGTK();
 	}
@@ -1028,7 +1078,7 @@ static void ToggleProg (GtkWidget *widget, gpointer data) {
 }
 
 static void ToggleControlButtons (GtkWidget *widget, GdkEventButton *event,
-                                  gpointer data) {
+								  gpointer data) {
 	GripGUI *uinfo;
 
 	uinfo = &((GripInfo *) data) -> gui_info;
@@ -1071,10 +1121,10 @@ static void SetVolume (GtkWidget *widget, gpointer data) {
 	ginfo = (GripInfo *) data;
 
 	ginfo -> volume = vol.vol_front.left = vol.vol_front.right =
-	        vol.vol_back.left = vol.vol_back.right = GTK_ADJUSTMENT (widget) -> value;
+			vol.vol_back.left = vol.vol_back.right = GTK_ADJUSTMENT (widget) -> value;
 
 	if (!CDSetVolume (&(ginfo -> disc), &vol))
-        g_warning ("Cannot set volume");
+		g_warning ("Cannot set volume");
 }
 
 static void FastFwdCB (GtkWidget *widget, gpointer data) {
@@ -1084,7 +1134,7 @@ static void FastFwdCB (GtkWidget *widget, gpointer data) {
 
 	if (ginfo -> ripping) {
 		show_warning (ginfo -> gui_info.app,
-		              _("Cannot fast forward while ripping."));
+					  _("Cannot fast forward while ripping."));
 
 		return;
 	}
@@ -1103,7 +1153,7 @@ void FastFwd (GripInfo *ginfo) {
 	tv.secs = 5;
 
 	if ((ginfo -> disc.disc_mode == CDAUDIO_PLAYING) ||
-	        (ginfo -> disc.disc_mode == CDAUDIO_PAUSED)) {
+			(ginfo -> disc.disc_mode == CDAUDIO_PAUSED)) {
 		CDAdvance (&(ginfo -> disc), &tv);
 	}
 }
@@ -1115,7 +1165,7 @@ static void RewindCB (GtkWidget *widget, gpointer data) {
 
 	if (ginfo -> ripping) {
 		show_warning (ginfo -> gui_info.app,
-		              _("Cannot rewind while ripping."));
+					  _("Cannot rewind while ripping."));
 
 		return;
 	}
@@ -1134,7 +1184,7 @@ void Rewind (GripInfo *ginfo) {
 	tv.secs = -5;
 
 	if ((ginfo -> disc.disc_mode == CDAUDIO_PLAYING) ||
-	        (ginfo -> disc.disc_mode == CDAUDIO_PAUSED)) {
+			(ginfo -> disc.disc_mode == CDAUDIO_PAUSED)) {
 		CDAdvance (&(ginfo -> disc), &tv);
 	}
 }
@@ -1148,7 +1198,7 @@ void EjectDisc (GtkWidget *widget, gpointer data) {
 
 	if (ginfo -> ripping) {
 		show_warning (ginfo -> gui_info.app,
-		              _("Cannot eject while ripping"));
+					  _("Cannot eject while ripping"));
 
 		return;
 	}
@@ -1160,7 +1210,7 @@ void EjectDisc (GtkWidget *widget, gpointer data) {
 	Busy (&(ginfo -> gui_info));
 
 	if (ginfo -> have_disc) {
-		g_debug (_("Have disc -- ejecting"));
+		g_debug ("Have disc -- ejecting");
 
 		CDStop (&(ginfo -> disc));
 		CDEject (&(ginfo -> disc));
@@ -1215,8 +1265,8 @@ void StopPlayCB (GtkWidget *widget, gpointer data) {
 
 void PlaySegment (GripInfo *ginfo, int track) {
 	CDPlayFrames (&(ginfo -> disc),
-	              ginfo -> disc.track[track].start_frame + ginfo -> start_sector,
-	              ginfo -> disc.track[track].start_frame + ginfo -> end_sector);
+				  ginfo -> disc.track[track].start_frame + ginfo -> start_sector,
+				  ginfo -> disc.track[track].start_frame + ginfo -> end_sector);
 }
 
 
@@ -1231,7 +1281,7 @@ void PlayTrackCB (GtkWidget *widget, gpointer data) {
 
 	if (ginfo -> ripping) {
 		show_warning (ginfo -> gui_info.app,
-		              _("Cannot play while ripping"));
+					  _("Cannot play while ripping"));
 
 		return;
 	}
@@ -1239,7 +1289,7 @@ void PlayTrackCB (GtkWidget *widget, gpointer data) {
 //	CDStat (disc, FALSE);
 
 	if (ginfo -> play_mode != PM_NORMAL &&! ((disc -> disc_mode == CDAUDIO_PLAYING) ||
-	                                        disc -> disc_mode == CDAUDIO_PAUSED)) {
+											disc -> disc_mode == CDAUDIO_PAUSED)) {
 		if (ginfo -> play_mode == PM_SHUFFLE && ginfo -> automatic_reshuffle) {
 			ShuffleTracks (ginfo);
 		}
@@ -1301,7 +1351,7 @@ void NextTrackCB (GtkWidget *widget, gpointer data) {
 void NextTrack (GripInfo *ginfo) {
 	if (ginfo -> ripping) {
 		show_warning (ginfo -> gui_info.app,
-		              _("Cannot switch tracks while ripping."));
+					  _("Cannot switch tracks while ripping."));
 		return;
 	}
 
@@ -1329,16 +1379,16 @@ void PrevTrackCB (GtkWidget *widget, gpointer data) {
 static void PrevTrack (GripInfo *ginfo) {
 	if (ginfo -> ripping) {
 		show_warning (ginfo -> gui_info.app,
-		              _("Cannot switch tracks while ripping"));
+					  _("Cannot switch tracks while ripping"));
 		return;
 	}
 
 //	CDStat (&(ginfo -> disc), FALSE);
 
 	if ((ginfo -> disc.disc_mode == CDAUDIO_PLAYING) &&
-	        /*((ginfo -> disc.curr_frame -
-	          ginfo -> disc.track[ginfo -> disc.curr_track - 1].start_frame) > 100)) {*/
-            ginfo -> disc.track_time.frames > SKIP_TO_PREV_FRAMES) {
+			/*((ginfo -> disc.curr_frame -
+			  ginfo -> disc.track[ginfo -> disc.curr_track - 1].start_frame) > 100)) {*/
+			ginfo -> disc.track_time.frames > SKIP_TO_PREV_FRAMES) {
 		PlayTrack (ginfo, CURRENT_TRACK);
 	} else {
 		if (ginfo -> current_track_index) {
@@ -1370,7 +1420,7 @@ static void InitProgram (GripInfo *ginfo) {
 
 	if (mode == PM_PLAYLIST) {
 		plist =
-		    strdup (gtk_entry_get_text (GTK_ENTRY (ginfo -> gui_info.playlist_entry)));
+			strdup (gtk_entry_get_text (GTK_ENTRY (ginfo -> gui_info.playlist_entry)));
 
 		ginfo -> prog_totaltracks = 0;
 
@@ -1418,68 +1468,68 @@ static void stub_disc_data (GripInfo *ginfo) {
 	ddata -> data_multi_artist = FALSE;
 	ddata -> data_year = 0;
 
-    ddata -> data_id = 0;
-    strncpy (ddata -> data_genre, "Other", MAX_STRING);
-    strncpy (ddata -> data_title, _("Unknown Disc"), MAX_STRING);
-    strncpy (ddata -> data_artist, "", MAX_STRING);
+	ddata -> data_id = 0;
+	strncpy (ddata -> data_genre, "Other", MAX_STRING);
+	strncpy (ddata -> data_title, _("Unknown Disc"), MAX_STRING);
+	strncpy (ddata -> data_artist, "", MAX_STRING);
 
 	int track;
-    for (track = 0; track < disc -> num_tracks; track++) {
-        sprintf (ddata -> data_track[track].track_name, _("Track %02d"), track + 1);
-        *(ddata -> data_track[track].track_artist) = '\0';
-        *(ddata -> data_track[track].track_extended) = '\0';
-        *(ddata -> data_playlist) = '\0';
-    }
+	for (track = 0; track < disc -> num_tracks; track++) {
+		sprintf (ddata -> data_track[track].track_name, _("Track %02d"), track + 1);
+		*(ddata -> data_track[track].track_artist) = '\0';
+		*(ddata -> data_track[track].track_extended) = '\0';
+		*(ddata -> data_playlist) = '\0';
+	}
 
-    *ddata -> data_extended = '\0';
+	*ddata -> data_extended = '\0';
 
-    ginfo -> update_required = TRUE;
+	ginfo -> update_required = TRUE;
 }
 
 void CheckForNewDisc (GripInfo *ginfo, gboolean force) {
 	DiscInfo *disc = &(ginfo -> disc);
 
-    g_debug ("Checking for a new disc");
+	g_debug ("Checking for a new disc");
 
 	const gchar *disc_type;
 	gboolean have_disc_now = is_cd_inserted (disc, &disc_type);
 
-    if (!ginfo -> have_disc && have_disc_now) {
-        g_debug ("A %s disc has been inserted", disc_type);
-        ginfo -> have_disc = TRUE;
-        ginfo -> update_required = TRUE;
+	if (!ginfo -> have_disc && have_disc_now) {
+		g_debug ("A %s disc has been inserted", disc_type);
+		ginfo -> have_disc = TRUE;
+		ginfo -> update_required = TRUE;
 
-        if (!ginfo -> looking_up) {     // Can we really be looking up at this point?!
-            CDStat (disc, FALSE);
-            if (CheckTracks (disc)) {
-                InitProgram (ginfo);
+		if (!ginfo -> looking_up) {     // Can we really be looking up at this point?!
+			CDStat (disc, FALSE);
+			if (CheckTracks (disc)) {
+				InitProgram (ginfo);
 
-                stub_disc_data (ginfo);
+				stub_disc_data (ginfo);
 
-                if (ginfo -> play_on_insert) {
-                    PlayTrackCB (NULL, (gpointer)ginfo);
-                }
+				if (ginfo -> play_on_insert) {
+					PlayTrackCB (NULL, (gpointer)ginfo);
+				}
 
-                if (ginfo -> automatic_discdb) {
-                    LookupDisc (ginfo);
-                }
+				if (ginfo -> automatic_discdb) {
+					LookupDisc (ginfo);
+				}
 
-                if (ginfo -> play_first) {
-                    if (disc -> disc_mode == CDAUDIO_COMPLETED ||
-                            disc -> disc_mode == CDAUDIO_NOSTATUS) {
-                        SelectRow (ginfo, 0);
+				if (ginfo -> play_first) {
+					if (disc -> disc_mode == CDAUDIO_COMPLETED ||
+							disc -> disc_mode == CDAUDIO_NOSTATUS) {
+						SelectRow (ginfo, 0);
 
-                        disc -> curr_track = 1;
-                    }
-                }
-            } else {
-                if (ginfo -> have_disc) {
-                    ginfo -> update_required = TRUE;
-                }
+						disc -> curr_track = 1;
+					}
+				}
+			} else {
+				if (ginfo -> have_disc) {
+					ginfo -> update_required = TRUE;
+				}
 
-                ginfo -> have_disc = FALSE;
-                g_debug (_("No non-zero length tracks"));
-            }
+				ginfo -> have_disc = FALSE;
+				g_debug (_("No non-zero length tracks"));
+			}
 //            } else {
 //                if (ginfo -> have_disc) {
 //                    ginfo -> update_required = TRUE;
@@ -1488,12 +1538,12 @@ void CheckForNewDisc (GripInfo *ginfo, gboolean force) {
 //                ginfo -> have_disc = FALSE;
 //                g_debug (_("CDStat said no disc"));
 //            }
-        }
-    } else if (ginfo -> have_disc && !have_disc_now) {
-        g_debug ("Disc ejected");
-        ginfo -> have_disc = FALSE;
-        ginfo -> update_required = TRUE;
-    }
+		}
+	} else if (ginfo -> have_disc && !have_disc_now) {
+		g_debug ("Disc ejected");
+		ginfo -> have_disc = FALSE;
+		ginfo -> update_required = TRUE;
+	}
 }
 
 /* Check to make sure we didn't get a false alarm from the cdrom device */
@@ -1504,7 +1554,7 @@ static gboolean CheckTracks (DiscInfo *disc) {
 
 	for (track = 0; track < disc -> num_tracks; track++)
 		if (disc -> track[track].length.mins ||
-		        disc -> track[track].length.secs) {
+				disc -> track[track].length.secs) {
 			have_track = TRUE;
 		}
 
@@ -1543,97 +1593,97 @@ static void on_disc_double_clicked (GtkTreeView *tree_view, GtkTreePath *path, G
 }
 
 static void process_cddb_results (GripInfo *ginfo) {
-    g_debug ("process_cddb_results() starting");
+	g_debug ("process_cddb_results() starting");
 
-    // Clear thread struct first
-    g_assert (ginfo -> discdb_thread);
-    gboolean discdb_ok = GPOINTER_TO_INT (g_thread_join (ginfo -> discdb_thread));
-    if (discdb_ok) {
-        g_debug (_("DiscDB thread finished successfully"));
-    } else {
-        g_debug (_("DiscDB thread finished with failure or was aborted"));
-    }
-    ginfo -> discdb_thread = NULL;
+	// Clear thread struct first
+	g_assert (ginfo -> discdb_thread);
+	gboolean discdb_ok = GPOINTER_TO_INT (g_thread_join (ginfo -> discdb_thread));
+	if (discdb_ok) {
+		g_debug (_("DiscDB thread finished successfully"));
+	} else {
+		g_debug (_("DiscDB thread finished with failure or was aborted"));
+	}
+	ginfo -> discdb_thread = NULL;
 
-    // Process results
-    guint n = g_list_length (ginfo -> cddb_results);
-    if (n == 0) {
-        // No results :(
-        g_debug ("No CDDB results");
-    } else if (n == 1) {
-        // Single match, use right away
-        GList *cur = g_list_first (ginfo -> cddb_results);
-        ginfo -> ddata = *(DiscData *) cur -> data;
-        g_free (cur -> data);
-        g_list_free (ginfo -> cddb_results);
-        ginfo -> cddb_results = NULL;
+	// Process results
+	guint n = g_list_length (ginfo -> cddb_results);
+	if (n == 0) {
+		// No results :(
+		g_debug ("No CDDB results");
+	} else if (n == 1) {
+		// Single match, use right away
+		GList *cur = g_list_first (ginfo -> cddb_results);
+		ginfo -> ddata = *(DiscData *) cur -> data;
+		g_free (cur -> data);
+		g_list_free (ginfo -> cddb_results);
+		ginfo -> cddb_results = NULL;
 
-        ginfo -> update_required = TRUE;
-        ginfo -> is_new_disc = TRUE;
-    } else {
-        /* Ask the user what match to use */
-        GripGUI *uinfo = &(ginfo -> gui_info);
+		ginfo -> update_required = TRUE;
+		ginfo -> is_new_disc = TRUE;
+	} else {
+		/* Ask the user what match to use */
+		GripGUI *uinfo = &(ginfo -> gui_info);
 
-        /* Have the ok button call the ok_button_clicked callback */
-        GtkWidget *widget = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "dialog_cddb_results"));
-        g_assert (widget);
+		/* Have the ok button call the ok_button_clicked callback */
+		GtkWidget *widget = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "dialog_cddb_results"));
+		g_assert (widget);
 
-        GtkTreeView *treeview = GTK_TREE_VIEW (gtk_builder_get_object (uinfo -> builder, "treeview_cddb_results"));
-        g_assert (treeview);
-        GtkTreeSelection *selection = gtk_tree_view_get_selection (treeview);
-        gtk_tree_selection_set_mode (selection, GTK_SELECTION_BROWSE);		// Can't do this in Glade?
-    //    g_signal_connect (G_OBJECT (selection), "changed", G_CALLBACK (on_disc_changed), widget);
-        g_signal_connect (GTK_OBJECT (treeview), "row-activated", G_CALLBACK (on_disc_double_clicked), widget);
-        GtkListStore *liststore = GTK_LIST_STORE (gtk_tree_view_get_model (treeview));
-        g_assert (liststore);
+		GtkTreeView *treeview = GTK_TREE_VIEW (gtk_builder_get_object (uinfo -> builder, "treeview_cddb_results"));
+		g_assert (treeview);
+		GtkTreeSelection *selection = gtk_tree_view_get_selection (treeview);
+		gtk_tree_selection_set_mode (selection, GTK_SELECTION_BROWSE);		// Can't do this in Glade?
+	//    g_signal_connect (G_OBJECT (selection), "changed", G_CALLBACK (on_disc_changed), widget);
+		g_signal_connect (GTK_OBJECT (treeview), "row-activated", G_CALLBACK (on_disc_double_clicked), widget);
+		GtkListStore *liststore = GTK_LIST_STORE (gtk_tree_view_get_model (treeview));
+		g_assert (liststore);
 
-        GtkTreeIter iter;
-        GList *cur, *next;
-        for (cur = g_list_first (ginfo -> cddb_results); next; cur = next) {
-            DiscData *data = (DiscData *) cur -> data;
+		GtkTreeIter iter;
+		GList *cur, *next;
+		for (cur = g_list_first (ginfo -> cddb_results); next; cur = next) {
+			DiscData *data = (DiscData *) cur -> data;
 
-            gtk_list_store_append (liststore, &iter);
-            gtk_list_store_set (liststore, &iter, 0, data -> data_artist, 1, data -> data_title, 2, data -> data_genre, 3, data -> data_category, 4, data -> data_id, -1);
+			gtk_list_store_append (liststore, &iter);
+			gtk_list_store_set (liststore, &iter, 0, data -> data_artist, 1, data -> data_title, 2, data -> data_genre, 3, data -> data_category, 4, data -> data_id, -1);
 
-            next = g_list_next (cur);
-            g_free (data);
-        }
-        g_list_free (ginfo -> cddb_results);
-        ginfo -> cddb_results = NULL;
+			next = g_list_next (cur);
+			g_free (data);
+		}
+		g_list_free (ginfo -> cddb_results);
+		ginfo -> cddb_results = NULL;
 
-        gtk_widget_show_all (widget);
-        if (gtk_dialog_run (GTK_DIALOG (widget))) {
-            GtkTreeSelection *sel = gtk_tree_view_get_selection (treeview);
-            if (gtk_tree_selection_get_selected (sel, NULL, &iter)) {
-                gchar *category;
-                guint id;
+		gtk_widget_show_all (widget);
+		if (gtk_dialog_run (GTK_DIALOG (widget))) {
+			GtkTreeSelection *sel = gtk_tree_view_get_selection (treeview);
+			if (gtk_tree_selection_get_selected (sel, NULL, &iter)) {
+				gchar *category;
+				guint id;
 
-                gtk_tree_model_get (GTK_TREE_MODEL (liststore), &iter, 3, &category, 4, &id, -1);
-                g_debug ("Selected item: %s/%u", category, id);
+				gtk_tree_model_get (GTK_TREE_MODEL (liststore), &iter, 3, &category, 4, &id, -1);
+				g_debug ("Selected item: %s/%u", category, id);
 
-                // Fetch data. We don't use a thread here, since the entry should be in cddb cache
-                GError *error = NULL;
-                DiscData *dd = cddb_get_entry (ginfo -> use_freedb ? NULL : &(ginfo -> dbserver), ginfo -> local_mode, category, id, &error);
-                g_assert (dd);
-                ginfo -> ddata = *dd;
+				// Fetch data. We don't use a thread here, since the entry should be in cddb cache
+				GError *error = NULL;
+				DiscData *dd = cddb_get_entry (ginfo -> use_freedb ? NULL : &(ginfo -> dbserver), ginfo -> local_mode, category, id, &error);
+				g_assert (dd);
+				ginfo -> ddata = *dd;
 
-                ginfo -> update_required = TRUE;
-                ginfo -> is_new_disc = TRUE;
+				ginfo -> update_required = TRUE;
+				ginfo -> is_new_disc = TRUE;
 
-                g_free (dd);
-                g_free (category);
-            }
-        }
+				g_free (dd);
+				g_free (category);
+			}
+		}
 
-        // Hide widget, don't destroy
-        gtk_widget_hide (widget);
-    }
+		// Hide widget, don't destroy
+		gtk_widget_hide (widget);
+	}
 
-    // Done with results
-    g_assert (ginfo -> cddb_results == NULL);
-    ginfo -> looking_up = DISCDB_IDLE;
+	// Done with results
+	g_assert (ginfo -> cddb_results == NULL);
+	ginfo -> looking_up = DISCDB_IDLE;
 
-    g_debug ("process_cddb_results() returning");
+	g_debug ("process_cddb_results() returning");
 }
 
 //////////////////
@@ -1659,20 +1709,20 @@ void UpdateDisplay (GripInfo *ginfo) {
 	if (!uinfo -> minimized) {
 		if (uinfo -> track_edit_visible) {
 			gtk_window_get_size (GTK_WINDOW (uinfo -> app), &uinfo -> win_width,
-			                     &uinfo -> win_height_edit);
+								 &uinfo -> win_height_edit);
 		} else
 			gtk_window_get_size (GTK_WINDOW (uinfo -> app), &uinfo -> win_width,
-			                     &uinfo -> win_height);
+								 &uinfo -> win_height);
 
 		if (old_width &&
-		        (old_width != uinfo -> track_list -> allocation.width)) {
+				(old_width != uinfo -> track_list -> allocation.width)) {
 			ResizeTrackList (ginfo);
 		}
 
 		old_width = uinfo -> track_list -> allocation.width;
 	} else {
 		gtk_window_get_size (GTK_WINDOW (uinfo -> app), &uinfo -> win_width_min,
-		                     &uinfo -> win_height_min);
+							 &uinfo -> win_height_min);
 	}
 
 	if (ginfo -> looking_up != DISCDB_IDLE) {
@@ -1680,13 +1730,13 @@ void UpdateDisplay (GripInfo *ginfo) {
 			discdb_counter++;
 		}
 
-        if (ginfo -> looking_up == DISCDB_RESULTS_READY) {
-            // CDDB query finished, take care of it
-            process_cddb_results (ginfo);
-        }
+		if (ginfo -> looking_up == DISCDB_RESULTS_READY) {
+			// CDDB query finished, take care of it
+			process_cddb_results (ginfo);
+		}
 	} else {
 		CopyPixmap (GTK_PIXMAP (uinfo -> discdb_pix[discdb_counter++ % 2]),
-		            GTK_PIXMAP (uinfo -> discdb_indicator));
+					GTK_PIXMAP (uinfo -> discdb_indicator));
 	}
 
 	if (!ginfo -> update_required) {
@@ -1713,7 +1763,7 @@ void UpdateDisplay (GripInfo *ginfo) {
 	if (!ginfo -> update_required) {
 		if (ginfo -> have_disc) {
 			if ((disc -> disc_mode == CDAUDIO_PLAYING) ||
-			        (disc -> disc_mode == CDAUDIO_PAUSED)) {
+					(disc -> disc_mode == CDAUDIO_PAUSED)) {
 				if (disc -> disc_mode == CDAUDIO_PAUSED) {
 					if ((play_counter++ % 2) == 0) {
 						strcpy (buf, "");
@@ -1739,7 +1789,7 @@ void UpdateDisplay (GripInfo *ginfo) {
 						case TIME_MODE_LEFT_TRACK:
 							secs = (disc -> track_time.mins * 60) + disc -> track_time.secs;
 							totsecs = (disc -> track[CURRENT_TRACK].length.mins * 60) +
-							          disc -> track[CURRENT_TRACK].length.secs;
+									  disc -> track[CURRENT_TRACK].length.secs;
 
 							totsecs -= secs;
 
@@ -1762,13 +1812,13 @@ void UpdateDisplay (GripInfo *ginfo) {
 //					frames = disc -> curr_frame - disc -> track[disc -> curr_track - 1].start_frame;
 //					g_snprintf (buf, 80, _("Current sector: %6d"), frames);
 //					gtk_label_set (GTK_LABEL (uinfo -> play_sector_label), buf);
-                    if (uinfo -> play_sector_label && gtk_widget_get_visible (uinfo -> play_sector_label)) {
-                        g_snprintf (buf, 80, "%ld", disc -> disc_time.frames);
-                        gtk_entry_set_text (GTK_ENTRY (uinfo -> play_sector_label), buf);
-                    }
+					if (uinfo -> play_sector_label && gtk_widget_get_visible (uinfo -> play_sector_label)) {
+						g_snprintf (buf, 80, "%ld", disc -> disc_time.frames);
+						gtk_entry_set_text (GTK_ENTRY (uinfo -> play_sector_label), buf);
+					}
 
 					if (uinfo -> time_display_mode == TIME_MODE_LEFT_TRACK ||
-					        uinfo -> time_display_mode == TIME_MODE_LEFT_DISC) {
+							uinfo -> time_display_mode == TIME_MODE_LEFT_DISC) {
 						g_snprintf (buf, 80, "-%02d:%02d", mins, secs);
 					} else {
 						g_snprintf (buf, 80, "%02d:%02d", mins, secs);
@@ -1776,8 +1826,8 @@ void UpdateDisplay (GripInfo *ginfo) {
 				}
 			} else {
 				if (ginfo -> playing && ((disc -> disc_mode == CDAUDIO_COMPLETED) ||
-				                       ((disc -> disc_mode == CDAUDIO_NOSTATUS) &&
-				                        !ginfo -> stopped))) {
+									   ((disc -> disc_mode == CDAUDIO_NOSTATUS) &&
+										!ginfo -> stopped))) {
 					NextTrack (ginfo);
 					strcpy (buf, "00:00");
 
@@ -1802,7 +1852,7 @@ void UpdateDisplay (GripInfo *ginfo) {
 
 			gtk_label_set (GTK_LABEL (uinfo -> play_time_label), buf);
 			g_snprintf (icon_buf, sizeof (icon_buf), "%02d %s %s",
-			            disc -> curr_track, buf, PACKAGE);
+						disc -> curr_track, buf, PACKAGE);
 			gdk_window_set_icon_name (uinfo -> app -> window, icon_buf);
 		}
 	}
@@ -1814,15 +1864,15 @@ void UpdateDisplay (GripInfo *ginfo) {
 
 		if (ginfo -> have_disc) {
 			g_snprintf (buf, 80, "%02d:%02d", disc -> length.mins,
-			            disc -> length.secs);
+						disc -> length.secs);
 			g_snprintf (icon_buf, sizeof (icon_buf), "%02d %s %s",
-			            disc -> curr_track, buf, PACKAGE);
+						disc -> curr_track, buf, PACKAGE);
 
 			gtk_label_set (GTK_LABEL (uinfo -> play_time_label), buf);
 
 			if (ginfo -> looking_up != DISCDB_IDLE) {
 				CopyPixmap (GTK_PIXMAP (uinfo -> empty_image),
-				            GTK_PIXMAP (uinfo -> discdb_indicator));
+							GTK_PIXMAP (uinfo -> discdb_indicator));
 
 				if (ginfo -> auto_rip && ginfo -> is_new_disc) {
 					ClickColumn (NULL, ginfo);
@@ -1870,7 +1920,7 @@ void UpdateTracks (GripInfo *ginfo) {
 		multi_artist_backup = ddata -> data_multi_artist;
 
 		gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (uinfo -> multi_artist_button),
-		                              ginfo -> ddata.data_multi_artist);
+									  ginfo -> ddata.data_multi_artist);
 
 		ddata -> data_multi_artist = multi_artist_backup;
 		UpdateMultiArtist (NULL, (gpointer)ginfo);
@@ -1879,7 +1929,7 @@ void UpdateTracks (GripInfo *ginfo) {
 			FillInTrackInfo (ginfo, 0, &enc_track);
 
 			TranslateAndLaunch (ginfo -> cdupdate, TranslateSwitch, &enc_track,
-			                    FALSE, &(ginfo -> sprefs), CloseStuff, (void *) ginfo);
+								FALSE, &(ginfo -> sprefs), CloseStuff, (void *) ginfo);
 		}
 	} else {
 		SetTitle (ginfo, _("No Disc"));
@@ -1889,73 +1939,73 @@ void UpdateTracks (GripInfo *ginfo) {
 	}
 
 	gtk_entry_set_text (GTK_ENTRY (uinfo -> playlist_entry),
-	                    ddata -> data_playlist);
+						ddata -> data_playlist);
 
-    // Save selected item, if any
-    gint selected_track = -1;
-    GtkTreeSelection *selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (uinfo -> track_list));
-    if (gtk_tree_selection_get_selected (selection, NULL, &iter))
-        gtk_tree_model_get (GTK_TREE_MODEL (uinfo -> track_list_store), &iter, TRACKLIST_NUM_COL, &selected_track, -1);
+	// Save selected item, if any
+	gint selected_track = -1;
+	GtkTreeSelection *selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (uinfo -> track_list));
+	if (gtk_tree_selection_get_selected (selection, NULL, &iter))
+		gtk_tree_model_get (GTK_TREE_MODEL (uinfo -> track_list_store), &iter, TRACKLIST_NUM_COL, &selected_track, -1);
 
 	gtk_list_store_clear (uinfo -> track_list_store);
 
 	SetCurrentTrackIndex (ginfo, disc -> curr_track - 1);
 
 	if (ginfo -> have_disc) {
-        gchar *len_col;
+		gchar *len_col;
 
 		for (track = 0; track < disc -> num_tracks; track++) {
-            TrackData *td = &(ddata -> data_track[track]);
-            TrackInfo *ti = &(disc -> track[track]);
+			TrackData *td = &(ddata -> data_track[track]);
+			TrackInfo *ti = &(disc -> track[track]);
 
 /*			if (td -> track_artist) {
 				track_col = g_strdup_printf ("%s (%s)",
-				            ddata -> data_track[track].track_name,
-				            ddata -> data_track[track].track_artist);
+							ddata -> data_track[track].track_name,
+							ddata -> data_track[track].track_artist);
 			} else {
 				track_col = g_strdup_printf ("%s",
-				            ddata -> data_track[track].track_name);
+							ddata -> data_track[track].track_name);
 			}*/
 
 			len_col = g_strdup_printf ("%2d:%02d",
-			            disc -> track[track].length.mins,
-			            disc -> track[track].length.secs);
+						disc -> track[track].length.mins,
+						disc -> track[track].length.secs);
 
 			gtk_list_store_append (uinfo -> track_list_store, &iter);
 			gtk_list_store_set (uinfo -> track_list_store, &iter,
-			                    TRACKLIST_TRACK_COL, td -> track_name,
-			                    TRACKLIST_ARTIST_COL, td -> track_artist,
-			                    TRACKLIST_LENGTH_COL, len_col,
-			                    TRACKLIST_START_FRAME_COL, ti -> start_frame,
-			                    TRACKLIST_END_FRAME_COL, ti -> start_frame + (ti -> length).frames - 1,
-			                    TRACKLIST_RIP_COL, FALSE,
-			                    TRACKLIST_NUM_COL, track + 1,
-			                    TRACKLIST_TRACKPTR_COL, td,
-			                    -1);
+								TRACKLIST_TRACK_COL, td -> track_name,
+								TRACKLIST_ARTIST_COL, td -> track_artist,
+								TRACKLIST_LENGTH_COL, len_col,
+								TRACKLIST_START_FRAME_COL, ti -> start_frame,
+								TRACKLIST_END_FRAME_COL, ti -> start_frame + (ti -> length).frames - 1,
+								TRACKLIST_RIP_COL, FALSE,
+								TRACKLIST_NUM_COL, track + 1,
+								TRACKLIST_TRACKPTR_COL, td,
+								-1);
 
 //            g_free (track_col);
-            g_free (len_col);
+			g_free (len_col);
 		}
 
 		// Restore selection
 		if (selected_track > 0)
-            SelectRow (ginfo, selected_track);
-        else
-            SelectRow (ginfo, CURRENT_TRACK);
+			SelectRow (ginfo, selected_track);
+		else
+			SelectRow (ginfo, CURRENT_TRACK);
 	}
 
 #if 0
 	if (ginfo -> ask_submit) {
 		GtkWidget *dialog = gtk_message_dialog_new (GTK_WINDOW (uinfo -> app),
-		                    GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
-		                    GTK_MESSAGE_WARNING, GTK_BUTTONS_YES_NO,
-		                    _("This disc has not been found on your DiscDB server.\n\n"
-		                       "Do you wish to submit this disc information?"));
-        gtk_window_set_title (GTK_WINDOW (dialog), "Disc not found in DB");
+							GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+							GTK_MESSAGE_WARNING, GTK_BUTTONS_YES_NO,
+							_("This disc has not been found on your DiscDB server.\n\n"
+							   "Do you wish to submit this disc information?"));
+		gtk_window_set_title (GTK_WINDOW (dialog), "Disc not found in DB");
 		g_signal_connect (dialog,
-		                  "response",
-		                  G_CALLBACK (SubmitEntry),
-		                  ginfo);
+						  "response",
+						  G_CALLBACK (SubmitEntry),
+						  ginfo);
 		gtk_dialog_run (GTK_DIALOG (dialog));
 		gtk_widget_destroy (dialog);
 
@@ -1984,7 +2034,7 @@ void SubmitEntry (GtkDialog *dialog, gint reply, gpointer data) {
 
 	if (fd == -1) {
 		show_warning (ginfo -> gui_info.app,
-		              _("Error: Unable to create temporary file."));
+					  _("Error: Unable to create temporary file."));
 		return;
 	}
 
@@ -1993,13 +2043,13 @@ void SubmitEntry (GtkDialog *dialog, gint reply, gpointer data) {
 	if (!efp) {
 		close (fd);
 		show_warning (ginfo -> gui_info.app,
-		              _("Error: Unable to create temporary file."));
+					  _("Error: Unable to create temporary file."));
 	} else {
 		fprintf (efp, "To: %s\nFrom: %s\nSubject: cddb %s %02x\n",
-		         ginfo -> discdb_submit_email,
-		         ginfo -> user_email,
-		         /*DiscDBGenre (ginfo -> ddata.data_genre)*/ "unknown",
-		         ginfo -> ddata.data_id);
+				 ginfo -> discdb_submit_email,
+				 ginfo -> user_email,
+				 /*DiscDBGenre (ginfo -> ddata.data_genre)*/ "unknown",
+				 ginfo -> ddata.data_id);
 
 //    if(ginfo -> db_use_freedb) {
 //      fprintf(efp,

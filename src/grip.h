@@ -345,6 +345,7 @@ typedef struct _grip_info {
 	// App settings
 	GSettings *settings;
 	GSettings *settings_cdplay;
+	GSettings *settings_gui;
 	GSettings *settings_cdparanoia;
 	GSettings *settings_rip;
 	GSettings *settings_encoder;
