@@ -47,15 +47,15 @@ typedef struct _encode_track {
 } EncodeTrack;
 
 
-void MakeRipPage (GripInfo *ginfo);
-unsigned long long BytesLeftInFS (char *path);
+void make_rip_page (GripInfo *ginfo);
+unsigned long long bytes_left_in_fs (char *path);
 char *FindRoot (char *str);
 char *MakePath (char *str);
-void KillRip (GtkWidget *widget, gpointer data);
-void UpdateRipProgress (GripInfo *ginfo);
+void kill_rip (GtkWidget *widget, gpointer data);
+void update_rip_progress (GripInfo *ginfo);
 char *TranslateSwitch (char switch_char, void *data, gboolean *munge);
-void DoRip (GtkWidget *widget, gpointer data);
-void FillInTrackInfo (GripInfo *ginfo, int track, EncodeTrack *new_track);
+void do_rip (GtkWidget *widget, gpointer data);
+void fill_in_track_info (GripInfo *ginfo, int track, EncodeTrack *new_track);
 void on_menuitem_rip_partial_activate (GtkMenuItem *menuitem, gpointer user_data);
 
 #endif /* ifndef GRIP_RIP_H */

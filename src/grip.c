@@ -46,14 +46,14 @@
 
 static gboolean gripDieOnWinCloseCB (GtkWidget *widget, GdkEvent *event,
                                      gpointer data);
-static void ReallyDie (GtkDialog *dialog, gint reply, gpointer data);
-//static void MakeStatusPage (GripInfo *ginfo);
-static void MakeStyles (GripGUI *uinfo);
-static void LoadImages (GripGUI *uinfo);
+static void really_die (GtkDialog *dialog, gint reply, gpointer data);
+//static void make_status_page (GripInfo *ginfo);
+static void make_styles (GripGUI *uinfo);
+static void load_images (GripGUI *uinfo);
 static void set_initial_config (GripInfo *ginfo);
 
 
-static gboolean AppWindowStateCB (GtkWidget *widget, GdkEventWindowState *event,
+static gboolean on_app_window_state (GtkWidget *widget, GdkEventWindowState *event,
                            gpointer data) {
 	GripInfo *ginfo = (GripInfo *)data;
 	GripGUI *uinfo = & (ginfo -> gui_info);
@@ -142,7 +142,7 @@ void on_rip_selected_tracks_clicked (GtkButton *button, gpointer user_data) {
     gtk_window_set_modal (GTK_WINDOW (uinfo -> rip_win), TRUE);
     gtk_widget_show_all (uinfo -> rip_win);
 
-    DoRip (NULL, ginfo);
+    do_rip (NULL, ginfo);
 }
 
 void on_rip_whole_disc_clicked (GtkButton *button, gpointer user_data) {
@@ -238,7 +238,7 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 
         widget = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "menuitem_quit"));
         g_assert (widget);
-        g_signal_connect (widget, "activate", G_CALLBACK (GripDie), ginfo);
+        g_signal_connect (widget, "activate", G_CALLBACK (grip_die), ginfo);
 
         // Window menu
         widget = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "menuitem_preferences"));
@@ -355,8 +355,8 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 		gtk_container_border_width (GTK_CONTAINER (uinfo -> winbox), 3);
 	}
 
-	LoadImages (uinfo);
-	MakeStyles (uinfo);
+	load_images (uinfo);
+	make_styles (uinfo);
 
 	// This actually also loads prefs from GSettings
 	uinfo -> preferences = MakeConfigPage (ginfo);
@@ -404,7 +404,7 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 	uinfo -> rip_win = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "dialog_ripping"));
 	uinfo -> ripprogbar = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "progressbar_ripping"));
 
-	CheckForNewDisc (ginfo, FALSE);
+	check_for_new_disc (ginfo, FALSE);
 
 	/* Check if we're running this version for the first time */
 	// FIXME: ginfo -> version should be loaded from gsettings
@@ -418,7 +418,7 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 		}
 	}
 
-	g_signal_connect (app, "window-state-event", G_CALLBACK (AppWindowStateCB),
+	g_signal_connect (app, "window-state-event", G_CALLBACK (on_app_window_state),
 	                  ginfo);
 
 	g_message (_("Regrip started"));
@@ -428,12 +428,12 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 
 static gboolean gripDieOnWinCloseCB (GtkWidget *widget, GdkEvent *event,
                                      gpointer data) {
-	GripDie (widget, data);
+	grip_die (widget, data);
 
 	return TRUE;
 }
 
-void GripDie (GtkWidget *widget, gpointer data) {
+void grip_die (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 
 	ginfo = (GripInfo *) data;
@@ -448,20 +448,20 @@ void GripDie (GtkWidget *widget, gpointer data) {
         gtk_window_set_title (GTK_WINDOW (dialog), "Rip in progress");
 		g_signal_connect (dialog,
 		                  "response",
-		                  G_CALLBACK (ReallyDie),
+		                  G_CALLBACK (really_die),
 		                  ginfo);
 		gtk_dialog_run (GTK_DIALOG (dialog));
 		gtk_widget_destroy (dialog);
 	} else {
-		ReallyDie (NULL, GTK_RESPONSE_YES, ginfo);
+		really_die (NULL, GTK_RESPONSE_YES, ginfo);
 	}
 
 #else
-	ReallyDie (NULL, GTK_RESPONSE_YES, ginfo);
+	really_die (NULL, GTK_RESPONSE_YES, ginfo);
 #endif
 }
 
-static void ReallyDie (GtkDialog *dialog, gint reply, gpointer data) {
+static void really_die (GtkDialog *dialog, gint reply, gpointer data) {
 	GripInfo *ginfo;
 
 	if (reply != GTK_RESPONSE_YES) {
@@ -472,7 +472,7 @@ static void ReallyDie (GtkDialog *dialog, gint reply, gpointer data) {
 
 #ifndef GRIPCD
 	if (ginfo -> ripping) {
-		KillRip (NULL, ginfo);
+		kill_rip (NULL, ginfo);
 	}
 #endif
 
@@ -486,7 +486,7 @@ static void ReallyDie (GtkDialog *dialog, gint reply, gpointer data) {
 }
 
 #if 0
-static void MakeStatusPage (GripInfo *ginfo) {
+static void make_status_page (GripInfo *ginfo) {
 	GtkWidget *status_page;
 	GtkWidget *vbox, *vbox2;
 	GtkWidget *notebook;
@@ -551,7 +551,7 @@ static void MakeStatusPage (GripInfo *ginfo) {
 }
 
 
-void LogStatus (GripInfo *ginfo, char *fmt, ...) {
+void log_status (GripInfo *ginfo, char *fmt, ...) {
 	va_list args;
 	char *buf;
 
@@ -565,7 +565,7 @@ void LogStatus (GripInfo *ginfo, char *fmt, ...) {
 
 	va_end (args);
 
-	StatusWindowWrite (ginfo -> gui_info.status_window, buf);
+	status_window_write (ginfo -> gui_info.status_window, buf);
 
 	g_free (buf);
 }
@@ -643,7 +643,7 @@ void on_menuitem_bugs_activate (GtkMenuItem *menuitem, gpointer user_data) {
     show_help ("bugs");
 }
 
-static void MakeStyles (GripGUI *uinfo) {
+static void make_styles (GripGUI *uinfo) {
 	GdkColor gdkblack;
 	GdkColor gdkwhite;
 	GdkColor *color_LCD;
@@ -652,75 +652,75 @@ static void MakeStyles (GripGUI *uinfo) {
 	gdk_color_white (gdk_colormap_get_system (), &gdkwhite);
 	gdk_color_black (gdk_colormap_get_system (), &gdkblack);
 
-	color_LCD = MakeColor (33686, 38273, 29557);
-	color_dark_grey = MakeColor (0x4444, 0x4444, 0x4444);
+	color_LCD = make_color (33686, 38273, 29557);
+	color_dark_grey = make_color (0x4444, 0x4444, 0x4444);
 
-	uinfo -> style_wb = MakeStyle (&gdkwhite, &gdkblack, FALSE);
-	uinfo -> style_LCD = MakeStyle (color_LCD, color_LCD, FALSE);
-	uinfo -> style_dark_grey = MakeStyle (&gdkwhite, color_dark_grey, TRUE);
+	uinfo -> style_wb = make_style (&gdkwhite, &gdkblack, FALSE);
+	uinfo -> style_LCD = make_style (color_LCD, color_LCD, FALSE);
+	uinfo -> style_dark_grey = make_style (&gdkwhite, color_dark_grey, TRUE);
 }
 
-static void LoadImages (GripGUI *uinfo) {
-	uinfo -> check_image = Loadxpm (uinfo -> app, check_xpm);
-	uinfo -> eject_image = Loadxpm (uinfo -> app, eject_xpm);
-	uinfo -> cdscan_image = Loadxpm (uinfo -> app, cdscan_xpm);
-	uinfo -> ff_image = Loadxpm (uinfo -> app, ff_xpm);
-	uinfo -> lowleft_image = Loadxpm (uinfo -> app, lowleft_xpm);
-	uinfo -> lowright_image = Loadxpm (uinfo -> app, lowright_xpm);
-	uinfo -> minmax_image = Loadxpm (uinfo -> app, minmax_xpm);
-	uinfo -> nexttrk_image = Loadxpm (uinfo -> app, nexttrk_xpm);
-	uinfo -> playpaus_image = Loadxpm (uinfo -> app, playpaus_xpm);
-	uinfo -> prevtrk_image = Loadxpm (uinfo -> app, prevtrk_xpm);
-	uinfo -> loop_image = Loadxpm (uinfo -> app, loop_xpm);
-	uinfo -> noloop_image = Loadxpm (uinfo -> app, noloop_xpm);
-	uinfo -> random_image = Loadxpm (uinfo -> app, random_xpm);
-	uinfo -> playlist_image = Loadxpm (uinfo -> app, playlist_xpm);
-	uinfo -> playnorm_image = Loadxpm (uinfo -> app, playnorm_xpm);
-	uinfo -> rew_image = Loadxpm (uinfo -> app, rew_xpm);
-	uinfo -> stop_image = Loadxpm (uinfo -> app, stop_xpm);
-	uinfo -> upleft_image = Loadxpm (uinfo -> app, upleft_xpm);
-	uinfo -> upright_image = Loadxpm (uinfo -> app, upright_xpm);
-	uinfo -> vol_image = Loadxpm (uinfo -> app, vol_xpm);
-	uinfo -> discdbwht_image = Loadxpm (uinfo -> app, discdbwht_xpm);
-	uinfo -> rotate_image = Loadxpm (uinfo -> app, rotate_xpm);
-	uinfo -> edit_image = Loadxpm (uinfo -> app, edit_xpm);
-	uinfo -> progtrack_image = Loadxpm (uinfo -> app, progtrack_xpm);
-	uinfo -> mail_image = Loadxpm (uinfo -> app, mail_xpm);
-	uinfo -> save_image = Loadxpm (uinfo -> app, save_xpm);
+static void load_images (GripGUI *uinfo) {
+	uinfo -> check_image = load_xpm (uinfo -> app, check_xpm);
+	uinfo -> eject_image = load_xpm (uinfo -> app, eject_xpm);
+	uinfo -> cdscan_image = load_xpm (uinfo -> app, cdscan_xpm);
+	uinfo -> ff_image = load_xpm (uinfo -> app, ff_xpm);
+	uinfo -> lowleft_image = load_xpm (uinfo -> app, lowleft_xpm);
+	uinfo -> lowright_image = load_xpm (uinfo -> app, lowright_xpm);
+	uinfo -> minmax_image = load_xpm (uinfo -> app, minmax_xpm);
+	uinfo -> nexttrk_image = load_xpm (uinfo -> app, nexttrk_xpm);
+	uinfo -> playpaus_image = load_xpm (uinfo -> app, playpaus_xpm);
+	uinfo -> prevtrk_image = load_xpm (uinfo -> app, prevtrk_xpm);
+	uinfo -> loop_image = load_xpm (uinfo -> app, loop_xpm);
+	uinfo -> noloop_image = load_xpm (uinfo -> app, noloop_xpm);
+	uinfo -> random_image = load_xpm (uinfo -> app, random_xpm);
+	uinfo -> playlist_image = load_xpm (uinfo -> app, playlist_xpm);
+	uinfo -> playnorm_image = load_xpm (uinfo -> app, playnorm_xpm);
+	uinfo -> rew_image = load_xpm (uinfo -> app, rew_xpm);
+	uinfo -> stop_image = load_xpm (uinfo -> app, stop_xpm);
+	uinfo -> upleft_image = load_xpm (uinfo -> app, upleft_xpm);
+	uinfo -> upright_image = load_xpm (uinfo -> app, upright_xpm);
+	uinfo -> vol_image = load_xpm (uinfo -> app, vol_xpm);
+	uinfo -> discdbwht_image = load_xpm (uinfo -> app, discdbwht_xpm);
+	uinfo -> rotate_image = load_xpm (uinfo -> app, rotate_xpm);
+	uinfo -> edit_image = load_xpm (uinfo -> app, edit_xpm);
+	uinfo -> progtrack_image = load_xpm (uinfo -> app, progtrack_xpm);
+	uinfo -> mail_image = load_xpm (uinfo -> app, mail_xpm);
+	uinfo -> save_image = load_xpm (uinfo -> app, save_xpm);
 
-	uinfo -> empty_image = NewBlankPixmap (uinfo -> app);
+	uinfo -> empty_image = new_blank_pixmap (uinfo -> app);
 
-	uinfo -> discdb_pix[0] = Loadxpm (uinfo -> app, discdb0_xpm);
-	uinfo -> discdb_pix[1] = Loadxpm (uinfo -> app, discdb1_xpm);
+	uinfo -> discdb_pix[0] = load_xpm (uinfo -> app, discdb0_xpm);
+	uinfo -> discdb_pix[1] = load_xpm (uinfo -> app, discdb1_xpm);
 
-	uinfo -> play_pix[0] = Loadxpm (uinfo -> app, playnorm_xpm);
-	uinfo -> play_pix[1] = Loadxpm (uinfo -> app, random_xpm);
-	uinfo -> play_pix[2] = Loadxpm (uinfo -> app, playlist_xpm);
+	uinfo -> play_pix[0] = load_xpm (uinfo -> app, playnorm_xpm);
+	uinfo -> play_pix[1] = load_xpm (uinfo -> app, random_xpm);
+	uinfo -> play_pix[2] = load_xpm (uinfo -> app, playlist_xpm);
 
 #ifndef GRIPCD
-	uinfo -> rip_pix[0] = Loadxpm (uinfo -> app, rip0_xpm);
-	uinfo -> rip_pix[1] = Loadxpm (uinfo -> app, rip1_xpm);
-	uinfo -> rip_pix[2] = Loadxpm (uinfo -> app, rip2_xpm);
-	uinfo -> rip_pix[3] = Loadxpm (uinfo -> app, rip3_xpm);
+	uinfo -> rip_pix[0] = load_xpm (uinfo -> app, rip0_xpm);
+	uinfo -> rip_pix[1] = load_xpm (uinfo -> app, rip1_xpm);
+	uinfo -> rip_pix[2] = load_xpm (uinfo -> app, rip2_xpm);
+	uinfo -> rip_pix[3] = load_xpm (uinfo -> app, rip3_xpm);
 
-	uinfo -> mp3_pix[0] = Loadxpm (uinfo -> app, enc0_xpm);
-	uinfo -> mp3_pix[1] = Loadxpm (uinfo -> app, enc1_xpm);
-	uinfo -> mp3_pix[2] = Loadxpm (uinfo -> app, enc2_xpm);
-	uinfo -> mp3_pix[3] = Loadxpm (uinfo -> app, enc3_xpm);
+	uinfo -> mp3_pix[0] = load_xpm (uinfo -> app, enc0_xpm);
+	uinfo -> mp3_pix[1] = load_xpm (uinfo -> app, enc1_xpm);
+	uinfo -> mp3_pix[2] = load_xpm (uinfo -> app, enc2_xpm);
+	uinfo -> mp3_pix[3] = load_xpm (uinfo -> app, enc3_xpm);
 
-	uinfo -> smile_pix[0] = Loadxpm (uinfo -> app, smile1_xpm);
-	uinfo -> smile_pix[1] = Loadxpm (uinfo -> app, smile2_xpm);
-	uinfo -> smile_pix[2] = Loadxpm (uinfo -> app, smile3_xpm);
-	uinfo -> smile_pix[3] = Loadxpm (uinfo -> app, smile4_xpm);
-	uinfo -> smile_pix[4] = Loadxpm (uinfo -> app, smile5_xpm);
-	uinfo -> smile_pix[5] = Loadxpm (uinfo -> app, smile6_xpm);
-	uinfo -> smile_pix[6] = Loadxpm (uinfo -> app, smile7_xpm);
-	uinfo -> smile_pix[7] = Loadxpm (uinfo -> app, smile8_xpm);
+	uinfo -> smile_pix[0] = load_xpm (uinfo -> app, smile1_xpm);
+	uinfo -> smile_pix[1] = load_xpm (uinfo -> app, smile2_xpm);
+	uinfo -> smile_pix[2] = load_xpm (uinfo -> app, smile3_xpm);
+	uinfo -> smile_pix[3] = load_xpm (uinfo -> app, smile4_xpm);
+	uinfo -> smile_pix[4] = load_xpm (uinfo -> app, smile5_xpm);
+	uinfo -> smile_pix[5] = load_xpm (uinfo -> app, smile6_xpm);
+	uinfo -> smile_pix[6] = load_xpm (uinfo -> app, smile7_xpm);
+	uinfo -> smile_pix[7] = load_xpm (uinfo -> app, smile8_xpm);
 #endif
 }
 
 // Called every second
-void GripUpdate (GtkWidget *app) {
+void grip_update (GtkWidget *app) {
     static gboolean in_progress = FALSE;
 
     // Just make sure we don't run twice
@@ -730,11 +730,11 @@ void GripUpdate (GtkWidget *app) {
         GripInfo *ginfo = (GripInfo *) gtk_object_get_user_data (GTK_OBJECT (app));
 
         if (ginfo -> ffwding) {
-            FastFwd (ginfo);
+            fast_fwd_disc (ginfo);
         }
 
         if (ginfo -> rewinding) {
-            Rewind (ginfo);
+            rewind_disc (ginfo);
         }
 
         time_t secs  = time (NULL);
@@ -745,31 +745,31 @@ void GripUpdate (GtkWidget *app) {
         }
 
         if (ginfo -> ripping) {
-            UpdateRipProgress (ginfo);
+            update_rip_progress (ginfo);
         } else {
             if (ginfo -> poll_drive && (secs % ginfo -> poll_interval) == 0) {
-                CheckForNewDisc (ginfo, FALSE);
+                check_for_new_disc (ginfo, FALSE);
             }
 
-            UpdateDisplay (ginfo);
+            update_display (ginfo);
         }
 
-        UpdateTray (ginfo);
+        update_tray (ginfo);
 
         in_progress = FALSE;
     }
 }
 
-void Busy (GripGUI *uinfo) {
+void busy (GripGUI *uinfo) {
 	gdk_window_set_cursor (uinfo -> app -> window, uinfo -> wait_cursor);
 
-	UpdateGTK ();
+	update_gtk ();
 }
 
-void UnBusy (GripGUI *uinfo) {
+void Unbusy (GripGUI *uinfo) {
 	gdk_window_set_cursor (uinfo -> app -> window, NULL);
 
-	UpdateGTK();
+	update_gtk();
 }
 
 static void set_initial_config (GripInfo *ginfo) {
@@ -966,7 +966,7 @@ static void set_initial_config (GripInfo *ginfo) {
 }
 
 /* Shut down stuff (generally before an exec) */
-void CloseStuff (void *user_data) {
+void close_stuff (void *user_data) {
 	GripInfo *ginfo;
 	int fd;
 

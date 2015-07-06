@@ -33,19 +33,19 @@
 #include "../pixmaps/menuprev.xpm"
 #include "../pixmaps/menunext.xpm"
 
-static void MakeTrayIcon (GripInfo *ginfo);
-static void PlayCB (GtkWidget *widget, gpointer data);
-static void PauseCB (GtkWidget *widget, gpointer data);
-static void NextCB (GtkWidget *widget, gpointer data);
-static void PrevCB (GtkWidget *widget, gpointer data);
-static void StopCB (GtkWidget *widget, gpointer data);
-static void RipEncCB (GtkWidget *widget, gpointer data);
-static void QuitCB (GtkWidget *widget, gpointer data);
-static gboolean TrayIconButtonPress (GtkWidget *widget, GdkEventButton *event,
+static void make_tray_icon (GripInfo *ginfo);
+static void on_play (GtkWidget *widget, gpointer data);
+static void on_pause (GtkWidget *widget, gpointer data);
+static void on_next (GtkWidget *widget, gpointer data);
+static void on_prev (GtkWidget *widget, gpointer data);
+static void on_stop (GtkWidget *widget, gpointer data);
+static void on_rip_enc (GtkWidget *widget, gpointer data);
+static void on_quit (GtkWidget *widget, gpointer data);
+static gboolean tray_icon_button_press (GtkWidget *widget, GdkEventButton *event,
                                      gpointer data);
 
 /*
- * UpdateTray
+ * update_tray
  *
  * Main functionality implemented here; handles:
  * - updating the tooltip
@@ -54,7 +54,7 @@ static gboolean TrayIconButtonPress (GtkWidget *widget, GdkEventButton *event,
  * - NOTE: ginfo -> show_tray_icon is set in the Config  ->  Misc tab
  */
 
-void UpdateTray (GripInfo *ginfo) {
+void update_tray (GripInfo *ginfo) {
 	gchar *text, *riptext = NULL;
 	gchar *artist = strlen (ginfo -> ddata.data_artist) > 0 ?
 	                ginfo -> ddata.data_artist : _("Artist");
@@ -67,7 +67,7 @@ void UpdateTray (GripInfo *ginfo) {
 	/* Decide if the tray icon is going to be displayed or not */
 	if (ginfo -> show_tray_icon) {
 		if (!ginfo -> tray_icon_made) {
-			MakeTrayIcon (ginfo);
+			make_tray_icon (ginfo);
 		}
 	} else {
 		if (uinfo -> tray_icon) {
@@ -81,7 +81,7 @@ void UpdateTray (GripInfo *ginfo) {
 	/* tray icon is present so we can make our tooltip */
 	if (ginfo -> show_tray_icon) {
 		if (ginfo -> playing) {
-			TrayUnGrayMenu (ginfo);
+			tray_ungray_menu (ginfo);
 			tmin = ginfo -> disc.track[ginfo -> current_track_index].length.mins;
 			tsec = ginfo -> disc.track[ginfo -> current_track_index].length.secs;
 			emin = ginfo -> disc.track_time.mins;
@@ -91,13 +91,13 @@ void UpdateTray (GripInfo *ginfo) {
 			                        tmin, tsec);
 		} else if (!ginfo -> playing) {
 			if (ginfo -> ripping) {
-				TrayGrayMenu (ginfo);
+				tray_gray_menu (ginfo);
 				riptext = (ginfo -> ripping) ? g_strdup_printf (
 				              _("Ripping Track %02d:\t%6.2f%% (%6.2f%%)"), ginfo -> rip_track + 1,
 				              ginfo -> rip_percent * 100, ginfo -> rip_tot_percent * 100) : NULL;
 				text = g_strdup_printf (_("%s - %s\n%s"), artist, title, riptext);
 			} else {
-				TrayUnGrayMenu (ginfo);
+				tray_ungray_menu (ginfo);
 				text = g_strdup_printf (_("%s - %s\nIdle"), artist, title);
 			}
 		}
@@ -114,19 +114,19 @@ void UpdateTray (GripInfo *ginfo) {
 }
 
 /*
- * TrayMenuShowPlay/TrayMenuShowPause
+ * tray_menu_show_play/tray_menu_show_pause
  *
  * - set whether the Play menu item or Pause menu item is displayed
  */
 
-void TrayMenuShowPlay (GripInfo *ginfo) {
+void tray_menu_show_play (GripInfo *ginfo) {
 	GripGUI *uinfo = &(ginfo -> gui_info);
 
 	gtk_widget_hide (GTK_WIDGET (uinfo -> tray_menu_pause));
 	gtk_widget_show (GTK_WIDGET (uinfo -> tray_menu_play));
 }
 
-void TrayMenuShowPause (GripInfo *ginfo) {
+void tray_menu_show_pause (GripInfo *ginfo) {
 	GripGUI *uinfo = &(ginfo -> gui_info);
 
 	gtk_widget_hide (GTK_WIDGET (uinfo -> tray_menu_play));
@@ -134,43 +134,43 @@ void TrayMenuShowPause (GripInfo *ginfo) {
 }
 
 /*
- * TrayGrayMenu/TrayUnGrayMenu
+ * tray_gray_menu/tray_ungray_menu
  *
  * - sets sensitivity of the menu items
  */
 
-static void ToggleMenuItemSensitive (GtkWidget *widget, gpointer data) {
+static void toggle_menu_item_sensitive (GtkWidget *widget, gpointer data) {
 	gtk_widget_set_sensitive (GTK_WIDGET (widget), GPOINTER_TO_INT (data));
 }
 
-void TrayGrayMenu (GripInfo *ginfo) {
+void tray_gray_menu (GripInfo *ginfo) {
 	GripGUI *uinfo = &(ginfo -> gui_info);
 
 	if (ginfo -> tray_menu_sensitive) {
 		gtk_container_foreach (GTK_CONTAINER (uinfo -> tray_menu),
-		                       ToggleMenuItemSensitive, GINT_TO_POINTER (FALSE));
+		                       toggle_menu_item_sensitive, GINT_TO_POINTER (FALSE));
 		ginfo -> tray_menu_sensitive = FALSE;
 	}
 }
 
-void TrayUnGrayMenu (GripInfo *ginfo) {
+void tray_ungray_menu (GripInfo *ginfo) {
 	GripGUI *uinfo = &(ginfo -> gui_info);
 
 	if (!ginfo -> tray_menu_sensitive) {
 		gtk_container_foreach (GTK_CONTAINER (uinfo -> tray_menu),
-		                       ToggleMenuItemSensitive, GINT_TO_POINTER (TRUE));
+		                       toggle_menu_item_sensitive, GINT_TO_POINTER (TRUE));
 		ginfo -> tray_menu_sensitive = TRUE;
 	}
 }
 
 /*
- * MakeTrayIcon
+ * make_tray_icon
  *
  * - tray icon and menu is built here
- * - NOTE: I added the function BuildMenuItemXpm to uihelper.c
+ * - NOTE: I added the function build_menuitem_xpm to uihelper.c
  */
 
-static void MakeTrayIcon (GripInfo *ginfo) {
+static void make_tray_icon (GripInfo *ginfo) {
 	GtkWidget *image, *mentry, *hb, *img;
 	GripGUI *uinfo = &(ginfo -> gui_info);
 
@@ -190,55 +190,55 @@ static void MakeTrayIcon (GripInfo *ginfo) {
 
 	uinfo -> tray_menu = gtk_menu_new ();
 
-	img = (GtkWidget *) Loadxpm (uinfo -> app, menuplay_xpm);
-	uinfo -> tray_menu_play = (GtkWidget *)BuildMenuItemXpm (img, _("Play"));
-	g_signal_connect (uinfo -> tray_menu_play, "activate", G_CALLBACK (PlayCB),
+	img = (GtkWidget *) load_xpm (uinfo -> app, menuplay_xpm);
+	uinfo -> tray_menu_play = (GtkWidget *)build_menuitem_xpm (img, _("Play"));
+	g_signal_connect (uinfo -> tray_menu_play, "activate", G_CALLBACK (on_play),
 	                  ginfo);
 	gtk_menu_shell_append (GTK_MENU_SHELL (uinfo -> tray_menu),
 	                       uinfo -> tray_menu_play);
 
-	img = (GtkWidget *) Loadxpm (uinfo -> app, menupause_xpm);
-	uinfo -> tray_menu_pause = (GtkWidget *)BuildMenuItemXpm (img, _("Pause"));
-	g_signal_connect (uinfo -> tray_menu_pause, "activate", G_CALLBACK (PauseCB),
+	img = (GtkWidget *) load_xpm (uinfo -> app, menupause_xpm);
+	uinfo -> tray_menu_pause = (GtkWidget *)build_menuitem_xpm (img, _("Pause"));
+	g_signal_connect (uinfo -> tray_menu_pause, "activate", G_CALLBACK (on_pause),
 	                  ginfo);
 	gtk_menu_shell_append (GTK_MENU_SHELL (uinfo -> tray_menu),
 	                       uinfo -> tray_menu_pause);
 
-	img = (GtkWidget *) Loadxpm (uinfo -> app, menustop_xpm);
-	mentry = (GtkWidget *)BuildMenuItemXpm (img, _("Stop"));
-	g_signal_connect (mentry, "activate", G_CALLBACK (StopCB), ginfo);
+	img = (GtkWidget *) load_xpm (uinfo -> app, menustop_xpm);
+	mentry = (GtkWidget *)build_menuitem_xpm (img, _("Stop"));
+	g_signal_connect (mentry, "activate", G_CALLBACK (on_stop), ginfo);
 	gtk_menu_shell_append (GTK_MENU_SHELL (uinfo -> tray_menu), mentry);
 
 	hb = gtk_separator_menu_item_new ();
 	gtk_menu_shell_append (GTK_MENU_SHELL (uinfo -> tray_menu), hb);
 
-	img = (GtkWidget *) Loadxpm (uinfo -> app, menuprev_xpm);
-	mentry = (GtkWidget *) BuildMenuItemXpm (img, _("Previous"));
-	g_signal_connect (mentry, "activate", G_CALLBACK (PrevCB), ginfo);
+	img = (GtkWidget *) load_xpm (uinfo -> app, menuprev_xpm);
+	mentry = (GtkWidget *) build_menuitem_xpm (img, _("Previous"));
+	g_signal_connect (mentry, "activate", G_CALLBACK (on_prev), ginfo);
 	gtk_menu_shell_append (GTK_MENU_SHELL (uinfo -> tray_menu), mentry);
 
-	img = (GtkWidget *) Loadxpm (uinfo -> app, menunext_xpm);
-	mentry = (GtkWidget *) BuildMenuItemXpm (img, _("Next"));
-	g_signal_connect (mentry, "activate", G_CALLBACK (NextCB), ginfo);
-	gtk_menu_shell_append (GTK_MENU_SHELL (uinfo -> tray_menu), mentry);
-
-	hb = gtk_separator_menu_item_new ();
-	gtk_menu_shell_append (GTK_MENU_SHELL (uinfo -> tray_menu), hb);
-
-	img = (GtkWidget *) Loadxpm (uinfo -> app, rip1_xpm);
-	mentry = (GtkWidget *) BuildMenuItemXpm (img, _("Rip and Encode"));
-	g_signal_connect (mentry, "activate", G_CALLBACK (RipEncCB), ginfo);
+	img = (GtkWidget *) load_xpm (uinfo -> app, menunext_xpm);
+	mentry = (GtkWidget *) build_menuitem_xpm (img, _("Next"));
+	g_signal_connect (mentry, "activate", G_CALLBACK (on_next), ginfo);
 	gtk_menu_shell_append (GTK_MENU_SHELL (uinfo -> tray_menu), mentry);
 
 	hb = gtk_separator_menu_item_new ();
 	gtk_menu_shell_append (GTK_MENU_SHELL (uinfo -> tray_menu), hb);
 
-	mentry = (GtkWidget *) BuildMenuItem (GTK_STOCK_QUIT, _("Quit"), TRUE);
-	g_signal_connect (mentry, "activate", G_CALLBACK (QuitCB), ginfo);
+	img = (GtkWidget *) load_xpm (uinfo -> app, rip1_xpm);
+	mentry = (GtkWidget *) build_menuitem_xpm (img, _("Rip and Encode"));
+	g_signal_connect (mentry, "activate", G_CALLBACK (on_rip_enc), ginfo);
+	gtk_menu_shell_append (GTK_MENU_SHELL (uinfo -> tray_menu), mentry);
+
+	hb = gtk_separator_menu_item_new ();
+	gtk_menu_shell_append (GTK_MENU_SHELL (uinfo -> tray_menu), hb);
+
+	mentry = (GtkWidget *) build_menuitem (GTK_STOCK_QUIT, _("Quit"), TRUE);
+	g_signal_connect (mentry, "activate", G_CALLBACK (on_quit), ginfo);
 	gtk_menu_shell_append (GTK_MENU_SHELL (uinfo -> tray_menu), mentry);
 
 	g_signal_connect (uinfo -> tray_ebox, "button-press-event",
-	                  G_CALLBACK (TrayIconButtonPress), ginfo);
+	                  G_CALLBACK (tray_icon_button_press), ginfo);
 
 	gtk_widget_show_all (uinfo -> tray_menu);
 
@@ -250,13 +250,13 @@ static void MakeTrayIcon (GripInfo *ginfo) {
 }
 
 /*
- * TrayIconButtonPress
+ * tray_icon_button_press
  *
  * - handles the showing/hiding of the main window and displaying the menu
- * - NOTE: ginfo -> app_visible is set by AppWindowStateCB in grip.c
+ * - NOTE: ginfo -> app_visible is set by on_app_window_state in grip.c
  */
 
-static gboolean TrayIconButtonPress (GtkWidget *widget, GdkEventButton *event,
+static gboolean tray_icon_button_press (GtkWidget *widget, GdkEventButton *event,
                                      gpointer data) {
 	GripInfo *ginfo = (GripInfo *) data;
 	GripGUI *uinfo = &(ginfo -> gui_info);
@@ -287,41 +287,41 @@ static gboolean TrayIconButtonPress (GtkWidget *widget, GdkEventButton *event,
  * Callbacks for the menu entries; pretty self-explanatory
  */
 
-static void PlayCB (GtkWidget *widget, gpointer data) {
-	PlayTrackCB (NULL, data);
+static void on_play (GtkWidget *widget, gpointer data) {
+	on_play_track (NULL, data);
 }
 
-static void PauseCB (GtkWidget *widget, gpointer data) {
-	PlayTrackCB (NULL, data);
+static void on_pause (GtkWidget *widget, gpointer data) {
+	on_play_track (NULL, data);
 }
 
-static void StopCB (GtkWidget *widget, gpointer data) {
-	StopPlayCB (NULL, data);
+static void on_stop (GtkWidget *widget, gpointer data) {
+	Stopon_play (NULL, data);
 }
 
-static void NextCB (GtkWidget *widget, gpointer data) {
-	NextTrackCB (NULL, data);
+static void on_next (GtkWidget *widget, gpointer data) {
+	on_next_track (NULL, data);
 }
 
-static void PrevCB (GtkWidget *widget, gpointer data) {
-	PrevTrackCB (NULL, data);
+static void on_prev (GtkWidget *widget, gpointer data) {
+	on_prev_track (NULL, data);
 }
 
-static void RipEncCB (GtkWidget *widget, gpointer data) {
+static void on_rip_enc (GtkWidget *widget, gpointer data) {
 	int i;
 	GripInfo *ginfo = (GripInfo *) data;
 
 	/* this gets rid of the annoying 'Rip Whole CD?' dialog box */
 	for (i = 0; i < ginfo -> disc.num_tracks; i++) {
-		SetChecked (&(ginfo -> gui_info), i, TRUE);
+		set_checked (&(ginfo -> gui_info), i, TRUE);
 	}
 
-	DoRip (NULL, data);
+	do_rip (NULL, data);
 }
 
-static void QuitCB (GtkWidget *widget, gpointer data) {
+static void on_quit (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo = (GripInfo *) data;
 	GripGUI *uinfo = &(ginfo -> gui_info);
 
-	GripDie (uinfo -> app, NULL);
+	grip_die (uinfo -> app, NULL);
 }

@@ -29,7 +29,7 @@
 #include <vte/vte.h>
 #include "status_window.h"
 
-static void PipeCB(gpointer data,gint source,GdkInputCondition condition);
+static void on_pipe(gpointer data,gint source,GdkInputCondition condition);
 
 /* Create a new status window */
 StatusWindow *NewStatusWindow(GtkWidget *box)
@@ -85,7 +85,7 @@ StatusWindow *NewStatusWindow(GtkWidget *box)
 }
 
 /* Write a line of output to a status window */
-void StatusWindowWrite(StatusWindow *sw,char *msg)
+void status_window_write(StatusWindow *sw,char *msg)
 {
   char *buf;
   gsize len;
@@ -121,7 +121,7 @@ void StatusWindowWrite(StatusWindow *sw,char *msg)
 
 /* Return the output pipe fd for a status window, opening the pipe
    if necessary */
-int GetStatusWindowPipe(StatusWindow *sw)
+int get_status_window_pipe(StatusWindow *sw)
 {
   if(sw->pipe[1]>0) return sw->pipe[1];
 
@@ -129,12 +129,12 @@ int GetStatusWindowPipe(StatusWindow *sw)
 
   fcntl(sw->pipe[0],F_SETFL,O_NONBLOCK);
 
-  gdk_input_add(sw->pipe[0],GDK_INPUT_READ,PipeCB,(gpointer)sw);
+  gdk_input_add(sw->pipe[0],GDK_INPUT_READ,on_pipe,(gpointer)sw);
 
   return sw->pipe[1];
 }
 
-static void PipeCB(gpointer data,gint source,GdkInputCondition condition)
+static void on_pipe(gpointer data,gint source,GdkInputCondition condition)
 {
   char buf[256];
   StatusWindow *sw;
@@ -142,6 +142,6 @@ static void PipeCB(gpointer data,gint source,GdkInputCondition condition)
   sw=(StatusWindow *)data;
 
   while(read(sw->pipe[0],buf,256)>0) {
-    /*    StatusWindowWrite(sw,buf);*/
+    /*    status_window_write(sw,buf);*/
   }
 }

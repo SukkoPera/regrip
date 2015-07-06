@@ -25,11 +25,11 @@ void show_error (GtkWidget *parentWin, char *text);
 void show_warning (GtkWidget *parentWin, char *text);
 
 /* Input routines */
-void ChangeStrVal (GtkWidget *widget, gpointer data);
+void change_str_val (GtkWidget *widget, gpointer data);
 GtkWidget *MakeStrEntry (GtkWidget **entry, char *var, char *name,
                          int len, gboolean editable);
 GtkWidget *MakeFolderSelector (GtkWidget **entry, char *var, char *name);
-void ChangeIntVal (GtkWidget *widget, gpointer data);
+void change_int_val (GtkWidget *widget, gpointer data);
 GtkWidget *MakeNumEntry (GtkWidget **entry, int *var, char *name, int len);
-void ChangeBoolVal (GtkWidget *widget, gpointer data);
+void change_bool_val (GtkWidget *widget, gpointer data);
 GtkWidget *MakeCheckButton (GtkWidget **button, gboolean *var, char *name);

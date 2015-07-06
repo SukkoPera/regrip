@@ -291,7 +291,7 @@ gboolean CDPlayFrames (DiscInfo *disc, int startframe, int endframe) {
 }
 
 /* Play starttrack at position pos to endtrack */
-gboolean CDPlayTrackPos (DiscInfo *disc, int starttrack,
+gboolean cd_play_track_from_pos (DiscInfo *disc, int starttrack,
                          int endtrack, int startpos) {
 
 	return CDPlayFrames (disc, disc -> track[starttrack - 1].start_frame +
@@ -302,8 +302,8 @@ gboolean CDPlayTrackPos (DiscInfo *disc, int starttrack,
 }
 
 /* Play starttrack to endtrack */
-gboolean CDPlayTrack (DiscInfo *disc, int starttrack, int endtrack) {
-	return CDPlayTrackPos (disc, starttrack, endtrack, 0);
+gboolean cd_play_track (DiscInfo *disc, int starttrack, int endtrack) {
+	return cd_play_track_from_pos (disc, starttrack, endtrack, 0);
 }
 
 /* Advance (fastfwd) */
@@ -333,7 +333,7 @@ gboolean CDAdvance (DiscInfo *disc, DiscTime *time) {
 		/*  Tried to skip past first track so go to the beginning  */
 		if (disc -> curr_track == 0) {
 			disc -> curr_track = 1;
-			return CDPlayTrack (disc, disc -> curr_track, disc -> curr_track);
+			return cd_play_track (disc, disc -> curr_track, disc -> curr_track);
 		}
 
 		/*  Go to the end of the last track  */
@@ -358,10 +358,10 @@ gboolean CDAdvance (DiscInfo *disc, DiscTime *time) {
 			disc -> curr_track = disc -> num_tracks;
 		}
 
-		return CDPlayTrack (disc, disc -> curr_track, disc -> curr_track);
+		return cd_play_track (disc, disc -> curr_track, disc -> curr_track);
 	}
 
-	return CDPlayTrackPos (disc, disc -> curr_track, disc -> curr_track,
+	return cd_play_track_from_pos (disc, disc -> curr_track, disc -> curr_track,
 	                       disc -> track_time.mins * 60 +
 	                       disc -> track_time.secs);
 }
@@ -394,7 +394,7 @@ gboolean CDResume (DiscInfo *disc) {
 }
 
 /* Check the tray status */
-gboolean IsTrayOpen (DiscInfo *disc) {
+gboolean is_tray_open (DiscInfo *disc) {
 	if (!disc -> cdio) {
         return FALSE;
 	} else {
@@ -440,7 +440,7 @@ gboolean CDGetVolume (DiscInfo *disc, DiscVolume *vol) {
 	return ret;
 }
 
-gboolean CDSetVolume (DiscInfo *disc, DiscVolume *vol) {
+gboolean cd_set_volume (DiscInfo *disc, DiscVolume *vol) {
 	if (!disc -> cdio) {
         return FALSE;
 	} else if (vol -> vol_front.left > 255 || vol -> vol_front.left < 0 ||

@@ -51,23 +51,23 @@
 #include "encoder.h"
 
 
-static void PlaySegmentCB (GtkWidget *widget, gpointer data);
-static char *MakeRelative (char *file1, char *file2);
-static gboolean AddM3U (GripInfo *ginfo);
+static void on_play_segment (GtkWidget *widget, gpointer data);
+static char *make_relative (char *file1, char *file2);
+static gboolean add_m3u (GripInfo *ginfo);
 static void ID3Add (GripInfo *ginfo, char *file, EncodeTrack *enc_track);
-static void DoWavFilter (GripInfo *ginfo);
-static void DoDiscFilter (GripInfo *ginfo);
-static void RipIsFinished (GripInfo *ginfo, gboolean aborted);
-static void CheckDupNames (GripInfo *ginfo);
-static void RipWholeCD (GtkDialog *dialog, gint reply, gpointer data);
-static int NextTrackToRip (GripInfo *ginfo);
-static gboolean RipNextTrack (GripInfo *ginfo);
-static void CalculateAll (GripInfo *ginfo);
-static size_t CalculateEncSize (GripInfo *ginfo, int track);
-static size_t CalculateWavSize (GripInfo *ginfo, int track);
+static void do_wav_filter (GripInfo *ginfo);
+static void do_disc_filter (GripInfo *ginfo);
+static void rip_is_finished (GripInfo *ginfo, gboolean aborted);
+static void check_dup_names (GripInfo *ginfo);
+static void rip_whole_disc (GtkDialog *dialog, gint reply, gpointer data);
+static int next_track_to_rip (GripInfo *ginfo);
+static gboolean rip_next_track (GripInfo *ginfo);
+static void calculate_all (GripInfo *ginfo);
+static size_t calculate_enc_size (GripInfo *ginfo, int track);
+static size_t calculate_wav_size (GripInfo *ginfo, int track);
 
 #if 0
-void MakeRipPage (GripInfo *ginfo) {
+void make_rip_page (GripInfo *ginfo) {
 	GripGUI *uinfo;
 	GtkWidget *rippage;
 	GtkWidget *rangesel;
@@ -91,18 +91,18 @@ void MakeRipPage (GripInfo *ginfo) {
 	vbox2 = gtk_vbox_new (FALSE, 0);
 
 	button = gtk_button_new_with_label (_("Rip!"));
-	gtk_tooltips_set_tip (MakeToolTip(), button,
+	gtk_tooltips_set_tip (make_tooltip(), button,
 						  _("Rip selected tracks"), NULL);
 	gtk_signal_connect (GTK_OBJECT (button), "clicked",
-						GTK_SIGNAL_FUNC (DoRip), (gpointer) ginfo);
+						GTK_SIGNAL_FUNC (do_rip), (gpointer) ginfo);
 	gtk_box_pack_start (GTK_BOX (vbox2), button, FALSE, FALSE, 0);
 	gtk_widget_show (button);
 
 	button = gtk_button_new_with_label (_("Abort Rip"));
-	gtk_tooltips_set_tip (MakeToolTip(), button,
+	gtk_tooltips_set_tip (make_tooltip(), button,
 						  _("Kill rip process"), NULL);
 	gtk_signal_connect (GTK_OBJECT (button), "clicked",
-						GTK_SIGNAL_FUNC (KillRip), (gpointer) ginfo);
+						GTK_SIGNAL_FUNC (kill_rip), (gpointer) ginfo);
 	gtk_box_pack_start (GTK_BOX (vbox2), button, FALSE, FALSE, 0);
 	gtk_widget_show (button);
 
@@ -116,7 +116,7 @@ void MakeRipPage (GripInfo *ginfo) {
 
 	check = MakeCheckButton (NULL, &ginfo -> rip_partial, _("Rip partial track"));
 	gtk_signal_connect (GTK_OBJECT (check), "clicked",
-						GTK_SIGNAL_FUNC (RipPartialChanged), (gpointer) ginfo);
+						GTK_SIGNAL_FUNC (on_rip_partial_changed), (gpointer) ginfo);
 	gtk_box_pack_start (GTK_BOX (vbox2), check, FALSE, FALSE, 0);
 	gtk_widget_show (check);
 
@@ -127,7 +127,7 @@ void MakeRipPage (GripInfo *ginfo) {
 
 	button = gtk_button_new_with_label (_("Play"));
 	gtk_signal_connect (GTK_OBJECT (button), "clicked",
-						GTK_SIGNAL_FUNC (PlaySegmentCB),
+						GTK_SIGNAL_FUNC (on_play_segment),
 						(gpointer) ginfo);
 	gtk_box_pack_start (GTK_BOX (hbox2), button, TRUE, TRUE, 0);
 	gtk_widget_show (button);
@@ -181,8 +181,8 @@ void MakeRipPage (GripInfo *ginfo) {
 	gtk_box_pack_start (GTK_BOX (hbox), uinfo -> ripprogbar, FALSE, FALSE, 0);
 	gtk_widget_show (uinfo -> ripprogbar);
 
-	uinfo -> smile_indicator = NewBlankPixmap (uinfo -> app);
-	gtk_tooltips_set_tip (MakeToolTip(), uinfo -> smile_indicator,
+	uinfo -> smile_indicator = new_blank_pixmap (uinfo -> app);
+	gtk_tooltips_set_tip (make_tooltip(), uinfo -> smile_indicator,
 						  _("Rip status"), NULL);
 	gtk_box_pack_start (GTK_BOX (hbox), uinfo -> smile_indicator, FALSE, FALSE, 0);
 	gtk_widget_show (uinfo -> smile_indicator);
@@ -256,7 +256,7 @@ void MakeRipPage (GripInfo *ginfo) {
 	gtk_widget_show (vbox);
 }
 
-static void RipPartialChanged (GtkWidget *widget, gpointer data) {
+static void on_rip_partial_changed (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 
 	ginfo = (GripInfo *) data;
@@ -265,7 +265,7 @@ static void RipPartialChanged (GtkWidget *widget, gpointer data) {
 }
 #endif
 
-unsigned long long BytesLeftInFS (char *path) {
+unsigned long long bytes_left_in_fs (char *path) {
 	unsigned long long bytesleft;
 	int pos;
 #ifdef HAVE_SYS_STATVFS_H
@@ -333,7 +333,7 @@ char *FindRoot (char *str) {
 }
 
 /* Make file1 relative to file2 */
-static char *MakeRelative (char *file1, char *file2) {
+static char *make_relative (char *file1, char *file2) {
 	int pos, pos2 = 0, slashcnt, i;
 	char *rel = file1;
 	char tem[PATH_MAX] = "";
@@ -368,7 +368,7 @@ static char *MakeRelative (char *file1, char *file2) {
 	return rel;
 }
 
-static gboolean AddM3U (GripInfo *ginfo) {
+static gboolean add_m3u (GripInfo *ginfo) {
 	int i;
 	EncodeTrack enc_track;
 	FILE *fp;
@@ -386,7 +386,7 @@ static gboolean AddM3U (GripInfo *ginfo) {
 	str = g_string_new (NULL);
 
 	/* Use track 0 to fill in M3u switches */
-	FillInTrackInfo (ginfo, 0, &enc_track);
+	fill_in_track_info (ginfo, 0, &enc_track);
 
 	TranslateString (ginfo -> m3ufileformat, str, TranslateSwitch,
 					 &enc_track, TRUE, & (ginfo -> sprefs));
@@ -420,10 +420,10 @@ static gboolean AddM3U (GripInfo *ginfo) {
 
 	for (i = 0; i < ginfo -> disc.num_tracks; i++) {
 		/* Only add to the m3u if the track is selected for ripping */
-		if (TrackIsChecked (& (ginfo -> gui_info), i)) {
+		if (is_track_checked (& (ginfo -> gui_info), i)) {
 			g_string_truncate (str, 0);
 
-			FillInTrackInfo (ginfo, i, &enc_track);
+			fill_in_track_info (ginfo, i, &enc_track);
 //			TranslateString (ginfo -> mp3fileformat, str, TranslateSwitch,
 //			                 &enc_track, TRUE, &(ginfo -> sprefs));
 
@@ -435,7 +435,7 @@ static gboolean AddM3U (GripInfo *ginfo) {
 
 			if (ginfo -> rel_m3u) {
 				g_snprintf (tmp, PATH_MAX, "%s", conv_str);
-				relnam = MakeRelative (tmp, m3unam);
+				relnam = make_relative (tmp, m3unam);
 				fprintf (fp, "%s\n", relnam);
 			} else {
 				fprintf (fp, "%s\n", conv_str);
@@ -452,11 +452,11 @@ static gboolean AddM3U (GripInfo *ginfo) {
 	return TRUE;
 }
 
-void KillRip (GtkWidget *widget, gpointer data) {
+void kill_rip (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 //	int track;
 
-	g_debug (_("In KillRip"));
+	g_debug (_("In kill_rip"));
 	ginfo = (GripInfo *) data;
 
 	if (!ginfo -> ripping) {
@@ -474,8 +474,8 @@ void KillRip (GtkWidget *widget, gpointer data) {
 	/* Need to decrement all_mp3size */
 //    for (track = 0; track < ginfo -> disc.num_tracks; ++track) {
 //        if ((!IsDataTrack (&(ginfo -> disc), track)) &&
-//                (TrackIsChecked (&(ginfo -> gui_info), track))) {
-//            ginfo -> all_encsize -= CalculateEncSize (ginfo, track);
+//                (is_track_checked (&(ginfo -> gui_info), track))) {
+//            ginfo -> all_encsize -= calculate_enc_size (ginfo, track);
 //        }
 //    }
 
@@ -508,27 +508,27 @@ static void ID3Add (GripInfo *ginfo, char *file, EncodeTrack *enc_track) {
 	}
 }
 
-static void DoWavFilter (GripInfo *ginfo) {
+static void do_wav_filter (GripInfo *ginfo) {
 	EncodeTrack enc_track;
 
-	FillInTrackInfo (ginfo, ginfo -> rip_track, &enc_track);
+	fill_in_track_info (ginfo, ginfo -> rip_track, &enc_track);
 	strcpy (enc_track.wav_filename, ginfo -> ripfile);
 
 	TranslateAndLaunch (ginfo -> wav_filter_cmd, TranslateSwitch, &enc_track,
-						FALSE, &(ginfo -> sprefs), CloseStuff, (void *) ginfo);
+						FALSE, &(ginfo -> sprefs), close_stuff, (void *) ginfo);
 }
 
-static void DoDiscFilter (GripInfo *ginfo) {
+static void do_disc_filter (GripInfo *ginfo) {
 	EncodeTrack enc_track;
 
-	FillInTrackInfo (ginfo, ginfo -> rip_track, &enc_track);
+	fill_in_track_info (ginfo, ginfo -> rip_track, &enc_track);
 	strcpy (enc_track.wav_filename, ginfo -> ripfile);
 
 	TranslateAndLaunch (ginfo -> disc_filter_cmd, TranslateSwitch, &enc_track,
-						FALSE, &(ginfo -> sprefs), CloseStuff, (void *) ginfo);
+						FALSE, &(ginfo -> sprefs), close_stuff, (void *) ginfo);
 }
 
-void UpdateRipProgress (GripInfo *ginfo) {
+void update_rip_progress (GripInfo *ginfo) {
 	GripGUI *uinfo;
 	struct stat mystat;
 	int quarter;
@@ -571,7 +571,7 @@ void UpdateRipProgress (GripInfo *ginfo) {
 		quarter = (int) (ginfo -> rip_percent * 4.0);
 
 		if (quarter < 4)
-			CopyPixmap (GTK_PIXMAP (uinfo -> rip_pix[quarter]),
+			copy_pixmap (GTK_PIXMAP (uinfo -> rip_pix[quarter]),
 						GTK_PIXMAP (uinfo -> rip_indicator));
 
 		int slevel;
@@ -581,10 +581,10 @@ void UpdateRipProgress (GripInfo *ginfo) {
 			slevel = 0;
 		}
 		if (uinfo -> minimized)
-			CopyPixmap (GTK_PIXMAP (uinfo -> smile_pix[slevel]),
+			copy_pixmap (GTK_PIXMAP (uinfo -> smile_pix[slevel]),
 						GTK_PIXMAP (uinfo -> lcd_smile_indicator));
 		else
-			CopyPixmap (GTK_PIXMAP (uinfo -> smile_pix[slevel]),
+			copy_pixmap (GTK_PIXMAP (uinfo -> smile_pix[slevel]),
 						GTK_PIXMAP (uinfo -> smile_indicator));
 
 		/* Overall rip */
@@ -621,9 +621,9 @@ void UpdateRipProgress (GripInfo *ginfo) {
 			}
 			ginfo -> rip_thread = NULL;
 
-			CopyPixmap (GTK_PIXMAP (uinfo -> empty_image),
+			copy_pixmap (GTK_PIXMAP (uinfo -> empty_image),
 						GTK_PIXMAP (uinfo -> lcd_smile_indicator));
-			CopyPixmap (GTK_PIXMAP (uinfo -> empty_image),
+			copy_pixmap (GTK_PIXMAP (uinfo -> empty_image),
 						GTK_PIXMAP (uinfo -> smile_indicator));
 
 			// Terminate encoding
@@ -641,22 +641,22 @@ void UpdateRipProgress (GripInfo *ginfo) {
 
 				ginfo -> all_riplast = 0;
 				ginfo -> ripping = FALSE;
-				SetChecked (uinfo, ginfo -> rip_track, FALSE);
+				set_checked (uinfo, ginfo -> rip_track, FALSE);
 
 				/* Get the title gain */
 				if (ginfo -> calc_gain) {
-					ginfo -> track_gain_adjustment = GetTitleGain ();
+					ginfo -> track_gain_adjustment = get_title_gain ();
 				}
 
 				/* Apply tag */
 				EncodeTrack enc_track;
-				FillInTrackInfo (ginfo, ginfo -> rip_track, &enc_track);
+				fill_in_track_info (ginfo, ginfo -> rip_track, &enc_track);
 				strcpy (enc_track.wav_filename, ginfo -> ripfile);  // FIXME: probably useless
 				ID3Add (ginfo, ginfo -> ripfile, &enc_track);
 
 				/* Do filtering of .wav file */
 				if (*ginfo -> wav_filter_cmd) {
-					DoWavFilter (ginfo);
+					do_wav_filter (ginfo);
 				}
 			} else {
 				// Remove temporary file
@@ -667,21 +667,21 @@ void UpdateRipProgress (GripInfo *ginfo) {
 			}
 
 			gtk_progress_bar_update (GTK_PROGRESS_BAR (uinfo -> ripprogbar), 0.0);
-			CopyPixmap (GTK_PIXMAP (uinfo -> empty_image),
+			copy_pixmap (GTK_PIXMAP (uinfo -> empty_image),
 						GTK_PIXMAP (uinfo -> rip_indicator));
 
 			if (!ginfo -> stop_rip) {
 				g_debug (_("Rip partial %d"), ginfo -> rip_partial);
 
 				g_debug (_("Next track is %d, total is %d"),
-						 NextTrackToRip (ginfo), ginfo -> disc.num_tracks);
+						 next_track_to_rip (ginfo), ginfo -> disc.num_tracks);
 
 				if (!ginfo -> rip_partial &&
-						(NextTrackToRip (ginfo) == ginfo -> disc.num_tracks)) {
+						(next_track_to_rip (ginfo) == ginfo -> disc.num_tracks)) {
 					g_debug (_("Check if we need to rip another track"));
 
-					if (!RipNextTrack (ginfo)) {
-						RipIsFinished (ginfo, FALSE);
+					if (!rip_next_track (ginfo)) {
+						rip_is_finished (ginfo, FALSE);
 					} else {
 						gtk_label_set (GTK_LABEL (uinfo -> rip_prog_label), _("Rip: Idle"));
 					}
@@ -689,12 +689,12 @@ void UpdateRipProgress (GripInfo *ginfo) {
 					gtk_label_set (GTK_LABEL (uinfo -> rip_prog_label), _("Rip: Idle"));
 				}
 			} else {
-				RipIsFinished (ginfo, TRUE);
+				rip_is_finished (ginfo, TRUE);
 			}
 		}
 	} else {
 		if (ginfo -> stop_rip) {
-			RipIsFinished (ginfo, TRUE);
+			rip_is_finished (ginfo, TRUE);
 		}
 	}
 
@@ -734,7 +734,7 @@ void UpdateRipProgress (GripInfo *ginfo) {
 		quarter = (int) (percent * 4.0);
 
 		if (quarter < 4)
-			CopyPixmap (GTK_PIXMAP (uinfo -> mp3_pix[quarter]),
+			copy_pixmap (GTK_PIXMAP (uinfo -> mp3_pix[quarter]),
 						GTK_PIXMAP (uinfo -> mp3_indicator));
 
 		if (!ginfo -> rip_partial && !ginfo -> stop_encode &&
@@ -762,7 +762,7 @@ void UpdateRipProgress (GripInfo *ginfo) {
 			ginfo -> all_enclast[mycpu] = 0;
 			gtk_progress_bar_update (GTK_PROGRESS_BAR (uinfo -> mp3progbar[mycpu]),
 									 0.0);
-			CopyPixmap (GTK_PIXMAP (uinfo -> empty_image),
+			copy_pixmap (GTK_PIXMAP (uinfo -> empty_image),
 						GTK_PIXMAP (uinfo -> mp3_indicator[mycpu]));
 
 			if (!ginfo -> stop_encode) {
@@ -773,15 +773,15 @@ void UpdateRipProgress (GripInfo *ginfo) {
 				if (*ginfo -> mp3_filter_cmd)
 					TranslateAndLaunch (ginfo -> mp3_filter_cmd, TranslateSwitch,
 										ginfo -> encoded_track[mycpu], FALSE,
-										& (ginfo -> sprefs), CloseStuff, (void *) ginfo);
+										& (ginfo -> sprefs), close_stuff, (void *) ginfo);
 
 
 				if (ginfo -> ripping_a_disc && !ginfo -> rip_partial &&
 						!ginfo -> ripping) {
-					if (RipNextTrack (ginfo)) {
+					if (rip_next_track (ginfo)) {
 //							ginfo -> doencode = TRUE;
 					} else {
-						RipIsFinished (ginfo, FALSE);
+						rip_is_finished (ginfo, FALSE);
 					}
 				}
 
@@ -808,7 +808,7 @@ void UpdateRipProgress (GripInfo *ginfo) {
 #endif
 }
 
-static void RipIsFinished (GripInfo *ginfo, gboolean aborted) {
+static void rip_is_finished (GripInfo *ginfo, gboolean aborted) {
 	GripGUI *uinfo = &(ginfo -> gui_info);
 	ginfo -> all_ripsize = 0;
 	ginfo -> all_ripdone = 0;
@@ -838,18 +838,18 @@ static void RipIsFinished (GripInfo *ginfo, gboolean aborted) {
 		}
 
 		if (ginfo -> calc_gain) {
-			ginfo -> disc_gain_adjustment = GetAlbumGain();
+			ginfo -> disc_gain_adjustment = get_album_gain();
 		}
 
 		if (*ginfo -> disc_filter_cmd) {
-			DoDiscFilter (ginfo);
+			do_disc_filter (ginfo);
 		}
 
 		if (ginfo -> eject_after_rip) {
 			/* Reset rip_finished since we're ejecting */
 			ginfo -> rip_finished = 0;
 
-			EjectDisc (NULL, ginfo);
+			eject_disc (NULL, ginfo);
 
 			if (ginfo -> eject_delay) {
 				ginfo -> auto_eject_countdown = ginfo -> eject_delay;
@@ -988,7 +988,7 @@ char *TranslateSwitch (char switch_char, void *data, gboolean *munge) {
 	return res;
 }
 
-static void CheckDupNames (GripInfo *ginfo) {
+static void check_dup_names (GripInfo *ginfo) {
 	int track, track2;
 	int numdups[MAX_TRACKS];
 	int count;
@@ -1022,7 +1022,7 @@ static void CheckDupNames (GripInfo *ginfo) {
 	}
 }
 
-void DoRip (GtkWidget *widget, gpointer data) {
+void do_rip (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 
 	ginfo = (GripInfo *) data;
@@ -1046,23 +1046,23 @@ void DoRip (GtkWidget *widget, gpointer data) {
 
 	/* Initialize gain calculation */
 	if (ginfo -> calc_gain) {
-		InitGainAnalysis (44100);
+		init_gain_analysis (44100);
 	}
 
-	CheckDupNames (ginfo);
+	check_dup_names (ginfo);
 
 	if (ginfo -> rip_partial) {
 		ginfo -> rip_track = CURRENT_TRACK;
 	} else {
 		if (ginfo -> add_m3u) {
-			AddM3U (ginfo);
+			add_m3u (ginfo);
 		}
 
-		SetCurrentTrackIndex (ginfo, 0);
+		set_current_track_index (ginfo, 0);
 		ginfo -> rip_track = 0;
 	}
 
-	if (NextTrackToRip (ginfo) == ginfo -> disc.num_tracks) {
+	if (next_track_to_rip (ginfo) == ginfo -> disc.num_tracks) {
 		GtkWidget *dialog = gtk_message_dialog_new (GTK_WINDOW (ginfo -> gui_info.app),
 							GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
 							GTK_MESSAGE_WARNING, GTK_BUTTONS_YES_NO,
@@ -1070,7 +1070,7 @@ void DoRip (GtkWidget *widget, gpointer data) {
 //	gtk_window_set_title (GTK_WINDOW (dialog), "Warning");
 		g_signal_connect (dialog,
 						  "response",
-						  G_CALLBACK (RipWholeCD),
+						  G_CALLBACK (rip_whole_disc),
 						  ginfo);
 		gtk_dialog_run (GTK_DIALOG (dialog));
 		gtk_widget_destroy (dialog);
@@ -1079,12 +1079,12 @@ void DoRip (GtkWidget *widget, gpointer data) {
 
 	ginfo -> stop_rip = FALSE;
 
-	CalculateAll (ginfo);
+	calculate_all (ginfo);
 
-	RipNextTrack (ginfo);
+	rip_next_track (ginfo);
 }
 
-static void RipWholeCD (GtkDialog *dialog, gint reply, gpointer data) {
+static void rip_whole_disc (GtkDialog *dialog, gint reply, gpointer data) {
 	int track;
 	GripInfo *ginfo;
 
@@ -1097,17 +1097,17 @@ static void RipWholeCD (GtkDialog *dialog, gint reply, gpointer data) {
 	ginfo = (GripInfo *) data;
 
 	for (track = 0; track < ginfo -> disc.num_tracks; ++track) {
-		SetChecked (& (ginfo -> gui_info), track, TRUE);
+		set_checked (& (ginfo -> gui_info), track, TRUE);
 	}
 
-	DoRip (NULL, ginfo);
+	do_rip (NULL, ginfo);
 }
 
-static int NextTrackToRip (GripInfo *ginfo) {
+static int next_track_to_rip (GripInfo *ginfo) {
 	int track;
 
 	for (track = 0; (track < ginfo -> disc.num_tracks) &&
-			(!TrackIsChecked (& (ginfo -> gui_info), track) ||
+			(!is_track_checked (& (ginfo -> gui_info), track) ||
 			 ! (ginfo -> disc).track[track].is_audio); track++)
 		;
 
@@ -1127,7 +1127,7 @@ static void gain_calc (gint16 *buffer, gsize bufsize) {
 		r_samples[count] = (Float_t) buffer[(count * 2) + 1];
 	}
 
-	AnalyzeSamples (l_samples, r_samples, 588, 2);
+	analyze_samples (l_samples, r_samples, 588, 2);
 }
 
 static gboolean rip_callback (gint16 *buffer, gsize bufsize, gfloat progress, int smilie_idx, gpointer user_data) {
@@ -1158,7 +1158,7 @@ static gboolean rip_callback (gint16 *buffer, gsize bufsize, gfloat progress, in
 	return TRUE;
 }
 
-static gboolean RipNextTrack (GripInfo *ginfo) {
+static gboolean rip_next_track (GripInfo *ginfo) {
 	GripGUI *uinfo;
 	char tmp[MAX_STRING];
 	unsigned long long bytesleft;
@@ -1169,14 +1169,14 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
 
 	uinfo = & (ginfo -> gui_info);
 
-	g_debug ("In RipNextTrack");
+	g_debug ("In rip_next_track");
 
 	if (ginfo -> ripping) {
 		return FALSE;
 	}
 
 	if (!ginfo -> rip_partial) {
-		ginfo -> rip_track = NextTrackToRip (ginfo);
+		ginfo -> rip_track = next_track_to_rip (ginfo);
 		g_assert (ginfo -> rip_track <= ginfo -> disc.num_tracks);
 	}
 	g_debug ("First checked track is %d", ginfo -> rip_track + 1);
@@ -1199,7 +1199,7 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
 		  gtk_clist_select_row(GTK_CLIST(uinfo -> trackclist),ginfo -> rip_track,0);
 		  }*/
 
-		CopyPixmap (GTK_PIXMAP (uinfo -> rip_pix[0]), GTK_PIXMAP (uinfo -> rip_indicator));
+		copy_pixmap (GTK_PIXMAP (uinfo -> rip_pix[0]), GTK_PIXMAP (uinfo -> rip_indicator));
 
 		if (ginfo -> stop_between_tracks) {
 			CDStop (& (ginfo -> disc));
@@ -1222,7 +1222,7 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
 
 		// Generate output filename
 		str = g_string_new (NULL);
-		FillInTrackInfo (ginfo, ginfo -> rip_track, &enc_track);
+		fill_in_track_info (ginfo, ginfo -> rip_track, &enc_track);
 		TranslateString (ginfo -> ripfileformat, str, TranslateSwitch,
 						 &enc_track, TRUE, & (ginfo -> sprefs));
 
@@ -1258,7 +1258,7 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
 				g_debug ("File %s has already been ripped. Skipping...", ginfo -> ripfile);
 
 //				ginfo -> ripping = TRUE;
-//				ginfo -> all_ripdone += CalculateWavSize (ginfo, ginfo -> rip_track);
+//				ginfo -> all_ripdone += calculate_wav_size (ginfo, ginfo -> rip_track);
 //				ginfo -> all_riplast = 0;
 
 				// FIXME: Free stuff?
@@ -1269,7 +1269,7 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
 		}
 
 		// This is currently wrong, but works as a sort of (much higher) upper limit, so let's keep it
-		bytesleft = BytesLeftInFS (ginfo -> ripfile);
+		bytesleft = bytes_left_in_fs (ginfo -> ripfile);
 		if (bytesleft < (ginfo -> ripsize * 1.5)) {
 			show_error (ginfo -> gui_info.app,
 						_("Out of space in output directory"));
@@ -1334,7 +1334,7 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
 	}
 }
 
-void FillInTrackInfo (GripInfo *ginfo, int track, EncodeTrack *new_track) {
+void fill_in_track_info (GripInfo *ginfo, int track, EncodeTrack *new_track) {
 	new_track -> ginfo = ginfo;
 
 	new_track -> wav_filename[0] = '\0';
@@ -1367,12 +1367,12 @@ void FillInTrackInfo (GripInfo *ginfo, int track, EncodeTrack *new_track) {
 }
 
 #if 0
-static void AddToEncode (GripInfo *ginfo, int track) {
+static void add_to_encode (GripInfo *ginfo, int track) {
 	EncodeTrack *new_track;
 
 	new_track = (EncodeTrack *) g_new (EncodeTrack, 1);
 
-	FillInTrackInfo (ginfo, track, new_track);
+	fill_in_track_info (ginfo, track, new_track);
 	strcpy (new_track -> wav_filename, ginfo -> ripfile);
 
 	if (!ginfo -> delayed_encoding) {
@@ -1418,7 +1418,7 @@ static gboolean MP3Encode (GripInfo *ginfo) {
 	ginfo -> encode_list = g_list_remove (ginfo -> encode_list, enc_track);
 	ginfo -> encoded_track[cpu] = enc_track;
 
-	CopyPixmap (GTK_PIXMAP (uinfo -> mp3_pix[0]),
+	copy_pixmap (GTK_PIXMAP (uinfo -> mp3_pix[0]),
 				GTK_PIXMAP (uinfo -> mp3_indicator[cpu]));
 
 	ginfo -> mp3_started[cpu] = time (NULL);
@@ -1452,7 +1452,7 @@ static gboolean MP3Encode (GripInfo *ginfo) {
 		return FALSE;
 	}
 
-	bytesleft = BytesLeftInFS (ginfo -> mp3file[cpu]);
+	bytesleft = bytes_left_in_fs (ginfo -> mp3file[cpu]);
 
 	conv_str = g_filename_to_utf8 (ginfo -> mp3file[cpu],
 								   strlen (ginfo -> mp3file[cpu]),
@@ -1488,7 +1488,7 @@ static gboolean MP3Encode (GripInfo *ginfo) {
 						enc_track, FALSE, & (ginfo -> sprefs));
 
 	/*
-	  ArgsToLocale(args);
+	  args_to_locale(args);
 	*/
 
 	for (arg = 0; args[arg]; arg++) {
@@ -1500,12 +1500,12 @@ static gboolean MP3Encode (GripInfo *ginfo) {
 	char_args[0] = FindRoot (ginfo -> mp3exename);
 
 	ginfo -> curr_pipe_fd =
-		GetStatusWindowPipe (ginfo -> gui_info.encode_status_window);
+		get_status_window_pipe (ginfo -> gui_info.encode_status_window);
 
 	ginfo -> mp3pid[cpu] = fork();
 
 	if (ginfo -> mp3pid[cpu] == 0) {
-		CloseStuff (ginfo);
+		close_stuff (ginfo);
 		setsid();
 		nice (ginfo -> mp3nice);
 		execv (ginfo -> mp3exename, char_args);
@@ -1524,13 +1524,13 @@ static gboolean MP3Encode (GripInfo *ginfo) {
 }
 #endif
 
-void CalculateAll (GripInfo *ginfo) {
+void calculate_all (GripInfo *ginfo) {
 	int track;
 	GripGUI *uinfo;
 
 	uinfo = & (ginfo -> gui_info);
 
-	g_debug (_("In CalculateAll"));
+	g_debug (_("In calculate_all"));
 
 	ginfo -> all_ripsize = 0;
 	ginfo -> all_ripdone = 0;
@@ -1550,9 +1550,9 @@ void CalculateAll (GripInfo *ginfo) {
 
 	for (track = 0; track < ginfo -> disc.num_tracks; ++track) {
 		if ((ginfo -> disc).track[track].is_audio &&
-				(TrackIsChecked (uinfo, track)) ) {
-			ginfo -> all_ripsize += CalculateWavSize (ginfo, track);
-			ginfo -> all_encsize += CalculateEncSize (ginfo, track);
+				(is_track_checked (uinfo, track)) ) {
+			ginfo -> all_ripsize += calculate_wav_size (ginfo, track);
+			ginfo -> all_encsize += calculate_enc_size (ginfo, track);
 		}
 	}
 
@@ -1560,7 +1560,7 @@ void CalculateAll (GripInfo *ginfo) {
 	g_debug (_("Total enc size is: %zu"), ginfo -> all_encsize);
 }
 
-static size_t CalculateWavSize (GripInfo *ginfo, int track) {
+static size_t calculate_wav_size (GripInfo *ginfo, int track) {
 	int frames;
 
 	frames = (ginfo -> disc.track[track + 1].start_frame - 1) -
@@ -1575,7 +1575,7 @@ static size_t CalculateWavSize (GripInfo *ginfo, int track) {
 	return frames * 2352;
 }
 
-static size_t CalculateEncSize (GripInfo *ginfo, int track) {
+static size_t calculate_enc_size (GripInfo *ginfo, int track) {
 	double tmp_encsize;
 	/* It's not the best way, but i couldn't find anything better */
 	tmp_encsize = (double) ((ginfo -> disc.track[track].length.mins * 60 +
@@ -1600,13 +1600,13 @@ static void on_rip_partial_sector_changed (GtkSpinButton *spinbutton, gpointer u
 #define STOCK_BTN_PLAY "gtk-media-play"
 #define STOCK_BTN_STOP "gtk-media-stop"
 
-static void PlaySegmentCB (GtkWidget *widget, gpointer data) {
+static void on_play_segment (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo = (GripInfo *) data;
 
 	// Toggle button between Play/Stop
 	if (strcmp (gtk_button_get_label (GTK_BUTTON (widget)), STOCK_BTN_PLAY) == 0) {
         gtk_button_set_label (GTK_BUTTON (widget), STOCK_BTN_STOP);
-        PlaySegment (ginfo, CURRENT_TRACK);
+        play_segment (ginfo, CURRENT_TRACK);
     } else {
         gtk_button_set_label (GTK_BUTTON (widget), STOCK_BTN_PLAY);
         CDStop (&(ginfo -> disc));
@@ -1646,7 +1646,7 @@ void on_menuitem_rip_partial_activate (GtkMenuItem *menuitem, gpointer user_data
 
 	GtkButton *button_partial_rip_play = GTK_BUTTON (gtk_builder_get_object (uinfo -> builder, "button_partial_rip_play"));
 	g_assert (button_partial_rip_play);
-	g_signal_connect (button_partial_rip_play, "clicked", G_CALLBACK (PlaySegmentCB), ginfo);
+	g_signal_connect (button_partial_rip_play, "clicked", G_CALLBACK (on_play_segment), ginfo);
 
 	gtk_dialog_run (dialog);
 	gtk_widget_hide (GTK_WIDGET (dialog));

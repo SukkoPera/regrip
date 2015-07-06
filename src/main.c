@@ -27,7 +27,7 @@
 #include <config.h>
 #include "grip.h"
 
-static gint TimeOut (gpointer data);
+static gint time_out (gpointer data);
 
 GtkWidget *grip_app;
 
@@ -85,15 +85,15 @@ int main (int argc, char *argv[]) {
 	                    no_redirect);
 	gtk_widget_show (grip_app);
 
-	gtk_timeout_add (1000, TimeOut, 0);
+	gtk_timeout_add (1000, time_out, 0);
 
 	gtk_main();
 
 	return 0;
 }
 
-static gint TimeOut (gpointer data) {
-	GripUpdate (grip_app);
+static gint time_out (gpointer data) {
+	grip_update (grip_app);
 
 	return TRUE;
 }

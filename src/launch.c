@@ -36,7 +36,7 @@
 #include "launch.h"
 
 /* Split a string into an array of arguments */
-int MakeArgs (char *str, GString **args, int maxargs) {
+int make_args (char *str, GString **args, int maxargs) {
 	int arg;
 	gboolean inquotes = FALSE;
 	gboolean escaped = FALSE;
@@ -271,7 +271,7 @@ int MakeTranslatedArgs (char *str, GString **args, int maxargs,
 	int arg;
 	GString *out, *tmp;
 
-	num_args = MakeArgs (str, args, maxargs);
+	num_args = make_args (str, args, maxargs);
 
 	for (arg = 0; args[arg]; arg++) {
 		out = g_string_new (NULL);
@@ -290,7 +290,7 @@ int MakeTranslatedArgs (char *str, GString **args, int maxargs,
 extern char *FindRoot (char *);
 
 /*
-void ArgsToLocale(GString **args)
+void args_to_locale(GString **args)
 {
   char *new_str;
   GString *new_arg;
@@ -327,7 +327,7 @@ void TranslateAndLaunch (char *cmd, char * (*trans_func) (char, void *, gboolean
 	MakeTranslatedArgs (cmd, args, 100, trans_func, user_data, do_munge_default, prefs);
 
 	/*
-	  ArgsToLocale(args);
+	  args_to_locale(args);
 	*/
 
 	for (arg = 1; args[arg]; arg++) {

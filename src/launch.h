@@ -32,7 +32,7 @@ typedef struct {
   char allow_these_chars[256];
 } StrTransPrefs;
 
-int MakeArgs(char *str,GString **args,int maxargs);
+int make_args(char *str,GString **args,int maxargs);
 gchar *expand_userdir (char *path);
 void TranslateString(char *instr,GString *outstr,
 		     char *(*trans_func)(char,void *,gboolean *),
@@ -45,7 +45,7 @@ int MakeTranslatedArgs(char *str,GString **args,int maxargs,
 		       void *user_data,gboolean do_munge_default,
 		       StrTransPrefs *prefs);
 /*
-void ArgsToLocale(GString **args);
+void args_to_locale(GString **args);
 */
 void TranslateAndLaunch(char *cmd,char *(*trans_func)(char,void *,gboolean *),
 			void *user_data,gboolean do_munge_default,

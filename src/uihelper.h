@@ -24,14 +24,14 @@
 #include <gdk/gdk.h>
 
 /* Routines from uihelper.c */
-GtkTooltips *MakeToolTip(void);
-GdkColor *MakeColor(int red,int green,int blue);
-GtkStyle *MakeStyle(GdkColor *fg,GdkColor *bg,gboolean do_grade);
-GtkWidget *BuildMenuItemXpm(GtkWidget *xpm, gchar *text);
-GtkWidget *BuildMenuItem(gchar *impath, gchar *text, gboolean stock);
-GtkWidget *NewBlankPixmap(GtkWidget *widget);
-GtkWidget *ImageButton(GtkWidget *widget,GtkWidget *image);
-GtkWidget *Loadxpm(GtkWidget *widget,char **xpm);
-void CopyPixmap(GtkPixmap *src,GtkPixmap *dest);
+GtkTooltips *make_tooltip(void);
+GdkColor *make_color(int red,int green,int blue);
+GtkStyle *make_style(GdkColor *fg,GdkColor *bg,gboolean do_grade);
+GtkWidget *build_menuitem_xpm(GtkWidget *xpm, gchar *text);
+GtkWidget *build_menuitem(gchar *impath, gchar *text, gboolean stock);
+GtkWidget *new_blank_pixmap(GtkWidget *widget);
+GtkWidget *image_button(GtkWidget *widget,GtkWidget *image);
+GtkWidget *load_xpm(GtkWidget *widget,char **xpm);
+void copy_pixmap(GtkPixmap *src,GtkPixmap *dest);
 gint SizeInDubs(GdkFont *font,gint numchars);
-void UpdateGTK(void);
+void update_gtk(void);

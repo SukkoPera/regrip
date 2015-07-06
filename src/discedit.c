@@ -251,16 +251,16 @@ int cddb_2_id3[] = {
 };
 #endif
 
-static void SaveDiscInfo (GtkWidget *widget, gpointer data);
-static void TitleEditChanged (GtkWidget *widget, gpointer data);
-static void ArtistEditChanged (GtkWidget *widget, gpointer data);
-static void YearEditChanged (GtkWidget *widget, gpointer data);
-static void EditNextTrack (GtkWidget *widget, gpointer data);
-static void GenreChanged (GtkWidget *widget, gpointer data);
-static void SeparateFields (char *buf, char *field1, char *field2, char *sep);
-static void SplitTitleArtist (GtkWidget *widget, gpointer data);
-static void SubmitEntryCB (GtkWidget *widget, gpointer data);
-static void GetDiscDBGenre (GripInfo *ginfo);
+static void save_disc_info (GtkWidget *widget, gpointer data);
+static void on_title_edit_changed (GtkWidget *widget, gpointer data);
+static void on_artist_edit_changed (GtkWidget *widget, gpointer data);
+static void on_year_edit_changed (GtkWidget *widget, gpointer data);
+static void edit_next_track (GtkWidget *widget, gpointer data);
+static void on_genre_changed (GtkWidget *widget, gpointer data);
+static void separate_fields (char *buf, char *field1, char *field2, char *sep);
+static void split_title_artist (GtkWidget *widget, gpointer data);
+static void on_submit_entry (GtkWidget *widget, gpointer data);
+static void get_discDBGenre (GripInfo *ginfo);
 
 
 GtkWidget *MakeEditBox (GripInfo *ginfo) {
@@ -314,7 +314,7 @@ GtkWidget *MakeEditBox (GripInfo *ginfo) {
 
 	uinfo -> title_edit_entry = gtk_entry_new_with_max_length (MAX_STRING);
 	gtk_signal_connect (GTK_OBJECT (uinfo -> title_edit_entry), "changed",
-	                    GTK_SIGNAL_FUNC (TitleEditChanged), (gpointer)ginfo);
+	                    GTK_SIGNAL_FUNC (on_title_edit_changed), (gpointer)ginfo);
 	gtk_entry_set_position (GTK_ENTRY (uinfo -> title_edit_entry), 0);
 	gtk_box_pack_start (GTK_BOX (hbox), uinfo -> title_edit_entry, TRUE, TRUE, 0);
 	gtk_widget_show (uinfo -> title_edit_entry);
@@ -331,7 +331,7 @@ GtkWidget *MakeEditBox (GripInfo *ginfo) {
 
 	uinfo -> artist_edit_entry = gtk_entry_new_with_max_length (MAX_STRING);
 	gtk_signal_connect (GTK_OBJECT (uinfo -> artist_edit_entry), "changed",
-	                    GTK_SIGNAL_FUNC (ArtistEditChanged), (gpointer)ginfo);
+	                    GTK_SIGNAL_FUNC (on_artist_edit_changed), (gpointer)ginfo);
 	gtk_entry_set_position (GTK_ENTRY (uinfo -> artist_edit_entry), 0);
 	gtk_box_pack_start (GTK_BOX (hbox), uinfo -> artist_edit_entry, TRUE, TRUE, 0);
 	gtk_widget_show (uinfo -> artist_edit_entry);
@@ -364,12 +364,12 @@ GtkWidget *MakeEditBox (GripInfo *ginfo) {
     gtk_entry_completion_set_minimum_key_length (comp, 1);
     gtk_entry_set_completion (boxEntry, comp);
 
-    gtk_signal_connect (GTK_OBJECT (uinfo -> genre_combo), "changed", G_CALLBACK (GenreChanged), ginfo);
+    gtk_signal_connect (GTK_OBJECT (uinfo -> genre_combo), "changed", G_CALLBACK (on_genre_changed), ginfo);
 
 	gtk_box_pack_start (GTK_BOX (hbox), uinfo -> genre_combo, TRUE, TRUE, 0);
 	gtk_widget_show (uinfo -> genre_combo);
 
-	SetGenre (ginfo, ginfo -> ddata.data_genre);
+	set_genre (ginfo, ginfo -> ddata.data_genre);
 
 	gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
 	gtk_widget_show (hbox);
@@ -385,7 +385,7 @@ GtkWidget *MakeEditBox (GripInfo *ginfo) {
 
 	uinfo -> year_spin_button = gtk_spin_button_new (GTK_ADJUSTMENT (adj), 0.5, 0);
 	gtk_signal_connect (GTK_OBJECT (uinfo -> year_spin_button), "value_changed",
-	                    GTK_SIGNAL_FUNC (YearEditChanged), (gpointer)ginfo);
+	                    GTK_SIGNAL_FUNC (on_year_edit_changed), (gpointer)ginfo);
 	gtk_box_pack_start (GTK_BOX (hbox), uinfo -> year_spin_button, TRUE, TRUE, 0);
 	gtk_widget_show (uinfo -> year_spin_button);
 
@@ -401,9 +401,9 @@ GtkWidget *MakeEditBox (GripInfo *ginfo) {
 
 	uinfo -> track_edit_entry = gtk_entry_new_with_max_length (MAX_STRING);
 	gtk_signal_connect (GTK_OBJECT (uinfo -> track_edit_entry), "changed",
-	                    GTK_SIGNAL_FUNC (TrackEditChanged), (gpointer)ginfo);
+	                    GTK_SIGNAL_FUNC (on_track_edit_changed), (gpointer)ginfo);
 	gtk_signal_connect (GTK_OBJECT (uinfo -> track_edit_entry), "activate",
-	                    GTK_SIGNAL_FUNC (EditNextTrack), (gpointer)ginfo);
+	                    GTK_SIGNAL_FUNC (edit_next_track), (gpointer)ginfo);
 	gtk_box_pack_start (GTK_BOX (hbox), uinfo -> track_edit_entry, TRUE, TRUE, 0);
 	gtk_widget_show (uinfo -> track_edit_entry);
 
@@ -421,7 +421,7 @@ GtkWidget *MakeEditBox (GripInfo *ginfo) {
 
 	uinfo -> track_artist_edit_entry = gtk_entry_new_with_max_length (MAX_STRING);
 	gtk_signal_connect (GTK_OBJECT (uinfo -> track_artist_edit_entry), "changed",
-	                    GTK_SIGNAL_FUNC (TrackEditChanged), (gpointer)ginfo);
+	                    GTK_SIGNAL_FUNC (on_track_edit_changed), (gpointer)ginfo);
 	gtk_box_pack_start (GTK_BOX (hbox), uinfo -> track_artist_edit_entry,
 	                    TRUE, TRUE, 0);
 	gtk_widget_show (uinfo -> track_artist_edit_entry);
@@ -438,14 +438,14 @@ GtkWidget *MakeEditBox (GripInfo *ginfo) {
 	button = gtk_button_new_with_label (_("Title/Artist"));
 	gtk_object_set_user_data (GTK_OBJECT (button), (gpointer)0);
 	gtk_signal_connect (GTK_OBJECT (button), "clicked",
-	                    GTK_SIGNAL_FUNC (SplitTitleArtist), (gpointer)ginfo);
+	                    GTK_SIGNAL_FUNC (split_title_artist), (gpointer)ginfo);
 	gtk_box_pack_start (GTK_BOX (hbox), button, FALSE, FALSE, 0);
 	gtk_widget_show (button);
 
 	button = gtk_button_new_with_label (_("Artist/Title"));
 	gtk_object_set_user_data (GTK_OBJECT (button), (gpointer)1);
 	gtk_signal_connect (GTK_OBJECT (button), "clicked",
-	                    GTK_SIGNAL_FUNC (SplitTitleArtist), (gpointer)ginfo);
+	                    GTK_SIGNAL_FUNC (split_title_artist), (gpointer)ginfo);
 	gtk_box_pack_start (GTK_BOX (hbox), button, FALSE, FALSE, 0);
 	gtk_widget_show (button);
 
@@ -475,24 +475,24 @@ GtkWidget *MakeEditBox (GripInfo *ginfo) {
 	                         & (ginfo -> ddata.data_multi_artist),
 	                         _("Multi-artist"));
 	gtk_signal_connect (GTK_OBJECT (uinfo -> multi_artist_button), "clicked",
-	                    GTK_SIGNAL_FUNC (UpdateMultiArtist), (gpointer)ginfo);
+	                    GTK_SIGNAL_FUNC (update_multi_artist), (gpointer)ginfo);
 	gtk_box_pack_start (GTK_BOX (hbox), check, TRUE, TRUE, 0);
 	gtk_widget_show (check);
 
-	button = ImageButton (GTK_WIDGET (uinfo -> app), uinfo -> save_image);
+	button = image_button (GTK_WIDGET (uinfo -> app), uinfo -> save_image);
 	gtk_widget_set_style (button, uinfo -> style_dark_grey);
 	gtk_signal_connect (GTK_OBJECT (button), "clicked",
-	                    GTK_SIGNAL_FUNC (SaveDiscInfo), (gpointer)ginfo);
-	gtk_tooltips_set_tip (MakeToolTip(), button,
+	                    GTK_SIGNAL_FUNC (save_disc_info), (gpointer)ginfo);
+	gtk_tooltips_set_tip (make_tooltip(), button,
 	                      _("Save disc info"), NULL);
 	gtk_box_pack_start (GTK_BOX (hbox), button, FALSE, FALSE, 0);
 	gtk_widget_show (button);
 
-	button = ImageButton (GTK_WIDGET (uinfo -> app), uinfo -> mail_image);
+	button = image_button (GTK_WIDGET (uinfo -> app), uinfo -> mail_image);
 	gtk_widget_set_style (button, uinfo -> style_dark_grey);
 	gtk_signal_connect (GTK_OBJECT (button), "clicked",
-	                    GTK_SIGNAL_FUNC (SubmitEntryCB), (gpointer)ginfo);
-	gtk_tooltips_set_tip (MakeToolTip(), button,
+	                    GTK_SIGNAL_FUNC (on_submit_entry), (gpointer)ginfo);
+	gtk_tooltips_set_tip (make_tooltip(), button,
 	                      _("Submit disc info"), NULL);
 	gtk_box_pack_start (GTK_BOX (hbox), button, FALSE, FALSE, 0);
 	gtk_widget_show (button);
@@ -506,7 +506,7 @@ GtkWidget *MakeEditBox (GripInfo *ginfo) {
 	return frame;
 }
 
-void UpdateMultiArtist (GtkWidget *widget, gpointer data) {
+void update_multi_artist (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 	GripGUI *uinfo;
 
@@ -515,13 +515,13 @@ void UpdateMultiArtist (GtkWidget *widget, gpointer data) {
 
 	if (!ginfo -> ddata.data_multi_artist) {
 		gtk_widget_hide (uinfo -> multi_artist_box);
-		UpdateGTK ();
+		update_gtk ();
 	} else {
 		gtk_widget_show (uinfo -> multi_artist_box);
 	}
 }
 
-void ToggleTrackEdit (GtkWidget *widget, gpointer data) {
+void toggle_track_edit (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 	GripGUI *uinfo;
 
@@ -534,10 +534,10 @@ void ToggleTrackEdit (GtkWidget *widget, gpointer data) {
 		                   uinfo -> win_height);
 
 		gtk_widget_hide (uinfo -> track_edit_box);
-		UpdateGTK();
+		update_gtk();
 	} else {
 		if (uinfo -> minimized) {
-			MinMax (NULL, (gpointer) ginfo);
+			min_max (NULL, (gpointer) ginfo);
 		}
 
 		gtk_widget_show (uinfo -> track_edit_box);
@@ -550,9 +550,9 @@ void ToggleTrackEdit (GtkWidget *widget, gpointer data) {
 	uinfo -> track_edit_visible = !uinfo -> track_edit_visible;
 }
 
-void SetTitle (GripInfo *ginfo, char *title) {
+void set_title (GripInfo *ginfo, char *title) {
 	g_signal_handlers_block_by_func (G_OBJECT (ginfo -> gui_info.title_edit_entry),
-	                                 TitleEditChanged, (gpointer) ginfo);
+	                                 on_title_edit_changed, (gpointer) ginfo);
 
 	gtk_entry_set_text (GTK_ENTRY (ginfo -> gui_info.title_edit_entry), title);
 	gtk_entry_set_position (GTK_ENTRY (ginfo -> gui_info.title_edit_entry), 0);
@@ -561,12 +561,12 @@ void SetTitle (GripInfo *ginfo, char *title) {
 	gtk_label_set (GTK_LABEL (ginfo -> gui_info.disc_name_label), title);
 
 	g_signal_handlers_unblock_by_func (G_OBJECT (ginfo -> gui_info.title_edit_entry),
-	                                   TitleEditChanged, (gpointer) ginfo);
+	                                   on_title_edit_changed, (gpointer) ginfo);
 }
 
-void SetArtist (GripInfo *ginfo, char *artist) {
+void set_artist (GripInfo *ginfo, char *artist) {
 	g_signal_handlers_block_by_func (G_OBJECT (ginfo -> gui_info.artist_edit_entry),
-	                                 ArtistEditChanged, (gpointer) ginfo);
+	                                 on_artist_edit_changed, (gpointer) ginfo);
 
 	gtk_entry_set_text (GTK_ENTRY (ginfo -> gui_info.artist_edit_entry), artist);
 	gtk_entry_set_position (GTK_ENTRY (ginfo -> gui_info.artist_edit_entry), 0);
@@ -575,21 +575,21 @@ void SetArtist (GripInfo *ginfo, char *artist) {
 	gtk_label_set (GTK_LABEL (ginfo -> gui_info.disc_artist_label), artist);
 
 	g_signal_handlers_unblock_by_func (G_OBJECT (ginfo -> gui_info.artist_edit_entry),
-	                                   ArtistEditChanged, (gpointer) ginfo);
+	                                   on_artist_edit_changed, (gpointer) ginfo);
 }
 
-void SetYear (GripInfo *ginfo, int year) {
+void set_year (GripInfo *ginfo, int year) {
 	gtk_spin_button_set_value (GTK_SPIN_BUTTON (ginfo -> gui_info.year_spin_button),
 	                           (gfloat) year);
 }
 
-void SetGenre (GripInfo *ginfo, char *genre) {
+void set_genre (GripInfo *ginfo, char *genre) {
 	GripGUI *uinfo = &(ginfo -> gui_info);
 
     gtk_entry_set_text (GTK_ENTRY (gtk_bin_get_child (GTK_BIN (uinfo -> genre_combo))), genre);
 }
 
-static void SaveDiscInfo (GtkWidget *widget, gpointer data) {
+static void save_disc_info (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 
 	ginfo = (GripInfo *) data;
@@ -603,7 +603,7 @@ static void SaveDiscInfo (GtkWidget *widget, gpointer data) {
 		                     _("No disc present."));
 }
 
-static void TitleEditChanged (GtkWidget *widget, gpointer data) {
+static void on_title_edit_changed (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 
 	ginfo = (GripInfo *) data;
@@ -615,7 +615,7 @@ static void TitleEditChanged (GtkWidget *widget, gpointer data) {
 	               ginfo -> ddata.data_title);
 }
 
-static void ArtistEditChanged (GtkWidget *widget, gpointer data) {
+static void on_artist_edit_changed (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 
 	ginfo = (GripInfo *) data;
@@ -627,7 +627,7 @@ static void ArtistEditChanged (GtkWidget *widget, gpointer data) {
 	               ginfo -> ddata.data_artist);
 }
 
-static void YearEditChanged (GtkWidget *widget, gpointer data) {
+static void on_year_edit_changed (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 
 	ginfo = (GripInfo *) data;
@@ -637,7 +637,7 @@ static void YearEditChanged (GtkWidget *widget, gpointer data) {
 	                                      year_spin_button));
 }
 
-void TrackEditChanged (GtkWidget *widget, gpointer data) {
+void on_track_edit_changed (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 	char newname[MAX_STRING];
 	GtkTreeIter iter;
@@ -674,17 +674,17 @@ void TrackEditChanged (GtkWidget *widget, gpointer data) {
 	    CURRENT_TRACK,0,newname);*/
 }
 
-static void EditNextTrack (GtkWidget *widget, gpointer data) {
+static void edit_next_track (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 
 	ginfo = (GripInfo *) data;
 
-	NextTrack (ginfo);
+	next_track (ginfo);
 	/*  gtk_editable_select_region(GTK_EDITABLE(track_edit_entry),0,-1);*/
 	gtk_widget_grab_focus (GTK_WIDGET (ginfo -> gui_info.track_edit_entry));
 }
 
-static void GenreChanged (GtkWidget *widget, gpointer data) {
+static void on_genre_changed (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo = (GripInfo *) data;
 	GripGUI *uinfo = &(ginfo -> gui_info);
 
@@ -692,7 +692,7 @@ static void GenreChanged (GtkWidget *widget, gpointer data) {
 	strncpy (ginfo -> ddata.data_genre, genre, MAX_STRING);
 }
 
-static void SeparateFields (char *buf, char *field1, char *field2, char *sep) {
+static void separate_fields (char *buf, char *field1, char *field2, char *sep) {
 	char *tmp;
 	char spare[80];
 
@@ -715,7 +715,7 @@ static void SeparateFields (char *buf, char *field1, char *field2, char *sep) {
 	strcpy (field1, spare);
 }
 
-static void SplitTitleArtist (GtkWidget *widget, gpointer data) {
+static void split_title_artist (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 	int track;
 	int mode;
@@ -725,21 +725,21 @@ static void SplitTitleArtist (GtkWidget *widget, gpointer data) {
 
 	for (track = 0; track < ginfo -> disc.num_tracks; track++) {
 		if (mode == 0)
-			SeparateFields (ginfo -> ddata.data_track[track].track_name,
+			separate_fields (ginfo -> ddata.data_track[track].track_name,
 			                ginfo -> ddata.data_track[track].track_name,
 			                ginfo -> ddata.data_track[track].track_artist,
 			                ginfo -> title_split_chars);
 		else
-			SeparateFields (ginfo -> ddata.data_track[track].track_name,
+			separate_fields (ginfo -> ddata.data_track[track].track_name,
 			                ginfo -> ddata.data_track[track].track_artist,
 			                ginfo -> ddata.data_track[track].track_name,
 			                ginfo -> title_split_chars);
 	}
 
-	UpdateTracks (ginfo);
+	update_tracks (ginfo);
 }
 
-static void SubmitEntryCB (GtkWidget *widget, gpointer data) {
+static void on_submit_entry (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo;
 	int len;
 
@@ -755,7 +755,7 @@ static void SubmitEntryCB (GtkWidget *widget, gpointer data) {
 	if (!ginfo -> ddata.data_genre) {
 		/*    gnome_app_warning((GnomeApp *)ginfo -> gui_info.app,
 		      _("Submission requires a genre other than 'unknown'."));*/
-		GetDiscDBGenre (ginfo);
+		get_discDBGenre (ginfo);
 
 		return;
 	}
@@ -789,7 +789,7 @@ static void SubmitEntryCB (GtkWidget *widget, gpointer data) {
 //	gtk_window_set_title (GTK_WINDOW (dialog), "Warning");
 		g_signal_connect (dialog,
 		                  "response",
-		                  G_CALLBACK (SubmitEntry),
+		                  G_CALLBACK (submit_entry),
 		                  ginfo);
 		gtk_dialog_run (GTK_DIALOG (dialog));
 		gtk_widget_destroy (dialog);
@@ -802,7 +802,7 @@ static void SubmitEntryCB (GtkWidget *widget, gpointer data) {
 //	gtk_window_set_title (GTK_WINDOW (dialog), "Warning");
 		g_signal_connect (dialog,
 		                  "response",
-		                  G_CALLBACK (SubmitEntry),
+		                  G_CALLBACK (submit_entry),
 		                  ginfo);
 		gtk_dialog_run (GTK_DIALOG (dialog));
 		gtk_widget_destroy (dialog);
@@ -810,7 +810,7 @@ static void SubmitEntryCB (GtkWidget *widget, gpointer data) {
 }
 
 /* Make the user pick a DiscDB genre on submit*/
-static void GetDiscDBGenre (GripInfo *ginfo) {
+static void get_discDBGenre (GripInfo *ginfo) {
 	GtkWidget *dialog;
 	GtkWidget *label;
 	GtkWidget *submit_button;
@@ -845,7 +845,7 @@ static void GetDiscDBGenre (GripInfo *ginfo) {
 //		gtk_object_set_user_data (GTK_OBJECT (item),
 //		                          GINT_TO_POINTER (genre));
 //		gtk_signal_connect (GTK_OBJECT (item), "select",
-//		                    GTK_SIGNAL_FUNC (DiscDBGenreChanged), (gpointer)ginfo);
+//		                    GTK_SIGNAL_FUNC (DiscDBon_genre_changed), (gpointer)ginfo);
 //		gtk_container_add (GTK_CONTAINER (GTK_COMBO (genre_combo) -> list), item);
 //		gtk_widget_show (item);
 //	}
@@ -859,7 +859,7 @@ static void GetDiscDBGenre (GripInfo *ginfo) {
 	submit_button = gtk_button_new_with_label (_("Submit"));
 
 	gtk_signal_connect (GTK_OBJECT (submit_button), "clicked",
-	                    (gpointer)SubmitEntryCB, (gpointer)ginfo);
+	                    (gpointer)on_submit_entry, (gpointer)ginfo);
 	gtk_signal_connect_object (GTK_OBJECT (submit_button), "clicked",
 	                           GTK_SIGNAL_FUNC (gtk_widget_destroy),
 	                           GTK_OBJECT (dialog));
@@ -883,7 +883,7 @@ static void GetDiscDBGenre (GripInfo *ginfo) {
 
 #if 0
 /* Set the DiscDB genre when a combo item is selected */
-static void DiscDBGenreChanged (GtkWidget *widget, gpointer data) {
+static void DiscDBon_genre_changed (GtkWidget *widget, gpointer data) {
 	GripInfo *ginfo = (GripInfo *) data;
 	GripGUI *uinfo = &(ginfo -> gui_info);
 

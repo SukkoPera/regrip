@@ -44,30 +44,30 @@
 #define NEXT_TRACK (ginfo->tracks_prog[ginfo->current_track_index + 1])
 
 
-void MinMax (GtkWidget *widget, gpointer data);
-void SetCurrentTrackIndex (GripInfo *ginfo, int track);
-void SetChecked (GripGUI *uinfo, int track, gboolean checked);
-gboolean TrackIsChecked (GripGUI *uinfo, int track);
-void EjectDisc (GtkWidget *widget, gpointer data);
-void PlaySegment (GripInfo *ginfo, int track);
-void FastFwd (GripInfo *ginfo);
-void Rewind (GripInfo *ginfo);
-void LookupDisc (GripInfo *ginfo);
+void min_max (GtkWidget *widget, gpointer data);
+void set_current_track_index (GripInfo *ginfo, int track);
+void set_checked (GripGUI *uinfo, int track, gboolean checked);
+gboolean is_track_checked (GripGUI *uinfo, int track);
+void eject_disc (GtkWidget *widget, gpointer data);
+void play_segment (GripInfo *ginfo, int track);
+void fast_fwd_disc (GripInfo *ginfo);
+void rewind_disc (GripInfo *ginfo);
+void lookup_disc (GripInfo *ginfo);
 GtkWidget *MakePlayOpts (GripInfo *ginfo);
 GtkWidget *MakeControls (GripInfo *ginfo);
-int GetLengthRipWidth (GripInfo *ginfo);
-void ResizeTrackList (GripInfo *ginfo);
+int get_length_rip_width (GripInfo *ginfo);
+void resize_track_list (GripInfo *ginfo);
 GtkWidget *MakeTrackPage (GripInfo *ginfo);
-void NextTrack (GripInfo *ginfo);
-void CheckForNewDisc (GripInfo *ginfo, gboolean force);
-void ScanDisc (GtkWidget *widget, gpointer data);
-void UpdateDisplay (GripInfo *ginfo);
-void UpdateTracks (GripInfo *ginfo);
-void SubmitEntry (GtkDialog *dialog, gint reply, gpointer data);
+void next_track (GripInfo *ginfo);
+void check_for_new_disc (GripInfo *ginfo, gboolean force);
+void scan_disc (GtkWidget *widget, gpointer data);
+void update_display (GripInfo *ginfo);
+void update_tracks (GripInfo *ginfo);
+void submit_entry (GtkDialog *dialog, gint reply, gpointer data);
 
-void PlayTrackCB (GtkWidget *widget, gpointer data);
-void StopPlayCB (GtkWidget *widget, gpointer data);
-void NextTrackCB (GtkWidget *widget, gpointer data);
-void PrevTrackCB (GtkWidget *widget, gpointer data);
+void on_play_track (GtkWidget *widget, gpointer data);
+void Stopon_play (GtkWidget *widget, gpointer data);
+void on_next_track (GtkWidget *widget, gpointer data);
+void on_prev_track (GtkWidget *widget, gpointer data);
 
 #endif /* ifndef GRIP_CDPLAY_H */

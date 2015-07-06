@@ -25,10 +25,10 @@
 
 #include "grip.h"
 
-void UpdateTray (GripInfo *ginfo);
-void TrayMenuShowPlay (GripInfo *ginfo);
-void TrayMenuShowPause (GripInfo *ginfo);
-void TrayUnGrayMenu (GripInfo *ginfo);
-void TrayGrayMenu (GripInfo *ginfo);
+void update_tray (GripInfo *ginfo);
+void tray_menu_show_play (GripInfo *ginfo);
+void tray_menu_show_pause (GripInfo *ginfo);
+void tray_ungray_menu (GripInfo *ginfo);
+void tray_gray_menu (GripInfo *ginfo);
 
 #endif

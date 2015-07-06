@@ -28,11 +28,11 @@
 /*
  *  Here's the deal. Call
  *
- *    InitGainAnalysis ( long samplefreq );
+ *    init_gain_analysis ( long samplefreq );
  *
  *  to initialize everything. Call
  *
- *    AnalyzeSamples ( const Float_t*  left_samples,
+ *    analyze_samples ( const Float_t*  left_samples,
  *                     const Float_t*  right_samples,
  *                     size_t          num_samples,
  *                     int             num_channels );
@@ -41,15 +41,15 @@
  *  If mono, pass the sample buffer in through left_samples, leave
  *  right_samples NULL, and make sure num_channels = 1.
  *
- *    GetTitleGain()
+ *    get_title_gain()
  *
  *  will return the recommended dB level change for all samples analyzed
- *  SINCE THE LAST TIME you called GetTitleGain() OR InitGainAnalysis().
+ *  SINCE THE LAST TIME you called get_title_gain() OR init_gain_analysis().
  *
- *    GetAlbumGain()
+ *    get_album_gain()
  *
  *  will return the recommended dB level change for all samples analyzed
- *  since InitGainAnalysis() was called and finalized with GetTitleGain().
+ *  since init_gain_analysis() was called and finalized with get_title_gain().
  *
  *  Pseudo-code to process an album:
  *
@@ -59,13 +59,13 @@
  *    unsigned int  num_songs;
  *    unsigned int  i;
  *
- *    InitGainAnalysis ( 44100 );
+ *    init_gain_analysis ( 44100 );
  *    for ( i = 1; i <= num_songs; i++ ) {
  *        while ( ( num_samples = getSongSamples ( song[i], left_samples, right_samples ) ) > 0 )
- *            AnalyzeSamples ( left_samples, right_samples, num_samples, 2 );
- *        fprintf ("Recommended dB change for song %2d: %+6.2f dB\n", i, GetTitleGain() );
+ *            analyze_samples ( left_samples, right_samples, num_samples, 2 );
+ *        fprintf ("Recommended dB change for song %2d: %+6.2f dB\n", i, get_title_gain() );
  *    }
- *    fprintf ("Recommended dB change for whole album: %+6.2f dB\n", GetAlbumGain() );
+ *    fprintf ("Recommended dB change for whole album: %+6.2f dB\n", get_album_gain() );
  */
 
 /*
@@ -75,7 +75,7 @@
  *  meaning they rely on up to <filter order> number of previous samples
  *  AND up to <filter order> number of previous filtered samples.
  *
- *  I set up the AnalyzeSamples routine to minimize memory usage and interface
+ *  I set up the analyze_samples routine to minimize memory usage and interface
  *  complexity. The speed isn't compromised too much (I don't think), but the
  *  internal complexity is higher than it should be for such a relatively
  *  simple routine.
@@ -203,7 +203,7 @@ filter ( const Float_t* input, Float_t* output, size_t nSamples, const Float_t* 
 // returns a INIT_GAIN_ANALYSIS_OK if successful, INIT_GAIN_ANALYSIS_ERROR if not
 
 int
-ResetSampleFrequency ( long samplefreq ) {
+reset_sample_frequency ( long samplefreq ) {
     int  i;
 
     // zero out initial values
@@ -235,9 +235,9 @@ ResetSampleFrequency ( long samplefreq ) {
 }
 
 int
-InitGainAnalysis ( long samplefreq )
+init_gain_analysis ( long samplefreq )
 {
-	if (ResetSampleFrequency(samplefreq) != INIT_GAIN_ANALYSIS_OK) {
+	if (reset_sample_frequency(samplefreq) != INIT_GAIN_ANALYSIS_OK) {
 		return INIT_GAIN_ANALYSIS_ERROR;
 	}
 
@@ -256,7 +256,7 @@ InitGainAnalysis ( long samplefreq )
 // returns GAIN_ANALYSIS_OK if successful, GAIN_ANALYSIS_ERROR if not
 
 int
-AnalyzeSamples ( const Float_t* left_samples, const Float_t* right_samples, size_t num_samples, int num_channels )
+analyze_samples ( const Float_t* left_samples, const Float_t* right_samples, size_t num_samples, int num_channels )
 {
     const Float_t*  curleft;
     const Float_t*  curright;
@@ -368,7 +368,7 @@ analyzeResult ( Uint32_t* Array, size_t len )
 
 
 Float_t
-GetTitleGain ( void )
+get_title_gain ( void )
 {
     Float_t  retval;
     int    i;
@@ -390,7 +390,7 @@ GetTitleGain ( void )
 
 
 Float_t
-GetAlbumGain ( void )
+get_album_gain ( void )
 {
     return analyzeResult ( B, sizeof(B)/sizeof(*B) );
 }

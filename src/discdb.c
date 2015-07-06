@@ -270,7 +270,7 @@ char *DiscDBGenre (int genre) {
 }
 
 /* Convert genre from text form into an integer value */
-int DiscDBGenreValue (char *genre) {
+int discDBGenre_value (char *genre) {
 	int pos;
 
 	for (pos = 0; pos < 12; pos++)
@@ -284,7 +284,7 @@ int DiscDBGenreValue (char *genre) {
 
 /* Split string into title/artist */
 
-void DiscDBParseTitle (char *buf, char *title, char *artist, char *sep) {
+void discDBParse_title (char *buf, char *title, char *artist, char *sep) {
 	char *tmp;
 
 	tmp = strtok (buf, sep);
@@ -327,7 +327,7 @@ static char *StrConvertEncoding (char *str, const char *from, const char *to,
 	return str;
 }
 
-gboolean DiscDBUTF8Validate (const DiscInfo *disc, const DiscData *data) {
+gboolean discDBUTF8_validate (const DiscInfo *disc, const DiscData *data) {
 	int track;
 
 	if (data->data_title && !g_utf8_validate (data->data_title, -1, NULL)) {
@@ -363,7 +363,7 @@ gboolean DiscDBUTF8Validate (const DiscInfo *disc, const DiscData *data) {
 }
 
 
-static void DiscDBConvertEncoding (DiscInfo *disc, DiscData *data,
+static void discDBConvert_encoding (DiscInfo *disc, DiscData *data,
                                    const char *from, const char *to) {
 	int track;
 
@@ -380,7 +380,7 @@ static void DiscDBConvertEncoding (DiscInfo *disc, DiscData *data,
 
 /* Read the actual DiscDB entry */
 
-gboolean DiscDBRead (DiscInfo *disc, DiscDBServer *server,
+gboolean discDBRead (DiscInfo *disc, DiscDBServer *server,
                      DiscDBHello *hello, DiscDBEntry *entry,
                      DiscData *data, char *encoding) {
 	int index;
@@ -423,16 +423,16 @@ gboolean DiscDBRead (DiscInfo *disc, DiscDBServer *server,
 
 	dataptr = result;
 
-	inbuffer = DiscDBReadLine (&dataptr);
+	inbuffer = discDBReadLine (&dataptr);
 
-	while ((inbuffer = DiscDBReadLine (&dataptr))) {
+	while ((inbuffer = discDBReadLine (&dataptr))) {
 		DiscDBProcessLine (inbuffer, data, disc->num_tracks);
 	}
 
 	/* Both disc title and artist have been stuffed in the title field, so the
 	   need to be separated */
 
-	DiscDBParseTitle (data->data_title, data->data_title, data->data_artist, "/");
+	discDBParse_title (data->data_title, data->data_title, data->data_artist, "/");
 
 	free (result);
 
@@ -440,7 +440,7 @@ gboolean DiscDBRead (DiscInfo *disc, DiscDBServer *server,
 //  data->data_genre=entry->entry_genre;    FIXME
 
 	if (strcasecmp (encoding, "utf-8")) {
-		DiscDBConvertEncoding (disc, data, encoding, "utf-8");
+		discDBConvert_encoding (disc, data, encoding, "utf-8");
 	}
 
 	return TRUE;

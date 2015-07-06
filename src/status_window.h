@@ -31,6 +31,6 @@ typedef struct {
 } StatusWindow;
 
 StatusWindow *NewStatusWindow(GtkWidget *box);
-void StatusWindowWrite(StatusWindow *sw,char *msg);
-int GetStatusWindowPipe(StatusWindow *sw);
+void status_window_write(StatusWindow *sw,char *msg);
+int get_status_window_pipe(StatusWindow *sw);
 

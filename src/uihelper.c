@@ -23,7 +23,7 @@
 
 #include "uihelper.h"
 
-GtkTooltips *MakeToolTip(void)
+GtkTooltips *make_tooltip(void)
 {
   GtkTooltips *tip;
 
@@ -34,7 +34,7 @@ GtkTooltips *MakeToolTip(void)
   return tip;
 }
 
-GdkColor *MakeColor(int red,int green,int blue)
+GdkColor *make_color(int red,int green,int blue)
 {
   GdkColor *c;
 
@@ -50,7 +50,7 @@ GdkColor *MakeColor(int red,int green,int blue)
 
 static gfloat style_color_mods[5]={0.0,-0.1,0.2,-0.2};
 
-GtkStyle *MakeStyle(GdkColor *fg,GdkColor *bg,gboolean do_grade)
+GtkStyle *make_style(GdkColor *fg,GdkColor *bg,gboolean do_grade)
 {
   GtkStyle *def;
   GtkStyle *sty;
@@ -74,7 +74,7 @@ GtkStyle *MakeStyle(GdkColor *fg,GdkColor *bg,gboolean do_grade)
   return sty;
 }
 
-GtkWidget *BuildMenuItem(gchar *impath, gchar *text, gboolean stock)
+GtkWidget *build_menuitem(gchar *impath, gchar *text, gboolean stock)
 {
   GtkWidget *item;
 
@@ -97,7 +97,7 @@ GtkWidget *BuildMenuItem(gchar *impath, gchar *text, gboolean stock)
   return item;
 }
 
-GtkWidget *BuildMenuItemXpm(GtkWidget *xpm, gchar *text)
+GtkWidget *build_menuitem_xpm(GtkWidget *xpm, gchar *text)
 {
   GtkWidget *item;
 
@@ -115,12 +115,12 @@ static char * empty_xpm[] = {
   " "
 };
 
-GtkWidget *NewBlankPixmap(GtkWidget *widget)
+GtkWidget *new_blank_pixmap(GtkWidget *widget)
 {
-  return Loadxpm(widget,empty_xpm);
+  return load_xpm(widget,empty_xpm);
 }
 
-GtkWidget *ImageButton(GtkWidget *widget,GtkWidget *image)
+GtkWidget *image_button(GtkWidget *widget,GtkWidget *image)
 {
   GtkWidget *button;
 
@@ -132,7 +132,7 @@ GtkWidget *ImageButton(GtkWidget *widget,GtkWidget *image)
   return button;
 }
 
-GtkWidget *Loadxpm(GtkWidget *widget,char **xpm)
+GtkWidget *load_xpm(GtkWidget *widget,char **xpm)
 {
   GdkBitmap *mask;
   GtkStyle *style;
@@ -150,7 +150,7 @@ GtkWidget *Loadxpm(GtkWidget *widget,char **xpm)
   return pixmapwid;
 }
 
-void CopyPixmap(GtkPixmap *src,GtkPixmap *dest)
+void copy_pixmap(GtkPixmap *src,GtkPixmap *dest)
 {
   GdkPixmap *gdkpix;
   GdkBitmap *mask;
@@ -159,7 +159,7 @@ void CopyPixmap(GtkPixmap *src,GtkPixmap *dest)
   gtk_pixmap_set(dest,gdkpix,mask);
 }
 
-void UpdateGTK(void)
+void update_gtk(void)
 {
   while(gtk_events_pending())
     gtk_main_iteration();

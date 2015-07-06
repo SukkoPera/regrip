@@ -361,10 +361,10 @@ typedef struct _grip_info {
 GtkWidget *GripNew (const gchar* geometry, char *device, char *scsi_device,
 					char *config_filename, gboolean force_small,
 					gboolean local_mode, gboolean no_redirect);
-void GripDie (GtkWidget *widget, gpointer data);
-void GripUpdate (GtkWidget *app);
-void Busy (GripGUI *uinfo);
-void UnBusy (GripGUI *uinfo);
-void CloseStuff (void *user_data);
+void grip_die (GtkWidget *widget, gpointer data);
+void grip_update (GtkWidget *app);
+void busy (GripGUI *uinfo);
+void Unbusy (GripGUI *uinfo);
+void close_stuff (void *user_data);
 
 #endif /* ifndef GRIP_H */

@@ -121,17 +121,17 @@ typedef struct _discdb_query {
 
 unsigned int DiscDBDiscid (DiscInfo *disc);
 char *DiscDBGenre (int genre);
-int DiscDBGenreValue (char *genre);
+int discDBGenre_value (char *genre);
 gboolean DiscDBDoQuery (DiscInfo *disc, DiscDBServer *server,
                         DiscDBHello *hello, DiscDBQuery *query);
-gboolean DiscDBRead (DiscInfo *disc, DiscDBServer *server,
+gboolean discDBRead (DiscInfo *disc, DiscDBServer *server,
                      DiscDBHello *hello, DiscDBEntry *entry,
                      DiscData *data, char *encoding);
 gboolean DiscDBStatDiscData (DiscInfo *disc);
-int DiscDBReadDiscData (DiscInfo *disc, DiscData *ddata, const char *encoding);
+int discDBReadDiscData (DiscInfo *disc, DiscData *ddata, const char *encoding);
 int DiscDBWriteDiscData (DiscInfo *disc, DiscData *ddata, FILE *outfile,
                          gboolean gripext, gboolean freedbext, char *encoding);
-void DiscDBParseTitle (char *buf, char *title, char *artist, char *sep);
+void discDBParse_title (char *buf, char *title, char *artist, char *sep);
 char *ChopWhite (char *buf);
 
 #endif /* GRIP_DISCDB_H */

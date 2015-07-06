@@ -29,13 +29,13 @@
 
 
 GtkWidget *MakeEditBox (GripInfo *ginfo);
-void TrackEditChanged (GtkWidget *widget, gpointer data);
-void UpdateMultiArtist (GtkWidget *widget, gpointer data);
-void ToggleTrackEdit (GtkWidget *widget, gpointer data);
-void SetTitle (GripInfo *ginfo, char *title);
-void SetArtist (GripInfo *ginfo, char *artist);
-void SetYear (GripInfo *ginfo, int year);
-void SetGenre (GripInfo *ginfo, char *genre);
+void on_track_edit_changed (GtkWidget *widget, gpointer data);
+void update_multi_artist (GtkWidget *widget, gpointer data);
+void toggle_track_edit (GtkWidget *widget, gpointer data);
+void set_title (GripInfo *ginfo, char *title);
+void set_artist (GripInfo *ginfo, char *artist);
+void set_year (GripInfo *ginfo, int year);
+void set_genre (GripInfo *ginfo, char *genre);
 
 
 #endif /* ifndef GRIP_DISCEDIT_H */

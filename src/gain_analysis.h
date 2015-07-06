@@ -43,11 +43,11 @@ extern "C" {
 
 typedef double  Float_t;         // Type used for filtering
 
-int     InitGainAnalysis ( long samplefreq );
-int     AnalyzeSamples   ( const Float_t* left_samples, const Float_t* right_samples, size_t num_samples, int num_channels );
-int		ResetSampleFrequency ( long samplefreq );
-Float_t   GetTitleGain     ( void );
-Float_t   GetAlbumGain     ( void );
+int     init_gain_analysis ( long samplefreq );
+int     analyze_samples   ( const Float_t* left_samples, const Float_t* right_samples, size_t num_samples, int num_channels );
+int		reset_sample_frequency ( long samplefreq );
+Float_t   get_title_gain     ( void );
+Float_t   get_album_gain     ( void );
 
 #ifdef __cplusplus
 }

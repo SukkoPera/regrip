@@ -48,7 +48,7 @@ void show_error (GtkWidget *parentWin, char *text) {
 	gtk_widget_destroy (dialog);
 }
 
-void ChangeStrVal (GtkWidget *widget, gpointer data) {
+void change_str_val (GtkWidget *widget, gpointer data) {
 	strcpy ((char *) data, gtk_entry_get_text (GTK_ENTRY (widget)));
 }
 
@@ -72,7 +72,7 @@ GtkWidget *MakeStrEntry (GtkWidget **entry, char *var, char *name,
 		gtk_entry_set_text (GTK_ENTRY (widget), var);
 
 		gtk_signal_connect (GTK_OBJECT (widget), "changed",
-		                    GTK_SIGNAL_FUNC (ChangeStrVal), (gpointer) var);
+		                    GTK_SIGNAL_FUNC (change_str_val), (gpointer) var);
 	}
 
 	gtk_box_pack_start (GTK_BOX (hbox), widget, TRUE, TRUE, 0);
@@ -122,7 +122,7 @@ GtkWidget *MakeFolderSelector (GtkWidget **entry, char *var, char *name) {
 	return hbox;
 }
 
-void ChangeIntVal (GtkWidget *widget, gpointer data) {
+void change_int_val (GtkWidget *widget, gpointer data) {
 	*((int *)data) = atoi (gtk_entry_get_text (GTK_ENTRY (widget)));
 }
 
@@ -146,7 +146,7 @@ GtkWidget *MakeNumEntry (GtkWidget **entry, int *var, char *name, int len) {
 		sprintf (buf, "%d", *var);
 		gtk_entry_set_text (GTK_ENTRY (widget), buf);
 		gtk_signal_connect (GTK_OBJECT (widget), "changed",
-		                    GTK_SIGNAL_FUNC (ChangeIntVal), (gpointer)var);
+		                    GTK_SIGNAL_FUNC (change_int_val), (gpointer)var);
 	}
 
 	gtk_box_pack_end (GTK_BOX (hbox), widget, FALSE, FALSE, 0);
@@ -159,7 +159,7 @@ GtkWidget *MakeNumEntry (GtkWidget **entry, int *var, char *name, int len) {
 	return hbox;
 }
 
-void ChangeBoolVal (GtkWidget *widget, gpointer data) {
+void change_bool_val (GtkWidget *widget, gpointer data) {
 	* ((gboolean *)data) = !* ((gboolean *)data);
 }
 
@@ -172,7 +172,7 @@ GtkWidget *MakeCheckButton (GtkWidget **button, gboolean *var, char *name) {
 		gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (widget),
 		                              *var);
 		gtk_signal_connect (GTK_OBJECT (widget), "clicked",
-		                    GTK_SIGNAL_FUNC (ChangeBoolVal),
+		                    GTK_SIGNAL_FUNC (change_bool_val),
 		                    (gpointer)var);
 	}
 

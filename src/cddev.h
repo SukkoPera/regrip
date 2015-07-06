@@ -117,17 +117,17 @@ gboolean CDCloseDevice (DiscInfo *disc);
 gboolean is_cd_inserted (DiscInfo *disc, const gchar **disc_type);
 gboolean CDStat (DiscInfo *disc, gboolean force_read_toc);
 gboolean CDPlayFrames (DiscInfo *disc, int startframe, int endframe);
-gboolean CDPlayTrackPos (DiscInfo *disc, int starttrack,
+gboolean cd_play_track_from_pos (DiscInfo *disc, int starttrack,
                          int endtrack, int startpos);
-gboolean CDPlayTrack (DiscInfo *disc, int starttrack, int endtrack);
+gboolean cd_play_track (DiscInfo *disc, int starttrack, int endtrack);
 gboolean CDAdvance (DiscInfo *disc, DiscTime *time);
 gboolean CDStop (DiscInfo *disc);
 gboolean CDPause (DiscInfo *disc);
 gboolean CDResume (DiscInfo *disc);
-gboolean IsTrayOpen (DiscInfo *disc);
+gboolean is_tray_open (DiscInfo *disc);
 gboolean CDEject (DiscInfo *disc);
 gboolean CDClose (DiscInfo *disc);
 gboolean CDGetVolume(DiscInfo *disc, DiscVolume *vol);
-gboolean CDSetVolume(DiscInfo *disc, DiscVolume *vol);
+gboolean cd_set_volume(DiscInfo *disc, DiscVolume *vol);
 
 #endif /* GRIP_CDDEV_H */
