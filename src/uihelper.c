@@ -23,144 +23,140 @@
 
 #include "uihelper.h"
 
-GtkTooltips *make_tooltip(void)
-{
-  GtkTooltips *tip;
+GtkTooltips *make_tooltip (void) {
+	GtkTooltips *tip;
 
-  tip=gtk_tooltips_new();
+	tip = gtk_tooltips_new ();
 
-  gtk_tooltips_set_delay(tip,1250);
+	gtk_tooltips_set_delay (tip, 1250);
 
-  return tip;
+	return tip;
 }
 
-GdkColor *make_color(int red,int green,int blue)
-{
-  GdkColor *c;
+GdkColor *make_color (int red, int green, int blue) {
+	GdkColor *c;
 
-  c=(GdkColor *)g_malloc(sizeof(GdkColor));
-  c->red=red;
-  c->green=green;
-  c->blue=blue;
+	c = (GdkColor *) g_malloc (sizeof (GdkColor));
+	c -> red = red;
+	c -> green = green;
+	c -> blue = blue;
 
-  gdk_color_alloc(gdk_colormap_get_system(),c);
+	gdk_color_alloc (gdk_colormap_get_system (), c);
 
-  return c;
+	return c;
 }
 
-static gfloat style_color_mods[5]={0.0,-0.1,0.2,-0.2};
+static gfloat style_color_mods[5] = {0.0, -0.1, 0.2, -0.2};
 
-GtkStyle *make_style(GdkColor *fg,GdkColor *bg,gboolean do_grade)
-{
-  GtkStyle *def;
-  GtkStyle *sty;
-  int state;
+GtkStyle *make_style (GdkColor *fg, GdkColor *bg, gboolean do_grade) {
+	GtkStyle *def;
+	GtkStyle *sty;
+	int state;
 
-  def=gtk_widget_get_default_style();
-  sty=gtk_style_copy(def);
+	def = gtk_widget_get_default_style ();
+	sty = gtk_style_copy (def);
 
-  for(state=0;state<5;state++) {
-    if(fg) sty->fg[state]=*fg;
+	for (state = 0; state < 5; state++) {
+		if (fg) {
+			sty -> fg[state] = *fg;
+		}
 
-    if(bg) sty->bg[state]=*bg;
+		if (bg) {
+			sty -> bg[state] = *bg;
+		}
 
-    if(bg && do_grade) {
-      sty->bg[state].red+=sty->bg[state].red*style_color_mods[state];
-      sty->bg[state].green+=sty->bg[state].green*style_color_mods[state];
-      sty->bg[state].blue+=sty->bg[state].blue*style_color_mods[state];
-    }
-  }
+		if (bg && do_grade) {
+			sty -> bg[state].red += sty -> bg[state].red * style_color_mods[state];
+			sty -> bg[state].green += sty -> bg[state].green * style_color_mods[state];
+			sty -> bg[state].blue += sty -> bg[state].blue * style_color_mods[state];
+		}
+	}
 
-  return sty;
+	return sty;
 }
 
-GtkWidget *build_menuitem(gchar *impath, gchar *text, gboolean stock)
-{
-  GtkWidget *item;
+GtkWidget *build_menuitem (gchar *impath, gchar *text, gboolean stock) {
+	GtkWidget *item;
 
-  if (impath != NULL) {
-    GtkWidget *image;
-    item = gtk_image_menu_item_new_with_mnemonic(text);
-	  if (!stock) {
-	    image = gtk_image_new_from_file(impath);
-		gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item), image);
-	  } else {
-		image = gtk_image_new_from_stock(impath, GTK_ICON_SIZE_MENU);
-		gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item), image);
-	  }
-  } else {
-    item = gtk_menu_item_new_with_mnemonic(text);
-  }
+	if (impath != NULL) {
+		GtkWidget *image;
+		item = gtk_image_menu_item_new_with_mnemonic (text);
 
-  gtk_widget_show_all(item);
+		if (!stock) {
+			image = gtk_image_new_from_file (impath);
+			gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM (item), image);
+		} else {
+			image = gtk_image_new_from_stock (impath, GTK_ICON_SIZE_MENU);
+			gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM (item), image);
+		}
+	} else {
+		item = gtk_menu_item_new_with_mnemonic (text);
+	}
 
-  return item;
+	gtk_widget_show_all (item);
+
+	return item;
 }
 
-GtkWidget *build_menuitem_xpm(GtkWidget *xpm, gchar *text)
-{
-  GtkWidget *item;
+GtkWidget *build_menuitem_xpm (GtkWidget *xpm, gchar *text) {
+	GtkWidget *item;
 
-  item = gtk_image_menu_item_new_with_mnemonic(text);
-  gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item), xpm);
+	item = gtk_image_menu_item_new_with_mnemonic (text);
+	gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM (item), xpm);
 
-  gtk_widget_show_all(item);
+	gtk_widget_show_all (item);
 
-  return item;
+	return item;
 }
 
-static char * empty_xpm[] = {
-  "1 1 1 1",
-  "       c None",
-  " "
+static char *empty_xpm[] = {
+	"1 1 1 1",
+	"       c None",
+	" "
 };
 
-GtkWidget *new_blank_pixmap(GtkWidget *widget)
-{
-  return load_xpm(widget,empty_xpm);
+GtkWidget *new_blank_pixmap (GtkWidget *widget) {
+	return load_xpm (widget, empty_xpm);
 }
 
-GtkWidget *image_button(GtkWidget *widget,GtkWidget *image)
-{
-  GtkWidget *button;
+GtkWidget *image_button (GtkWidget *widget, GtkWidget *image) {
+	GtkWidget *button;
 
-  button=gtk_button_new();
+	button = gtk_button_new ();
 
-  gtk_container_add(GTK_CONTAINER(button),image);
-  gtk_widget_show(image);
+	gtk_container_add (GTK_CONTAINER (button), image);
+	gtk_widget_show (image);
 
-  return button;
+	return button;
 }
 
-GtkWidget *load_xpm(GtkWidget *widget,char **xpm)
-{
-  GdkBitmap *mask;
-  GtkStyle *style;
-  GtkWidget *pixmapwid;
-  GdkPixmap *pixmap;
+GtkWidget *load_xpm (GtkWidget *widget, char **xpm) {
+	GdkBitmap *mask;
+	GtkStyle *style;
+	GtkWidget *pixmapwid;
+	GdkPixmap *pixmap;
 
-  style=gtk_widget_get_style(widget);
+	style = gtk_widget_get_style (widget);
 
-  pixmap=gdk_pixmap_create_from_xpm_d(widget->window,&mask,
-				      &style->bg[GTK_STATE_NORMAL],
-				      (gchar **)xpm);
+	pixmap = gdk_pixmap_create_from_xpm_d (widget -> window, &mask,
+	                                       &style -> bg[GTK_STATE_NORMAL],
+	                                       (gchar **) xpm);
 
-  pixmapwid=gtk_pixmap_new(pixmap,mask);
+	pixmapwid = gtk_pixmap_new (pixmap, mask);
 
-  return pixmapwid;
+	return pixmapwid;
 }
 
-void copy_pixmap(GtkPixmap *src,GtkPixmap *dest)
-{
-  GdkPixmap *gdkpix;
-  GdkBitmap *mask;
+void copy_pixmap (GtkPixmap *src, GtkPixmap *dest) {
+	GdkPixmap *gdkpix;
+	GdkBitmap *mask;
 
-  gtk_pixmap_get(src,&gdkpix,&mask);
-  gtk_pixmap_set(dest,gdkpix,mask);
+	gtk_pixmap_get (src, &gdkpix, &mask);
+	gtk_pixmap_set (dest, gdkpix, mask);
 }
 
-void update_gtk(void)
-{
-  while(gtk_events_pending())
-    gtk_main_iteration();
+void update_gtk (void) {
+	while (gtk_events_pending ()) {
+		gtk_main_iteration ();
+	}
 }

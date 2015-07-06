@@ -5,8 +5,8 @@
  *
  *   https://github.com/SukkoPera/regrip
  *
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License as 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
  * License, or (at your option) any later version.
  *
@@ -25,12 +25,12 @@
 /*#include <zvt/zvtterm.h>*/
 
 typedef struct {
-  gboolean embedded;
-  GtkWidget *term_widget;
-  int pipe[2];
+	gboolean embedded;
+	GtkWidget *term_widget;
+	int pipe[2];
 } StatusWindow;
 
-StatusWindow *NewStatusWindow(GtkWidget *box);
-void status_window_write(StatusWindow *sw,char *msg);
-int get_status_window_pipe(StatusWindow *sw);
+StatusWindow *NewStatusWindow (GtkWidget *box);
+void status_window_write (StatusWindow *sw, char *msg);
+int get_status_window_pipe (StatusWindow *sw);
 

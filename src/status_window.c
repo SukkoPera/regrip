@@ -29,119 +29,117 @@
 #include <vte/vte.h>
 #include "status_window.h"
 
-static void on_pipe(gpointer data,gint source,GdkInputCondition condition);
+static void on_pipe (gpointer data, gint source, GdkInputCondition condition);
 
 /* Create a new status window */
-StatusWindow *NewStatusWindow(GtkWidget *box)
-{
-  StatusWindow *sw;
-  GtkWidget *vscrollbar;
-  GtkWidget *hbox;
+StatusWindow *NewStatusWindow (GtkWidget *box) {
+	StatusWindow *sw;
+	GtkWidget *vscrollbar;
+	GtkWidget *hbox;
 
-  sw=g_new(StatusWindow,1);
+	sw = g_new (StatusWindow, 1);
 
-  if(!sw) return NULL;
+	if (!sw) {
+		return NULL;
+	}
 
-  sw->pipe[0]=sw->pipe[1]=-1;
+	sw -> pipe[0] = sw -> pipe[1] = -1;
 
-  if(box) {
-    sw->embedded=TRUE;
-  }
-  else {
-    sw->embedded=FALSE;
+	if (box) {
+		sw -> embedded = TRUE;
+	} else {
+		sw -> embedded = FALSE;
 
-    /* Create new window here */
-  }
+		/* Create new window here */
+	}
 
-  hbox=gtk_hbox_new(FALSE,3);
+	hbox = gtk_hbox_new (FALSE, 3);
 
-  /*  sw->term_widget=zvt_term_new_with_size(40,10);
+	/*  sw -> term_widget=zvt_term_new_with_size(40,10);
 
-  gtk_box_pack_start(GTK_BOX(hbox),sw->term_widget,FALSE,FALSE,0);
-  gtk_widget_show(sw->term_widget);
+	gtk_box_pack_start(GTK_BOX(hbox),sw -> term_widget,FALSE,FALSE,0);
+	gtk_widget_show(sw -> term_widget);
 
-  vscrollbar=gtk_vscrollbar_new(ZVT_TERM(sw->term_widget)->adjustment);
-  gtk_box_pack_start(GTK_BOX(hbox),vscrollbar,FALSE,FALSE,0);
-  gtk_widget_show(vscrollbar);*/
+	vscrollbar=gtk_vscrollbar_new(ZVT_TERM(sw -> term_widget)->adjustment);
+	gtk_box_pack_start(GTK_BOX(hbox),vscrollbar,FALSE,FALSE,0);
+	gtk_widget_show(vscrollbar);*/
 
-  sw->term_widget=vte_terminal_new();
+	sw -> term_widget = vte_terminal_new();
 
 
-  vte_terminal_set_encoding(VTE_TERMINAL(sw->term_widget),"UTF-8");
+	vte_terminal_set_encoding (VTE_TERMINAL (sw -> term_widget), "UTF-8");
 
-  /*  vte_terminal_set_size(VTE_TERMINAL(sw->term_widget),40,10);*/
+	/*  vte_terminal_set_size(VTE_TERMINAL(sw -> term_widget),40,10);*/
 
-  gtk_box_pack_start(GTK_BOX(hbox),sw->term_widget,TRUE,TRUE,0);
-  gtk_widget_show(sw->term_widget);
+	gtk_box_pack_start (GTK_BOX (hbox), sw -> term_widget, TRUE, TRUE, 0);
+	gtk_widget_show (sw -> term_widget);
 
-  vscrollbar=gtk_vscrollbar_new(VTE_TERMINAL(sw->term_widget)->adjustment);
-  gtk_box_pack_start(GTK_BOX(hbox),vscrollbar,FALSE,FALSE,0);
-  gtk_widget_show(vscrollbar);
+	vscrollbar = gtk_vscrollbar_new (VTE_TERMINAL (sw -> term_widget)->adjustment);
+	gtk_box_pack_start (GTK_BOX (hbox), vscrollbar, FALSE, FALSE, 0);
+	gtk_widget_show (vscrollbar);
 
-  gtk_box_pack_start(GTK_BOX(box),hbox,TRUE,TRUE,0);
-  gtk_widget_show(hbox);
+	gtk_box_pack_start (GTK_BOX (box), hbox, TRUE, TRUE, 0);
+	gtk_widget_show (hbox);
 
-  return sw;
+	return sw;
 }
 
 /* Write a line of output to a status window */
-void status_window_write(StatusWindow *sw,char *msg)
-{
-  char *buf;
-  gsize len;
-  int pos=0;
+void status_window_write (StatusWindow *sw, char *msg) {
+	char *buf;
+	gsize len;
+	int pos = 0;
 
-  len=strlen(msg);
+	len = strlen (msg);
 
-  buf=(char *)malloc((len*2)+1);
+	buf = (char *) malloc ((len * 2) + 1);
 
-  while(*msg) {
-    if(1) { //!(*msg & (1<<7))) {
-      if(*msg=='\n') {
-	buf[pos++]='\r';
-        buf[pos++]='\n';
-      }
-      else {
-	buf[pos++]=*msg;
-      }
-    }
+	while (*msg) {
+		if (1) { //!(*msg & (1<<7))) {
+			if (*msg == '\n') {
+				buf[pos++] = '\r';
+				buf[pos++] = '\n';
+			} else {
+				buf[pos++] = *msg;
+			}
+		}
 
-    msg++;
-  }
+		msg++;
+	}
 
-  buf[pos]='\0';
+	buf[pos] = '\0';
 
 
-  /*  zvt_term_feed((ZvtTerm *)sw->term_widget,buf,strlen(buf));*/
+	/*  zvt_term_feed((ZvtTerm *)sw -> term_widget,buf,strlen(buf));*/
 
-  vte_terminal_feed(VTE_TERMINAL(sw->term_widget),buf,strlen(buf));
+	vte_terminal_feed (VTE_TERMINAL (sw -> term_widget), buf, strlen (buf));
 
-  free(buf);
+	free (buf);
 }
 
 /* Return the output pipe fd for a status window, opening the pipe
    if necessary */
-int get_status_window_pipe(StatusWindow *sw)
-{
-  if(sw->pipe[1]>0) return sw->pipe[1];
+int get_status_window_pipe (StatusWindow *sw) {
+	if (sw -> pipe[1] > 0) {
+		return sw -> pipe[1];
+	}
 
-  pipe(sw->pipe);
+	pipe (sw -> pipe);
 
-  fcntl(sw->pipe[0],F_SETFL,O_NONBLOCK);
+	fcntl (sw -> pipe[0], F_SETFL, O_NONBLOCK);
 
-  gdk_input_add(sw->pipe[0],GDK_INPUT_READ,on_pipe,(gpointer)sw);
+	gdk_input_add (sw -> pipe[0], GDK_INPUT_READ, on_pipe, (gpointer)sw);
 
-  return sw->pipe[1];
+	return sw -> pipe[1];
 }
 
-static void on_pipe(gpointer data,gint source,GdkInputCondition condition)
-{
-  char buf[256];
-  StatusWindow *sw;
+static void on_pipe (gpointer data, gint source, GdkInputCondition condition) {
+	char buf[256];
+	StatusWindow *sw;
 
-  sw=(StatusWindow *)data;
+	sw = (StatusWindow *)data;
 
-  while(read(sw->pipe[0],buf,256)>0) {
-    /*    status_window_write(sw,buf);*/
-  }
+	while (read (sw -> pipe[0], buf, 256) > 0) {
+		/*    status_window_write(sw,buf);*/
+	}
 }
