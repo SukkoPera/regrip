@@ -49,7 +49,6 @@ typedef struct _encode_track {
 
 void make_rip_page (GripInfo *ginfo);
 unsigned long long bytes_left_in_fs (char *path);
-char *FindRoot (char *str);
 char *MakePath (char *str);
 void kill_rip (GtkWidget *widget, gpointer data);
 void update_rip_progress (GripInfo *ginfo);

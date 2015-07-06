@@ -25,31 +25,32 @@
 
 /* Options to use when munging strings */
 typedef struct {
-  gboolean no_underscore;
-  gboolean allow_high_bits;
-  gboolean escape;
-  gboolean no_lower_case;
-  char allow_these_chars[256];
+	gboolean no_underscore;
+	gboolean allow_high_bits;
+	gboolean escape;
+	gboolean no_lower_case;
+	char allow_these_chars[256];
 } StrTransPrefs;
 
-int make_args(char *str,GString **args,int maxargs);
+int make_args (char *str, GString **args, int maxargs);
 gchar *expand_userdir (char *path);
-void TranslateString(char *instr,GString *outstr,
-		     char *(*trans_func)(char,void *,gboolean *),
-		     void *user_data,gboolean do_munge_default,
-		     StrTransPrefs *prefs);
-char *ReallocStrcat(char *dest, const char *src);
-char *MungeString(char *str,StrTransPrefs *prefs);
-int MakeTranslatedArgs(char *str,GString **args,int maxargs,
-		       char *(*trans_func)(char,void *,gboolean *),
-		       void *user_data,gboolean do_munge_default,
-		       StrTransPrefs *prefs);
+void TranslateString (char *instr, GString *outstr,
+                      char * (*trans_func) (char, void *, gboolean *),
+                      void *user_data, gboolean do_munge_default,
+                      StrTransPrefs *prefs);
+char *ReallocStrcat (char *dest, const char *src);
+char *MungeString (char *str, StrTransPrefs *prefs);
+int MakeTranslatedArgs (char *str, GString **args, int maxargs,
+                        char * (*trans_func) (char, void *, gboolean *),
+                        void *user_data, gboolean do_munge_default,
+                        StrTransPrefs *prefs);
 /*
 void args_to_locale(GString **args);
 */
-void TranslateAndLaunch(char *cmd,char *(*trans_func)(char,void *,gboolean *),
-			void *user_data,gboolean do_munge_default,
-			StrTransPrefs *prefs,void (*close_func)(void *),
-			void *close_user_data);
+void TranslateAndLaunch (char *cmd, char * (*trans_func) (char, void *,
+                         gboolean *),
+                         void *user_data, gboolean do_munge_default,
+                         StrTransPrefs *prefs, void (*close_func) (void *),
+                         void *close_user_data);
 
 #endif /* ifndef GRIP_LAUNCH_H */

@@ -318,20 +318,6 @@ unsigned long long bytes_left_in_fs (char *path) {
 	return bytesleft;
 }
 
-// FIXME I think this can be replaced with basename()
-/* Find the root filename of a path */
-char *FindRoot (char *str) {
-	char *c;
-
-	for (c = str + strlen (str); c > str; c--) {
-		if (*c == '/') {
-			return c + 1;
-		}
-	}
-
-	return c;
-}
-
 /* Make file1 relative to file2 */
 static char *make_relative (char *file1, char *file2) {
 	int pos, pos2 = 0, slashcnt, i;

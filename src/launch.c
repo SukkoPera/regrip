@@ -48,7 +48,9 @@ int make_args (char *str, GString **args, int maxargs) {
 			inspace = FALSE;
 		}
 
-		if (inspace && *str == ' ') continue;
+		if (inspace && *str == ' ') {
+			continue;
+		}
 
 		if (!escaped && *str == '\\') {
 			escaped = TRUE;
@@ -61,13 +63,17 @@ int make_args (char *str, GString **args, int maxargs) {
 		}
 
 		/* A null or a space outside quotes indicates the end of an argument */
-		if (!*str || (!inquotes && *str == ' ') ) {
+		if (!*str || (!inquotes && *str == ' ')) {
 			inquotes = escaped = FALSE;
 
-			if (!inspace) arg++;
+			if (!inspace) {
+				arg++;
+			}
 
 			/* Check to see if we are finished */
-			if (!*str || !* (str + 1) || arg == (maxargs - 1) ) break;
+			if (!*str || !* (str + 1) || arg == (maxargs - 1)) {
+				break;
+			}
 
 			inspace = TRUE;
 
@@ -85,7 +91,7 @@ int make_args (char *str, GString **args, int maxargs) {
 }
 
 gchar *expand_userdir (char *path) {
-    gchar *ret;
+	gchar *ret;
 
 	if (*path == '~') {
 		path++;
@@ -93,27 +99,29 @@ gchar *expand_userdir (char *path) {
 		/* Expand ~ in dir -- modeled loosely after code from gtkfind by
 		   Matthew Grossman */
 		if (*path == '\0')  {
-		    ret = g_strdup (g_get_home_dir ());
-        } else if (*path == G_DIR_SEPARATOR) {
-            /* This user's dir */
-            ret = g_build_filename (g_get_home_dir (), path + 1, NULL);
+			ret = g_strdup (g_get_home_dir ());
+		} else if (*path == G_DIR_SEPARATOR) {
+			/* This user's dir */
+			ret = g_build_filename (g_get_home_dir (), path + 1, NULL);
 		} else {
-		    /* Another user's dir */
-		    gchar *tok, *username;
-		    struct passwd *pwd;
+			/* Another user's dir */
+			gchar *tok, *username;
+			struct passwd *pwd;
 
 			tok = strchr (path, G_DIR_SEPARATOR);
+
 			if (tok) {
-                username = g_strndup (path, tok - path);
-                g_debug ("Looking for username: '%s'", username);
-                ++tok;
+				username = g_strndup (path, tok - path);
+				g_debug ("Looking for username: '%s'", username);
+				++tok;
 			} else {
-			    username = g_strdup (path);
+				username = g_strdup (path);
 			}
 
 			pwd = getpwnam (username);
+
 			if (!pwd) {
-				g_warning (_("Unable to translate filename - No such user: '%s'"), username);
+				g_warning (_ ("Unable to translate filename - No such user: '%s'"), username);
 				ret = g_strdup (path);
 			} else {
 				ret = g_build_filename (pwd -> pw_dir, tok, NULL);
@@ -122,7 +130,7 @@ gchar *expand_userdir (char *path) {
 			g_free (username);
 		}
 	} else {
-        ret = g_strdup (path);
+		ret = g_strdup (path);
 	}
 
 	return ret;
@@ -130,9 +138,9 @@ gchar *expand_userdir (char *path) {
 
 /* Translate all '%' switches in a string using the specified function */
 void TranslateString (char *instr, GString *outstr,
-					  char * (*trans_func) (char, void *, gboolean *),
-					  void *user_data, gboolean do_munge_default,
-					  StrTransPrefs *prefs) {
+                      char * (*trans_func) (char, void *, gboolean *),
+                      void *user_data, gboolean do_munge_default,
+                      StrTransPrefs *prefs) {
 	gboolean do_munge;
 	char *trans_result;
 	char *tok;
@@ -160,10 +168,9 @@ void TranslateString (char *instr, GString *outstr,
 			}
 
 			if (!pwd)
-				g_print (_("Error: unable to translate filename. No such user as %s\n"),
-						 tok);
+				g_warning (_("Unable to translate filename. No such user as %s\n"), tok);
 			else {
-				g_string_sprintf (outstr, "%s", pwd->pw_dir);
+				g_string_sprintf (outstr, "%s", pwd -> pw_dir);
 			}
 		}
 	}
@@ -184,17 +191,18 @@ void TranslateString (char *instr, GString *outstr,
 				instr++;
 			}
 
-			if (*instr == '%')
+			if (*instr == '%') {
 				g_string_append_c (outstr, *instr);
-			else {
+			} else {
 				trans_result = trans_func (*instr, user_data, &do_munge);
 
-				if (do_munge && (munge_str = MungeString (trans_result, prefs) ) ) {
+				if (do_munge && (munge_str = MungeString (trans_result, prefs))) {
 					g_string_append (outstr, munge_str);
 
 					free (munge_str);
-				} else
+				} else {
 					g_string_append (outstr, trans_result);
+				}
 			}
 		} else {
 			g_string_append_c (outstr, *instr);
@@ -208,11 +216,13 @@ void TranslateString (char *instr, GString *outstr,
 
 char *ReallocStrcat (char *dest, const char *src) {
 	if (src) {
-		dest = g_realloc (dest, strlen (dest) + strlen (src) + sizeof (char) );
+		dest = g_realloc (dest, strlen (dest) + strlen (src) + sizeof (char));
+
 		if (dest) {
 			strcat (dest, src);
 		}
 	}
+
 	return dest;
 }
 
@@ -231,27 +241,30 @@ char *MungeString (char *str, StrTransPrefs *prefs) {
 	gint utf8_char_len;
 
 	src = g_utf8_to_ucs4 (str, strlen (str), &ri, &wi, NULL);
+
 	if (!src) {
 		return NULL;
 	}
 
 	dst = g_strdup ("");
+
 	for (c = src; *c; c++) {
-		utf8_char_len = g_unichar_to_utf8 (prefs->no_lower_case ?
-										   *c : g_unichar_tolower (*c), utf8_char);
+		utf8_char_len = g_unichar_to_utf8 (prefs -> no_lower_case ?
+		                                   *c : g_unichar_tolower (*c), utf8_char);
 		utf8_char[utf8_char_len] = '\0';
 		filename_char = g_filename_from_utf8 (utf8_char, -1, &rb, &wb, NULL);
 		g_free (filename_char);
-		if (!filename_char || (!prefs->allow_high_bits && *c >> 7)) {
-			if (prefs->escape) {
+
+		if (!filename_char || (!prefs -> allow_high_bits && *c >> 7)) {
+			if (prefs -> escape) {
 				g_snprintf (escape, 11, "(%x)", *c);
 				dst = ReallocStrcat (dst, escape);
 			}
 		} else if (*c == ' ') {
-			dst = ReallocStrcat (dst, prefs->no_underscore ? " " : "_");
+			dst = ReallocStrcat (dst, prefs -> no_underscore ? " " : "_");
 		} else if (!g_unichar_isalnum (*c) &&
-				   !g_utf8_strchr (prefs->allow_these_chars,
-								   strlen (prefs->allow_these_chars), *c) ) {
+		           !g_utf8_strchr (prefs -> allow_these_chars,
+		                           strlen (prefs -> allow_these_chars), *c)) {
 			continue;
 		} else {
 			dst = ReallocStrcat (dst, utf8_char);
@@ -264,9 +277,9 @@ char *MungeString (char *str, StrTransPrefs *prefs) {
 }
 
 int MakeTranslatedArgs (char *str, GString **args, int maxargs,
-						char * (*trans_func) (char, void *, gboolean *),
-						void *user_data, gboolean do_munge_default,
-						StrTransPrefs *prefs) {
+                        char * (*trans_func) (char, void *, gboolean *),
+                        void *user_data, gboolean do_munge_default,
+                        StrTransPrefs *prefs) {
 	int num_args;
 	int arg;
 	GString *out, *tmp;
@@ -276,8 +289,8 @@ int MakeTranslatedArgs (char *str, GString **args, int maxargs,
 	for (arg = 0; args[arg]; arg++) {
 		out = g_string_new (NULL);
 
-		TranslateString (args[arg]->str, out, trans_func, user_data,
-						 do_munge_default, prefs);
+		TranslateString (args[arg] -> str, out, trans_func, user_data,
+		                 do_munge_default, prefs);
 
 		tmp = args[arg];
 		args[arg] = out;
@@ -286,8 +299,6 @@ int MakeTranslatedArgs (char *str, GString **args, int maxargs,
 
 	return num_args;
 }
-
-extern char *FindRoot (char *);
 
 /*
 void args_to_locale(GString **args)
@@ -298,7 +309,7 @@ void args_to_locale(GString **args)
   int len;
 
   for(pos=1;args[pos];pos++) {
-    new_str=g_locale_from_utf8(args[pos]->str,-1,NULL,&len,NULL);
+    new_str=g_locale_from_utf8(args[pos] -> str,-1,NULL,&len,NULL);
 
     if(new_str) {
       new_arg=g_string_new(new_str);
@@ -312,10 +323,11 @@ void args_to_locale(GString **args)
 }
 */
 
-void TranslateAndLaunch (char *cmd, char * (*trans_func) (char, void *, gboolean *),
-						 void *user_data, gboolean do_munge_default,
-						 StrTransPrefs *prefs, void (*close_func) (void *),
-						 void *close_user_data) {
+void TranslateAndLaunch (char *cmd, char *(*trans_func) (char, void *,
+                         gboolean *),
+                         void *user_data, gboolean do_munge_default,
+                         StrTransPrefs *prefs, void (*close_func) (void *),
+                         void *close_user_data) {
 //  GString *str;
 	GString *args[100];
 	char *char_args[21];
@@ -324,31 +336,35 @@ void TranslateAndLaunch (char *cmd, char * (*trans_func) (char, void *, gboolean
 
 //  str=g_string_new(NULL);
 
-	MakeTranslatedArgs (cmd, args, 100, trans_func, user_data, do_munge_default, prefs);
+	MakeTranslatedArgs (cmd, args, 100, trans_func, user_data, do_munge_default,
+	                    prefs);
 
 	/*
 	  args_to_locale(args);
 	*/
 
 	for (arg = 1; args[arg]; arg++) {
-		char_args[arg] = args[arg]->str;
+		char_args[arg] = args[arg] -> str;
 	}
 
 	char_args[arg] = NULL;
 
-	char_args[0] = FindRoot (args[0]->str);
+	char_args[0] = g_path_get_basename (args[0] -> str);
 
-	pid = fork();
+	pid = fork ();
 
 	if (pid == 0) {
-		if (close_func) close_func (close_user_data);
+		if (close_func) {
+			close_func (close_user_data);
+		}
 
-		execv (args[0]->str, char_args);
+		execv (args[0] -> str, char_args);
 
-		g_debug (_("Exec failed") );
-		_exit (0);
+		g_error ("Exec failed");
+		g_assert_not_reached ();
 	}
 
+	g_free (char_args[0]);
 	waitpid (pid, NULL, 0);
 
 	for (arg = 0; args[arg]; arg++) {
