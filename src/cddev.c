@@ -83,20 +83,20 @@ GList *get_cd_drives (void) {
 }
 
 /* Initialize the CD-ROM for playing audio CDs */
-gboolean CDInitDevice (char *device_name, DiscInfo *disc) {
-//	memset (disc, 0x00, sizeof (DiscInfo)); // Just to make sure
-//	disc -> toc_up_to_date = FALSE;
-//	disc -> disc_present = FALSE;
+gboolean cd_init_device (char *device_name, DiscInfo *disc) {
+    // Don't do this, we'll need these later!
+    //	memset (disc, 0x00, sizeof (DiscInfo));
+    //	disc -> toc_up_to_date = FALSE;
+    //	disc -> disc_present = FALSE;
 
 	if (disc -> devname
-	        && disc -> devname != device_name
-	        && strcmp (device_name, disc -> devname)) {
-		free (disc -> devname);
-		disc -> devname = 0;
+	        && strcmp (device_name, disc -> devname) != 0) {
+		g_free (disc -> devname);
+		disc -> devname = NULL;
 	}
 
 	if (!disc -> devname) {
-		disc -> devname = strdup (device_name);
+		disc -> devname = g_strdup (device_name);
 	}
 
 	disc -> cdio = cdio_open (device_name, DRIVER_DEVICE);
@@ -108,9 +108,10 @@ gboolean CDInitDevice (char *device_name, DiscInfo *disc) {
 	return TRUE;
 }
 
-gboolean CDCloseDevice (DiscInfo *disc) {
+gboolean cd_close_device (DiscInfo *disc) {
     if (disc -> devname) {
-		free (disc -> devname);
+		g_free (disc -> devname);
+		disc -> devname = NULL;
 	}
 
     if (disc -> cdio)
@@ -125,7 +126,7 @@ gboolean is_cd_inserted (DiscInfo *disc, const gchar **disc_type) {
     gboolean have_disc;
 
 	if (!disc -> cdio) {
-		CDInitDevice (disc -> devname, disc);
+		cd_init_device (disc -> devname, disc);
 	}
 
     discmode_t discmode = cdio_get_discmode (disc -> cdio);
@@ -143,12 +144,12 @@ gboolean is_cd_inserted (DiscInfo *disc, const gchar **disc_type) {
 }
 
 /* Read TOC... God bless libcdio! */
-gboolean CDStat (DiscInfo *disc, gboolean force_read_toc) {
+gboolean cd_stat (DiscInfo *disc, gboolean force_read_toc) {
     /* Read the Table Of Contents */
     g_debug ("Reading disc TOC");
 
     // libcdio caches the TOC, so we must reinit
-    CDInitDevice (disc -> devname, disc);
+    cd_init_device (disc -> devname, disc);
 
     disc -> first_track = cdio_get_first_track_num (disc -> cdio);
     disc -> last_track = cdio_get_last_track_num (disc -> cdio);
@@ -278,7 +279,7 @@ gboolean CDStat (DiscInfo *disc, gboolean force_read_toc) {
 }
 
 /* Play frames from CD */
-gboolean CDPlayFrames (DiscInfo *disc, int startframe, int endframe) {
+gboolean cd_play_frames (DiscInfo *disc, int startframe, int endframe) {
 	if (!disc -> cdio) {
         return FALSE;
 	} else {
@@ -294,7 +295,7 @@ gboolean CDPlayFrames (DiscInfo *disc, int startframe, int endframe) {
 gboolean cd_play_track_from_pos (DiscInfo *disc, int starttrack,
                          int endtrack, int startpos) {
 
-	return CDPlayFrames (disc, disc -> track[starttrack - 1].start_frame +
+	return cd_play_frames (disc, disc -> track[starttrack - 1].start_frame +
 	                     startpos * 75, endtrack >= disc -> num_tracks ?
 	                     (disc -> length.mins * 60 +
 	                      disc -> length.secs) * 75 :
@@ -307,7 +308,7 @@ gboolean cd_play_track (DiscInfo *disc, int starttrack, int endtrack) {
 }
 
 /* Advance (fastfwd) */
-gboolean CDAdvance (DiscInfo *disc, DiscTime *time) {
+gboolean cd_advance (DiscInfo *disc, DiscTime *time) {
 	if (!disc -> cdio) {
 		return FALSE;
 	}
@@ -343,7 +344,7 @@ gboolean CDAdvance (DiscInfo *disc, DiscTime *time) {
 		                        length.secs;
 
 		/*  Try again  */
-		return CDAdvance (disc, time);
+		return cd_advance (disc, time);
 	}
 
 	if ((disc -> track_time.mins ==
@@ -367,7 +368,7 @@ gboolean CDAdvance (DiscInfo *disc, DiscTime *time) {
 }
 
 /* Stop the CD, if it is playing */
-gboolean CDStop (DiscInfo *disc) {
+gboolean cd_stop (DiscInfo *disc) {
 	if (!disc -> cdio) {
         return FALSE;
 	} else {
@@ -376,7 +377,7 @@ gboolean CDStop (DiscInfo *disc) {
 }
 
 /* Pause the CD */
-gboolean CDPause (DiscInfo *disc) {
+gboolean cd_pause (DiscInfo *disc) {
 	if (!disc -> cdio) {
         return FALSE;
 	} else {
@@ -385,7 +386,7 @@ gboolean CDPause (DiscInfo *disc) {
 }
 
 /* Resume playing */
-gboolean CDResume (DiscInfo *disc) {
+gboolean cd_resume (DiscInfo *disc) {
 	if (!disc -> cdio) {
         return FALSE;
 	} else {
@@ -403,7 +404,7 @@ gboolean is_tray_open (DiscInfo *disc) {
 }
 
 /* Eject the tray */
-gboolean CDEject (DiscInfo *disc) {
+gboolean cd_eject (DiscInfo *disc) {
 	if (!disc -> devname || strlen (disc -> devname) == 0) {
         return FALSE;
 	} else {
@@ -412,7 +413,7 @@ gboolean CDEject (DiscInfo *disc) {
 }
 
 /* Close the tray */
-gboolean CDClose (DiscInfo *disc) {
+gboolean cd_close (DiscInfo *disc) {
 	if (!disc -> devname || strlen (disc -> devname) == 0) {
         return FALSE;
 	} else {
@@ -420,7 +421,7 @@ gboolean CDClose (DiscInfo *disc) {
 	}
 }
 
-gboolean CDGetVolume (DiscInfo *disc, DiscVolume *vol) {
+gboolean cd_get_volume (DiscInfo *disc, DiscVolume *vol) {
     gboolean ret;
 
 	if (!disc -> cdio) {

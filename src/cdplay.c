@@ -845,7 +845,7 @@ GtkWidget *MakeControls (GripInfo *ginfo) {
 	gtk_widget_set_name (uinfo -> volume_control, "darkgrey");
 	gtk_box_pack_start (GTK_BOX (vbox), uinfo -> volume_control, FALSE, FALSE, 0);
 
-	/*  CDGetVolume(cd_desc,&vol);
+	/*  cd_get_volume(cd_desc,&vol);
 	gtk_adjustment_set_value(GTK_ADJUSTMENT(adj),(vol.vol_front.left+
 	vol.vol_front.right)/2);*/
 
@@ -1163,7 +1163,7 @@ void fast_fwd_disc (GripInfo *ginfo) {
 
 	if ((ginfo -> disc.disc_mode == CDAUDIO_PLAYING) ||
 			(ginfo -> disc.disc_mode == CDAUDIO_PAUSED)) {
-		CDAdvance (&(ginfo -> disc), &tv);
+		cd_advance (&(ginfo -> disc), &tv);
 	}
 }
 
@@ -1194,7 +1194,7 @@ void rewind_disc (GripInfo *ginfo) {
 
 	if ((ginfo -> disc.disc_mode == CDAUDIO_PLAYING) ||
 			(ginfo -> disc.disc_mode == CDAUDIO_PAUSED)) {
-		CDAdvance (&(ginfo -> disc), &tv);
+		cd_advance (&(ginfo -> disc), &tv);
 	}
 }
 
@@ -1221,8 +1221,8 @@ void eject_disc (GtkWidget *widget, gpointer data) {
 	if (ginfo -> have_disc) {
 		g_debug ("Have disc -- ejecting");
 
-		CDStop (&(ginfo -> disc));
-		CDEject (&(ginfo -> disc));
+		cd_stop (&(ginfo -> disc));
+		cd_eject (&(ginfo -> disc));
 		ginfo -> playing = FALSE;
 		ginfo -> have_disc = FALSE;
 		ginfo -> update_required = TRUE;
@@ -1230,15 +1230,15 @@ void eject_disc (GtkWidget *widget, gpointer data) {
 	} else {
 		if (ginfo -> faulty_eject) {
 			if (ginfo -> tray_open) {
-				CDClose (&(ginfo -> disc));
+				cd_close (&(ginfo -> disc));
 			} else {
-				CDEject (&(ginfo -> disc));
+				cd_eject (&(ginfo -> disc));
 			}
 		} else {
 			if (is_tray_open (&(ginfo -> disc)) != 0) {
-				CDClose (&(ginfo -> disc));
+				cd_close (&(ginfo -> disc));
 			} else {
-				CDEject (&(ginfo -> disc));
+				cd_eject (&(ginfo -> disc));
 			}
 		}
 
@@ -1261,8 +1261,8 @@ void Stopon_play (GtkWidget *widget, gpointer data) {
 		return;
 	}
 
-	CDStop (&(ginfo -> disc));
-//	CDStat (&(ginfo -> disc), FALSE);
+	cd_stop (&(ginfo -> disc));
+//	cd_stat (&(ginfo -> disc), FALSE);
 	ginfo -> stopped = TRUE;
 
 	if (ginfo -> stop_first) {
@@ -1273,7 +1273,7 @@ void Stopon_play (GtkWidget *widget, gpointer data) {
 }
 
 void play_segment (GripInfo *ginfo, int track) {
-	CDPlayFrames (&(ginfo -> disc),
+	cd_play_frames (&(ginfo -> disc),
 				  ginfo -> disc.track[track].start_frame + ginfo -> start_sector,
 				  ginfo -> disc.track[track].start_frame + ginfo -> end_sector);
 }
@@ -1295,7 +1295,7 @@ void on_play_track (GtkWidget *widget, gpointer data) {
 		return;
 	}
 
-//	CDStat (disc, FALSE);
+//	cd_stat (disc, FALSE);
 
 	if (ginfo -> play_mode != PM_NORMAL &&! ((disc -> disc_mode == CDAUDIO_PLAYING) ||
 											disc -> disc_mode == CDAUDIO_PAUSED)) {
@@ -1313,13 +1313,13 @@ void on_play_track (GtkWidget *widget, gpointer data) {
 	if (track == (disc -> curr_track - 1)) {
 		switch (disc -> disc_mode) {
 			case CDAUDIO_PLAYING:
-				CDPause (disc);
+				cd_pause (disc);
 				tray_menu_show_play (ginfo);
 				return;
 				break;
 
 			case CDAUDIO_PAUSED:
-				CDResume (disc);
+				cd_resume (disc);
 				tray_menu_show_pause (ginfo);
 				return;
 				break;
@@ -1364,7 +1364,7 @@ void next_track (GripInfo *ginfo) {
 		return;
 	}
 
-//	CDStat (&(ginfo -> disc), FALSE);
+//	cd_stat (&(ginfo -> disc), FALSE);
 
 	if (ginfo -> current_track_index < (ginfo -> prog_totaltracks - 1)) {
 		select_row (ginfo, NEXT_TRACK);
@@ -1392,7 +1392,7 @@ static void prev_track (GripInfo *ginfo) {
 		return;
 	}
 
-//	CDStat (&(ginfo -> disc), FALSE);
+//	cd_stat (&(ginfo -> disc), FALSE);
 
 	if ((ginfo -> disc.disc_mode == CDAUDIO_PLAYING) &&
 			/*((ginfo -> disc.curr_frame -
@@ -1509,7 +1509,7 @@ void check_for_new_disc (GripInfo *ginfo, gboolean force) {
 		ginfo -> update_required = TRUE;
 
 		if (!ginfo -> looking_up) {     // Can we really be looking up at this point?!
-			CDStat (disc, FALSE);
+			cd_stat (disc, FALSE);
 			if (check_tracks (disc)) {
 				init_program (ginfo);
 
@@ -1545,7 +1545,7 @@ void check_for_new_disc (GripInfo *ginfo, gboolean force) {
 //                }
 //
 //                ginfo -> have_disc = FALSE;
-//                g_debug (_("CDStat said no disc"));
+//                g_debug (_("cd_stat said no disc"));
 //            }
 		}
 	} else if (ginfo -> have_disc && !have_disc_now) {
@@ -1759,7 +1759,7 @@ void update_display (GripInfo *ginfo) {
 			}
 
 //			if (!ginfo -> rip_finished) {
-////				CDStat (disc, FALSE);
+////				cd_stat (disc, FALSE);
 //
 //				if (!disc -> disc_present) {
 ////					ginfo -> have_disc = FALSE;
@@ -1844,7 +1844,7 @@ void update_display (GripInfo *ginfo) {
 						play_track (ginfo, CURRENT_TRACK);
 					}
 				} else if (ginfo -> stopped) {
-					CDStop (disc);
+					cd_stop (disc);
 
 					frames = secs = mins = 0;
 					g_snprintf (buf, 80, _("Current sector: %6d"), frames);

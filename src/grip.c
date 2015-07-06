@@ -137,6 +137,7 @@ void on_rip_selected_tracks_clicked (GtkButton *button, gpointer user_data) {
     g_assert (uinfo -> rip_win);
 
     gint w, h;
+    gtk_widget_unrealize (uinfo -> rip_win);
     gtk_window_get_size (GTK_WINDOW (uinfo -> app), &w, &h);
     gtk_window_resize (GTK_WINDOW (uinfo -> rip_win), w / 2, h / 2);
     gtk_window_set_modal (GTK_WINDOW (uinfo -> rip_win), TRUE);
@@ -311,12 +312,12 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 	ginfo -> do_redirect = !no_redirect;
 
 	// Init drive (and disc structure)
-	if (!CDInitDevice (ginfo -> cd_device, &(ginfo -> disc))) {
+	if (!cd_init_device (ginfo -> cd_device, &(ginfo -> disc))) {
 		gchar *msg = g_strdup_printf (_("Error: Unable to initialize CD-ROM drive %s"), ginfo -> cd_device);
 		show_error (ginfo -> gui_info.app, msg);
 		g_free (msg);
 	}
-//	CDStat (&(ginfo -> disc), TRUE);
+//	cd_stat (&(ginfo -> disc), TRUE);
 
 	gtk_window_set_policy (GTK_WINDOW (app), FALSE, TRUE, FALSE);
 	gtk_window_set_wmclass (GTK_WINDOW (app), "regrip", "Regrip");
@@ -404,6 +405,9 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 	uinfo -> rip_win = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "dialog_ripping"));
 	uinfo -> ripprogbar = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "progressbar_ripping"));
 
+	GtkWidget *button_stop_rip = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "button_stop_rip"));
+    g_signal_connect (G_OBJECT (button_stop_rip), "clicked", G_CALLBACK (kill_rip), (gpointer) ginfo);
+
 	check_for_new_disc (ginfo, FALSE);
 
 	/* Check if we're running this version for the first time */
@@ -477,7 +481,7 @@ static void really_die (GtkDialog *dialog, gint reply, gpointer data) {
 #endif
 
 	if (!ginfo -> no_interrupt) {
-		CDStop (& (ginfo -> disc));
+		cd_stop (& (ginfo -> disc));
 	}
 
     g_object_unref (G_OBJECT ((ginfo -> gui_info).builder));
@@ -973,7 +977,8 @@ void close_stuff (void *user_data) {
 	ginfo = (GripInfo *) user_data;
 
 	close (ConnectionNumber (GDK_DISPLAY()));
-	close (ginfo -> disc.cd_desc);
+	// FIXME: What to close? CD dev?
+//	close (ginfo -> disc.cd_desc);
 
 	fd = open ("/dev/null", O_RDWR);
 	dup2 (fd, 0);

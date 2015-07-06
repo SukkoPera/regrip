@@ -54,7 +54,7 @@
 static void on_play_segment (GtkWidget *widget, gpointer data);
 static char *make_relative (char *file1, char *file2);
 static gboolean add_m3u (GripInfo *ginfo);
-static void ID3Add (GripInfo *ginfo, char *file, EncodeTrack *enc_track);
+static void add_tag (GripInfo *ginfo, char *file, EncodeTrack *enc_track);
 static void do_wav_filter (GripInfo *ginfo);
 static void do_disc_filter (GripInfo *ginfo);
 static void rip_is_finished (GripInfo *ginfo, gboolean aborted);
@@ -439,11 +439,8 @@ static gboolean add_m3u (GripInfo *ginfo) {
 }
 
 void kill_rip (GtkWidget *widget, gpointer data) {
-	GripInfo *ginfo;
-//	int track;
-
-	g_debug (_("In kill_rip"));
-	ginfo = (GripInfo *) data;
+	g_debug ("In kill_rip");
+	GripInfo *ginfo = (GripInfo *) data;
 
 	if (!ginfo -> ripping) {
 		return;
@@ -465,15 +462,15 @@ void kill_rip (GtkWidget *widget, gpointer data) {
 //        }
 //    }
 
-	g_debug (_("Now total enc size is: %zu"), ginfo -> all_encsize);
+	g_debug ("Now total enc size is: %zu", ginfo -> all_encsize);
 }
 
-static void ID3Add (GripInfo *ginfo, char *file, EncodeTrack *enc_track) {
+static void add_tag (GripInfo *ginfo, char *file, EncodeTrack *enc_track) {
 	if (ginfo -> doid3) {
 		GString *comment = g_string_new (NULL);
 //        g_debug ("comment = '%s'", ginfo -> id3_comment);
 		TranslateString (ginfo -> id3_comment, comment, TranslateSwitch, enc_track,
-						 FALSE, & (ginfo -> sprefs));
+						 FALSE, &(ginfo -> sprefs));
 		g_assert (comment);
 
 		GError *error = NULL;
@@ -515,7 +512,6 @@ static void do_disc_filter (GripInfo *ginfo) {
 }
 
 void update_rip_progress (GripInfo *ginfo) {
-	GripGUI *uinfo;
 	struct stat mystat;
 	int quarter;
 	gfloat percent = 0;
@@ -524,7 +520,7 @@ void update_rip_progress (GripInfo *ginfo) {
 	gfloat elapsed = 0;
 	gfloat speed;
 
-	uinfo = & (ginfo -> gui_info);
+	GripGUI *uinfo = &(ginfo -> gui_info);
 
 	if (ginfo -> ripping) {
 		// Rip percent is calculated by the cdparanoia callback and provided to rip_callback().
@@ -552,7 +548,7 @@ void update_rip_progress (GripInfo *ginfo) {
 
 		sprintf (buf, _("Rip: Trk %d (%3.1fx)"), ginfo -> rip_track + 1, speed);
 
-		gtk_label_set (GTK_LABEL (uinfo -> rip_prog_label), buf);
+//		gtk_label_set (GTK_LABEL (uinfo -> rip_prog_label), buf);
 
 		quarter = (int) (ginfo -> rip_percent * 4.0);
 
@@ -601,9 +597,9 @@ void update_rip_progress (GripInfo *ginfo) {
 			// Clear thread struct
 			gboolean rip_ok = GPOINTER_TO_INT (g_thread_join (ginfo -> rip_thread));
 			if (rip_ok) {
-				g_debug (_("Rip thread finished successfully"));
+				g_debug ("Rip thread finished successfully");
 			} else {
-				g_debug (_("Rip thread finished with failure or was aborted"));
+				g_debug ("Rip thread finished with failure or was aborted");
 			}
 			ginfo -> rip_thread = NULL;
 
@@ -638,7 +634,7 @@ void update_rip_progress (GripInfo *ginfo) {
 				EncodeTrack enc_track;
 				fill_in_track_info (ginfo, ginfo -> rip_track, &enc_track);
 				strcpy (enc_track.wav_filename, ginfo -> ripfile);  // FIXME: probably useless
-				ID3Add (ginfo, ginfo -> ripfile, &enc_track);
+				add_tag (ginfo, ginfo -> ripfile, &enc_track);
 
 				/* Do filtering of .wav file */
 				if (*ginfo -> wav_filter_cmd) {
@@ -657,22 +653,22 @@ void update_rip_progress (GripInfo *ginfo) {
 						GTK_PIXMAP (uinfo -> rip_indicator));
 
 			if (!ginfo -> stop_rip) {
-				g_debug (_("Rip partial %d"), ginfo -> rip_partial);
+				g_debug ("Rip partial %d", ginfo -> rip_partial);
 
-				g_debug (_("Next track is %d, total is %d"),
+				g_debug ("Next track is %d, total is %d",
 						 next_track_to_rip (ginfo), ginfo -> disc.num_tracks);
 
 				if (!ginfo -> rip_partial &&
 						(next_track_to_rip (ginfo) == ginfo -> disc.num_tracks)) {
-					g_debug (_("Check if we need to rip another track"));
+					g_debug ("Check if we need to rip another track");
 
 					if (!rip_next_track (ginfo)) {
 						rip_is_finished (ginfo, FALSE);
 					} else {
-						gtk_label_set (GTK_LABEL (uinfo -> rip_prog_label), _("Rip: Idle"));
+//						gtk_label_set (GTK_LABEL (uinfo -> rip_prog_label), _("Rip: Idle"));
 					}
 				} else {
-					gtk_label_set (GTK_LABEL (uinfo -> rip_prog_label), _("Rip: Idle"));
+//					gtk_label_set (GTK_LABEL (uinfo -> rip_prog_label), _("Rip: Idle"));
 				}
 			} else {
 				rip_is_finished (ginfo, TRUE);
@@ -753,7 +749,7 @@ void update_rip_progress (GripInfo *ginfo) {
 
 			if (!ginfo -> stop_encode) {
 				if (ginfo -> doid3)
-					ID3Add (ginfo, ginfo -> mp3file[mycpu],
+					add_tag (ginfo, ginfo -> mp3file[mycpu],
 							ginfo -> encoded_track[mycpu]);
 
 				if (*ginfo -> mp3_filter_cmd)
@@ -800,7 +796,7 @@ static void rip_is_finished (GripInfo *ginfo, gboolean aborted) {
 	ginfo -> all_ripdone = 0;
 	ginfo -> all_riplast = 0;
 
-	g_message ("Ripping complete");
+	g_debug ("Ripping complete");
 
 //	gtk_label_set (GTK_LABEL (uinfo -> rip_prog_label), _("Rip: Idle"));
 //	gtk_label_set (GTK_LABEL (uinfo -> all_rip_label), _("Overall: Idle"));
@@ -813,8 +809,8 @@ static void rip_is_finished (GripInfo *ginfo, gboolean aborted) {
 	ginfo -> rip_finished = time (NULL);
 
 	/* Re-open the cdrom device if it was closed */
-	if (ginfo -> disc.cd_desc < 0) {
-		CDInitDevice (ginfo -> disc.devname, & (ginfo -> disc));
+	if (!ginfo -> disc.cdio) {
+		cd_init_device (ginfo -> disc.devname, &(ginfo -> disc));
 	}
 
 	/* Do post-rip stuff only if we weren't explicitly aborted */
@@ -1024,11 +1020,11 @@ void do_rip (GtkWidget *widget, gpointer data) {
 //		return;
 //	}
 
-	CDStop (&(ginfo -> disc));
+	cd_stop (&(ginfo -> disc));
 	ginfo -> stopped = TRUE;
 
 	/* Close the device so as not to conflict with ripping */
-	CDCloseDevice (& (ginfo -> disc));
+	cd_close_device (&(ginfo -> disc));
 
 	/* Initialize gain calculation */
 	if (ginfo -> calc_gain) {
@@ -1188,7 +1184,7 @@ static gboolean rip_next_track (GripInfo *ginfo) {
 		copy_pixmap (GTK_PIXMAP (uinfo -> rip_pix[0]), GTK_PIXMAP (uinfo -> rip_indicator));
 
 		if (ginfo -> stop_between_tracks) {
-			CDStop (& (ginfo -> disc));
+			cd_stop (& (ginfo -> disc));
 		}
 
 		if (!ginfo -> rip_partial) {
@@ -1595,7 +1591,7 @@ static void on_play_segment (GtkWidget *widget, gpointer data) {
         play_segment (ginfo, CURRENT_TRACK);
     } else {
         gtk_button_set_label (GTK_BUTTON (widget), STOCK_BTN_PLAY);
-        CDStop (&(ginfo -> disc));
+        cd_stop (&(ginfo -> disc));
     }
 }
 

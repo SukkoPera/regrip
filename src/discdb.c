@@ -388,7 +388,7 @@ gboolean discDBRead (DiscInfo *disc, DiscDBServer *server,
 	char *result, *inbuffer, *dataptr;
 
 	if (!disc->have_info) {
-		CDStat (disc, TRUE);
+		cd_stat (disc, TRUE);
 	}
 
 	// FIXME

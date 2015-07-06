@@ -27,18 +27,15 @@
 #define GRIP_CDDEV_H
 
 #include <glib.h>
-//#include <cdio/cdio.h>
-//#include <cdio/cdio_unconfig.h>
 #include "common.h"
 
 /* Used with disc_info */
-#define CDAUDIO_PLAYING             0
-#define CDAUDIO_PAUSED              1
-#define CDAUDIO_COMPLETED           2
-#define CDAUDIO_NOSTATUS            3
-
-#define MAX_SLOTS               100 /* For CD changers */
-
+enum {
+    CDAUDIO_PLAYING = 0,
+    CDAUDIO_PAUSED = 1,
+    CDAUDIO_COMPLETED = 2,
+    CDAUDIO_NOSTATUS = 3
+};
 
 typedef struct {
     gchar device[MAX_STRING];
@@ -77,7 +74,6 @@ typedef struct _CdIo CdIo_t;
 /* Disc information such as current track, amount played, etc */
 typedef struct _disc_info {
     CdIo_t *cdio;
-	int cd_desc;                              /* CD device file desc. */
 	char *devname;                            /* CD device file pathname */
 
 	gboolean disc_present;                /* Is disc present? */
@@ -112,22 +108,22 @@ typedef struct _disc_volume {
 
 GList *get_cd_drives (void);
 
-gboolean CDInitDevice (char *device_name, DiscInfo *disc);
-gboolean CDCloseDevice (DiscInfo *disc);
+gboolean cd_init_device (char *device_name, DiscInfo *disc);
+gboolean cd_close_device (DiscInfo *disc);
 gboolean is_cd_inserted (DiscInfo *disc, const gchar **disc_type);
-gboolean CDStat (DiscInfo *disc, gboolean force_read_toc);
-gboolean CDPlayFrames (DiscInfo *disc, int startframe, int endframe);
+gboolean cd_stat (DiscInfo *disc, gboolean force_read_toc);
+gboolean cd_play_frames (DiscInfo *disc, int startframe, int endframe);
 gboolean cd_play_track_from_pos (DiscInfo *disc, int starttrack,
                          int endtrack, int startpos);
 gboolean cd_play_track (DiscInfo *disc, int starttrack, int endtrack);
-gboolean CDAdvance (DiscInfo *disc, DiscTime *time);
-gboolean CDStop (DiscInfo *disc);
-gboolean CDPause (DiscInfo *disc);
-gboolean CDResume (DiscInfo *disc);
+gboolean cd_advance (DiscInfo *disc, DiscTime *time);
+gboolean cd_stop (DiscInfo *disc);
+gboolean cd_pause (DiscInfo *disc);
+gboolean cd_resume (DiscInfo *disc);
 gboolean is_tray_open (DiscInfo *disc);
-gboolean CDEject (DiscInfo *disc);
-gboolean CDClose (DiscInfo *disc);
-gboolean CDGetVolume(DiscInfo *disc, DiscVolume *vol);
+gboolean cd_eject (DiscInfo *disc);
+gboolean cd_close (DiscInfo *disc);
+gboolean cd_get_volume(DiscInfo *disc, DiscVolume *vol);
 gboolean cd_set_volume(DiscInfo *disc, DiscVolume *vol);
 
 #endif /* GRIP_CDDEV_H */
