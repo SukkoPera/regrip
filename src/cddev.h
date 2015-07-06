@@ -65,6 +65,8 @@ typedef struct _track_info {
 	DiscTime start_pos;
 //	int num_frames;
 	gint32 start_frame;
+	gint32 end_frame;       // Can be calculated from other info, but let's do it once for all
+	gint32 pregap_start_frame;  // Starting LBA for the pregap
 	gboolean is_audio;
 //	unsigned char flags;
 } TrackInfo;

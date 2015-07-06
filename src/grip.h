@@ -49,6 +49,10 @@ typedef struct _grip_gui {
 
 	GtkWidget *preferences;
 
+    GtkWidget *rip_selected_button;
+    GtkWidget *rip_disc_button;
+    GtkWidget *rip_win;
+
 	gboolean minimized;
 	int win_width;
 	int win_height;

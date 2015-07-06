@@ -129,6 +129,20 @@ void on_menuitem_about_activate (GtkMenuItem *menuitem, gpointer user_data) {
 }
 
 void on_rip_selected_tracks_clicked (GtkButton *button, gpointer user_data) {
+   	GripInfo *ginfo = (GripInfo *) user_data;
+	GripGUI *uinfo = &(ginfo -> gui_info);
+
+	g_assert (ginfo -> have_disc);
+	g_assert (!ginfo -> ripping);
+    g_assert (uinfo -> rip_win);
+
+    gint w, h;
+    gtk_window_get_size (GTK_WINDOW (uinfo -> app), &w, &h);
+    gtk_window_resize (GTK_WINDOW (uinfo -> rip_win), w / 2, h / 2);
+    gtk_window_set_modal (GTK_WINDOW (uinfo -> rip_win), TRUE);
+    gtk_widget_show_all (uinfo -> rip_win);
+
+    DoRip (NULL, ginfo);
 }
 
 void on_rip_whole_disc_clicked (GtkButton *button, gpointer user_data) {
@@ -208,7 +222,7 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 
 	app = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "window_main"));
     g_assert (app);
-	gtk_widget_add_events(app, GDK_CONFIGURE);
+	gtk_widget_add_events (app, GDK_CONFIGURE);
 	g_signal_connect (app, "configure-event", G_CALLBACK (on_window_resize), ginfo);
 	gtk_object_set_user_data (GTK_OBJECT (app), (gpointer) ginfo);
 	uinfo -> app = app;
@@ -237,9 +251,10 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
         g_signal_connect (widget, "activate", G_CALLBACK (on_menuitem_about_activate), ginfo);
 
         // Toolbars
-        widget = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "toolbutton_rip_selected"));
-        g_assert (widget);
-        g_signal_connect (widget, "clicked", G_CALLBACK (DoRip), ginfo);
+        uinfo -> rip_selected_button = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "toolbutton_rip_selected"));
+        g_assert (uinfo -> rip_selected_button);
+        g_signal_connect (uinfo -> rip_selected_button, "clicked", G_CALLBACK (on_rip_selected_tracks_clicked), ginfo);
+        gtk_widget_set_sensitive (uinfo -> rip_selected_button, FALSE);
 	}
 
 	if (device) {
@@ -264,7 +279,8 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
         for (cur = g_list_first (drives); cur; cur = g_list_next (cur)) {
             cd_drive *drive = (cd_drive *) cur -> data;
 
-            gchar *tmp = g_strdup_printf ("%s %s %s (%s)", drive -> vendor, drive -> model, drive -> revision, drive -> device);
+//            gchar *tmp = g_strdup_printf ("%s %s %s (%s)", drive -> vendor, drive -> model, drive -> revision, drive -> device);
+            gchar *tmp = g_strdup_printf ("%s %s (%s)", drive -> vendor, drive -> model, drive -> device);
             gtk_list_store_append (liststore, &iter);
             gtk_list_store_set (liststore, &iter, 0, tmp, 1, drive -> device, -1);
             g_free (tmp);
@@ -383,6 +399,10 @@ GtkWidget *GripNew (const gchar *geometry, char *device, char *scsi_device,
 	g_assert (uinfo -> statusbar);
 	guint ctx = gtk_statusbar_get_context_id (uinfo -> statusbar, "Blah");
 	gtk_statusbar_push (uinfo -> statusbar, ctx, "Welcome to Regrip!");
+
+	// Init other handy widgets
+	uinfo -> rip_win = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "dialog_ripping"));
+	uinfo -> ripprogbar = GTK_WIDGET (gtk_builder_get_object (uinfo -> builder, "progressbar_ripping"));
 
 	CheckForNewDisc (ginfo, FALSE);
 

@@ -219,13 +219,22 @@ static void on_track_rip_toggled (GtkCellRendererToggle *cell_renderer, gchar *p
 	GripInfo *ginfo = (GripInfo *) user_data;
 	GripGUI *uinfo = &(ginfo -> gui_info);
 
-	gtk_tree_model_get_iter_from_string (GTK_TREE_MODEL (uinfo -> track_list_store), &iter, path);
+	GtkTreeModel *model = GTK_TREE_MODEL (uinfo -> track_list_store);
+	gtk_tree_model_get_iter_from_string (model, &iter, path);
 
-	gtk_tree_model_get (GTK_TREE_MODEL (uinfo -> track_list_store),
-						&iter, TRACKLIST_RIP_COL, &checked, -1);
+	gtk_tree_model_get (model, &iter, TRACKLIST_RIP_COL, &checked, -1);
 
 	gtk_list_store_set (uinfo -> track_list_store, &iter,
 						TRACKLIST_RIP_COL, !checked, -1);
+
+    // Check if any track is selected and toggle rip button
+    checked = FALSE;
+    if (gtk_tree_model_get_iter_first (model, &iter)) {
+        do {
+            gtk_tree_model_get (model, &iter, TRACKLIST_RIP_COL, &checked, -1);
+        } while (!checked && gtk_tree_model_iter_next (model, &iter));
+    }
+    gtk_widget_set_sensitive (uinfo -> rip_selected_button, checked);
 }
 
 /* Called when a track title is edited. It is the responsibility of the
@@ -1908,6 +1917,9 @@ void UpdateTracks (GripInfo *ginfo) {
 	DiscInfo *disc = &(ginfo -> disc);
 	DiscData *ddata = &(ginfo -> ddata);
 
+	// Disable rip button
+	gtk_widget_set_sensitive (uinfo -> rip_selected_button, FALSE);
+
 	if (ginfo -> have_disc) {
 		/* Reset to make sure we don't eject twice */
 		ginfo -> auto_eject_countdown = 0;
@@ -1923,7 +1935,7 @@ void UpdateTracks (GripInfo *ginfo) {
 									  ginfo -> ddata.data_multi_artist);
 
 		ddata -> data_multi_artist = multi_artist_backup;
-		UpdateMultiArtist (NULL, (gpointer)ginfo);
+		UpdateMultiArtist (NULL, (gpointer) ginfo);
 
 		if (*(ginfo -> cdupdate)) {
 			FillInTrackInfo (ginfo, 0, &enc_track);
@@ -1977,7 +1989,7 @@ void UpdateTracks (GripInfo *ginfo) {
 								TRACKLIST_ARTIST_COL, td -> track_artist,
 								TRACKLIST_LENGTH_COL, len_col,
 								TRACKLIST_START_FRAME_COL, ti -> start_frame,
-								TRACKLIST_END_FRAME_COL, ti -> start_frame + (ti -> length).frames - 1,
+								TRACKLIST_END_FRAME_COL, ti -> end_frame,
 								TRACKLIST_RIP_COL, FALSE,
 								TRACKLIST_NUM_COL, track + 1,
 								TRACKLIST_TRACKPTR_COL, td,

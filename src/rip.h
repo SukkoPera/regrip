@@ -35,7 +35,7 @@ typedef struct _encode_track {
 	char song_artist[MAX_STRING];
 	char disc_name[MAX_STRING];
 	char disc_artist[MAX_STRING];
-  char wav_filename[MAX_STRING];
+    char wav_filename[MAX_STRING];
 //  char mp3_filename[MAX_STRING];
 	int song_year;
 	char genre[MAX_STRING];

@@ -192,7 +192,7 @@ gboolean CDStat (DiscInfo *disc, gboolean force_read_toc) {
             // Get track start frame (Again, LBA)
             disc -> track[j].start_frame = cdio_get_track_lba (disc -> cdio, i);
             if (disc -> track[j].start_frame == CDIO_INVALID_LBA) {
-                g_error ("Track %d has invalid LBA", i);
+                g_error ("Track %d has invalid start frame LBA", i);
                 return FALSE;
             }
 
@@ -204,6 +204,27 @@ gboolean CDStat (DiscInfo *disc, gboolean force_read_toc) {
             disc -> track[j].start_pos.mins = cdio_from_bcd8 (msf.m);
             disc -> track[j].start_pos.secs = cdio_from_bcd8 (msf.s);
 
+            // End frame
+			disc -> track[j].end_frame = cdio_lsn_to_lba (cdio_get_track_last_lsn (disc -> cdio, i));
+            if (disc -> track[j].end_frame == CDIO_INVALID_LBA) {
+                g_error ("Track %d has invalid end frame LBA", i);
+                return FALSE;
+            }
+            /* Compensate for the gap before a data track */
+			// FIXME: Necessary?
+//			if ((ginfo -> rip_track < (ginfo -> disc.num_tracks - 1) &&
+//					!(ginfo -> disc).track[ginfo -> rip_track + 1].is_audio &&
+//					(ginfo -> end_sector - ginfo -> start_sector) > 11399)) {
+//				ginfo -> end_sector -= 11400;
+//			}
+
+            // Pre-gap, not used anywhere for the moment
+			disc -> track[j].pregap_start_frame = cdio_get_track_pregap_lba (disc -> cdio, i);
+            if (disc -> track[j].pregap_start_frame == CDIO_INVALID_LBA) {
+                g_warning ("Track %d has invalid pre-gap frame LBA", i);
+                //return FALSE;
+            }
+
             // Get track length - What about pre-gap? Should we consider it? See cdio_get_track_pregap_lba()
             disc -> track[j].length.frames = cdio_get_track_sec_count (disc -> cdio, i);
             if (disc -> track[j].length.frames == 0) {
@@ -213,7 +234,7 @@ gboolean CDStat (DiscInfo *disc, gboolean force_read_toc) {
             int len = disc -> track[j].length.frames / CDIO_CD_FRAMES_PER_SEC;
             disc -> track[j].length.mins = len / 60;
             disc -> track[j].length.secs = len % 60;
-            g_debug ("-- Track %d: start frame: %d [MS(F): %02d:%02d], length: %02d:%02d", i, disc -> track[j].start_frame, disc -> track[j].start_pos.mins, disc -> track[j].start_pos.secs, disc -> track[j].length.mins, disc -> track[j].length.secs);
+            g_debug ("-- Track %d frames: %d-%d [MS(F): %02d:%02d], length: %02d:%02d, pregap: %d", i, disc -> track[j].start_frame, disc -> track[j].end_frame, disc -> track[j].start_pos.mins, disc -> track[j].start_pos.secs, disc -> track[j].length.mins, disc -> track[j].length.secs, disc -> track[j].pregap_start_frame);
 
             ++j;
         }

@@ -542,7 +542,11 @@ void UpdateRipProgress (GripInfo *ginfo) {
 
 	if (ginfo -> ripping) {
 		// Rip percent is calculated by the cdparanoia callback and provided to rip_callback().
-		gtk_progress_bar_update (GTK_PROGRESS_BAR (uinfo -> ripprogbar), ginfo -> rip_percent);
+        g_assert (uinfo -> ripprogbar);
+		gtk_progress_bar_update (GTK_PROGRESS_BAR (uinfo -> ripprogbar), (gdouble) ginfo -> rip_percent);
+		gchar *tmp = g_strdup_printf ("%.0f%%", ginfo -> rip_percent * 100);
+		gtk_progress_bar_set_text (GTK_PROGRESS_BAR (uinfo -> ripprogbar), tmp);
+		g_free (tmp);
 
 		now = time (NULL);
 		elapsed = (gfloat) now - (gfloat) ginfo -> rip_started;
@@ -597,12 +601,13 @@ void UpdateRipProgress (GripInfo *ginfo) {
 			ginfo -> rip_tot_percent = percent;
 
 			sprintf (buf, _("Rip: %6.2f%%"), percent * 100.0);
-			gtk_label_set (GTK_LABEL (uinfo -> all_rip_label), buf);
-			gtk_progress_bar_update (GTK_PROGRESS_BAR (uinfo -> all_ripprogbar), percent);
+			// FIXME
+//			gtk_label_set (GTK_LABEL (uinfo -> all_rip_label), buf);
+//			gtk_progress_bar_update (GTK_PROGRESS_BAR (uinfo -> all_ripprogbar), percent);
 		} else if (ginfo -> stop_rip) {
-			gtk_label_set (GTK_LABEL (uinfo -> all_rip_label), _("Rip: Idle"));
+//			gtk_label_set (GTK_LABEL (uinfo -> all_rip_label), _("Rip: Idle"));
 
-			gtk_progress_bar_update (GTK_PROGRESS_BAR (uinfo -> all_ripprogbar), 0.0);
+//			gtk_progress_bar_update (GTK_PROGRESS_BAR (uinfo -> all_ripprogbar), 0.0);
 		}
 
 		/* Check if a rip finished */
@@ -804,17 +809,18 @@ void UpdateRipProgress (GripInfo *ginfo) {
 }
 
 static void RipIsFinished (GripInfo *ginfo, gboolean aborted) {
-	GripGUI *uinfo;
-	g_message (_("Ripping is finished"));
-
-	uinfo = & (ginfo -> gui_info);
+	GripGUI *uinfo = &(ginfo -> gui_info);
 	ginfo -> all_ripsize = 0;
 	ginfo -> all_ripdone = 0;
 	ginfo -> all_riplast = 0;
 
-	gtk_label_set (GTK_LABEL (uinfo -> rip_prog_label), _("Rip: Idle"));
-	gtk_label_set (GTK_LABEL (uinfo -> all_rip_label), _("Overall: Idle"));
-	gtk_progress_bar_update (GTK_PROGRESS_BAR (uinfo -> all_ripprogbar), 0.0);
+	g_message ("Ripping complete");
+
+//	gtk_label_set (GTK_LABEL (uinfo -> rip_prog_label), _("Rip: Idle"));
+//	gtk_label_set (GTK_LABEL (uinfo -> all_rip_label), _("Overall: Idle"));
+//	gtk_progress_bar_update (GTK_PROGRESS_BAR (uinfo -> all_ripprogbar), 0.0);
+
+	gtk_widget_hide (uinfo -> rip_win);
 
 	ginfo -> stop_rip = FALSE;
 	ginfo -> ripping = FALSE;
@@ -1026,11 +1032,11 @@ void DoRip (GtkWidget *widget, gpointer data) {
 		return;
 	}
 
-	if (!ginfo -> have_disc) {
-		show_warning (ginfo -> gui_info.app,
-					  _("No disc was detected in the drive. If you have a disc in your drive, please check your CD-Rom device setting under Config -> CD."));
-		return;
-	}
+//	if (!ginfo -> have_disc) {
+//		show_warning (ginfo -> gui_info.app,
+//					  _("No disc was detected in the drive. If you have a disc in your drive, please check your CD-Rom device setting under Config -> CD."));
+//		return;
+//	}
 
 	CDStop (&(ginfo -> disc));
 	ginfo -> stopped = TRUE;
@@ -1086,7 +1092,7 @@ static void RipWholeCD (GtkDialog *dialog, gint reply, gpointer data) {
 		return;
 	}
 
-	g_debug (_("Ripping whole CD"));
+	g_debug ("Ripping whole CD");
 
 	ginfo = (GripInfo *) data;
 
@@ -1094,7 +1100,7 @@ static void RipWholeCD (GtkDialog *dialog, gint reply, gpointer data) {
 		SetChecked (& (ginfo -> gui_info), track, TRUE);
 	}
 
-	DoRip (NULL, (gpointer) ginfo);
+	DoRip (NULL, ginfo);
 }
 
 static int NextTrackToRip (GripInfo *ginfo) {
@@ -1163,7 +1169,7 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
 
 	uinfo = & (ginfo -> gui_info);
 
-	g_debug (_("In RipNextTrack"));
+	g_debug ("In RipNextTrack");
 
 	if (ginfo -> ripping) {
 		return FALSE;
@@ -1173,7 +1179,7 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
 		ginfo -> rip_track = NextTrackToRip (ginfo);
 		g_assert (ginfo -> rip_track <= ginfo -> disc.num_tracks);
 	}
-	g_debug (_("First checked track is %d"), ginfo -> rip_track + 1);
+	g_debug ("First checked track is %d", ginfo -> rip_track + 1);
 
 	/* See if we are finished ripping */
 	if (ginfo -> rip_track == ginfo -> disc.num_tracks) {
@@ -1182,7 +1188,12 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
 
 	/* We have a track to rip */
 	if (ginfo -> have_disc && ginfo -> rip_track >= 0) {
-		g_debug (_("Ripping away!"));
+		g_debug ("Ripping away!");
+
+        GtkLabel *l = GTK_LABEL (gtk_builder_get_object (uinfo -> builder, "label_ripping"));
+        gchar *txt = g_strdup_printf (_("Ripping Track %d"), ginfo -> rip_track + 1);
+        gtk_label_set (l, txt);
+        g_free (txt);
 
 		/*    if(!ginfo -> rip_partial){
 		  gtk_clist_select_row(GTK_CLIST(uinfo -> trackclist),ginfo -> rip_track,0);
@@ -1244,7 +1255,7 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
 		GStatBuf mystat;
 		if (g_stat (ginfo -> ripfile, &mystat) >= 0) {
 			if (mystat.st_size > 0) {
-				g_debug (_("File %s has already been ripped. Skipping..."), ginfo -> ripfile);
+				g_debug ("File %s has already been ripped. Skipping...", ginfo -> ripfile);
 
 //				ginfo -> ripping = TRUE;
 //				ginfo -> all_ripdone += CalculateWavSize (ginfo, ginfo -> rip_track);
@@ -1279,7 +1290,7 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
 		}
 
 
-		g_message (_("Ripping track %d to '%s'"), ginfo -> rip_track + 1, ginfo -> ripfile);
+		g_message ("Ripping track %d to '%s'", ginfo -> rip_track + 1, ginfo -> ripfile);
 		g_debug ("Temp file is: '%s'", ginfo -> rip_tmpfile);
 
 		// Init encoder
@@ -1304,7 +1315,7 @@ static gboolean RipNextTrack (GripInfo *ginfo) {
 		ginfo -> rip_percent = 0;
 		ginfo -> encoder_data = encoder;
 		g_snprintf (tmp, MAX_STRING, _("Rip: Trk %d (0.0x)"), ginfo -> rip_track + 1);
-		gtk_label_set (GTK_LABEL (uinfo -> rip_prog_label), tmp);
+//		gtk_label_set (GTK_LABEL (uinfo -> rip_prog_label), tmp);
 
 		error = NULL;
 		if (!rip_start (ginfo, rip_callback, ginfo, &error)) {
